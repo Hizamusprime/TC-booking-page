@@ -3,24 +3,34 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Admin // Luke Heiser TC</title>
+<title>Luke Heiser Traffic Control — Book a Shift</title>
 
 <script>
-  // ============================================================
-  // ADMIN CONFIG — change ADMIN_PASSWORD any time
-  // ============================================================
   const CONFIG = {
-    ADMIN_PASSWORD: "lollipop2026",                           // ← CHANGE THIS to your password
-    GET_ALL_DATES_URL: "https://safetytrafficcontrol.app.n8n.cloud/webhook/admin-get-dates",
-    SET_DATE_URL:      "https://safetytrafficcontrol.app.n8n.cloud/webhook/admin-set-date",
-    DELETE_DATE_URL:   "https://safetytrafficcontrol.app.n8n.cloud/webhook/admin-delete-date",
-    DEMO_MODE: true                                            // false when n8n is wired
+    GET_BOOKED_DATES_URL: "https://safetytrafficcontrol.app.n8n.cloud/webhook/get-booked-dates",
+    SUBMIT_BOOKING_URL:  "https://safetytrafficcontrol.app.n8n.cloud/webhook/submit-booking",
+    DEMO_MODE: true
   };
+
+  const RATES = {
+    Day:              { base: 50, label: "Standard Day (Mon–Fri 6am–6pm)" },
+    Afternoon:        { base: 60, label: "Afternoon (Mon–Fri 6pm–10pm)" },
+    Night:            { base: 70, label: "Night Shift (Mon–Fri 10pm–6am)" },
+    Saturday:         { base: 72, label: "Saturday" },
+    Sunday:           { base: 87, label: "Sunday" },
+    "Public Holiday": { base: 107, label: "Public Holiday" }
+  };
+  const MIN_HOURS = 4;
+  const TRAVEL_RATE_PER_KM = 0.99;
+  const TRAVEL_FREE_RADIUS_KM = 30;
+  const ROUSE_HILL = { lat: -33.6826, lng: 150.9182 };
+  const GST_RATE = 0.10;
+  const DAYJOB_MIN_START_HOUR = 16;
 </script>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Space+Mono:wght@400;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Archivo+Narrow:wght@700;800&family=Space+Mono:wght@400;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
 <style>
 :root {
@@ -33,281 +43,185 @@
   --warning-red: #E63946;
   --stop-red: #C8102E;
   --confirmed-green: #2D8F47;
-  --override-cyan: #29B6F6;
   --white: #FAFAF7;
-  --shadow: 0 6px 0 0 rgba(0,0,0,0.85);
+  --shadow: 0 8px 0 0 rgba(0,0,0,0.85);
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: 'Manrope', sans-serif; background: var(--steel-dark); color: var(--white); line-height: 1.5; min-height: 100vh; }
+html { scroll-behavior: smooth; }
+body { font-family: 'Manrope', sans-serif; background: var(--steel-dark); color: var(--white); line-height: 1.5; overflow-x: hidden; }
 
-.hazard-stripe { height: 12px; background: repeating-linear-gradient(-45deg, var(--warning-red) 0, var(--warning-red) 16px, var(--steel-dark) 16px, var(--steel-dark) 32px); }
+.hazard-stripe { height: 16px; background: repeating-linear-gradient(-45deg, var(--safety-yellow) 0, var(--safety-yellow) 20px, var(--steel-dark) 20px, var(--steel-dark) 40px); }
 
-header { background: var(--steel-dark); padding: 18px 24px; border-bottom: 3px solid var(--warning-red); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
-header .logo { font-family: 'Archivo Black', sans-serif; font-size: 18px; letter-spacing: -0.3px; text-transform: uppercase; }
-header .logo .accent { color: var(--warning-red); }
-header .public-link { font-family: 'Space Mono', monospace; font-size: 12px; color: var(--concrete-dark); text-decoration: none; padding: 6px 12px; border: 1px solid var(--steel-light); }
-header .public-link:hover { color: var(--safety-yellow); border-color: var(--safety-yellow); }
+header { background: var(--steel-dark); padding: 24px 32px; border-bottom: 3px solid var(--safety-yellow); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; }
+header .logo { font-family: 'Archivo Black', sans-serif; font-size: 22px; letter-spacing: -0.5px; text-transform: uppercase; }
+header .logo .accent { color: var(--safety-yellow); }
+header .contact { font-family: 'Space Mono', monospace; font-size: 14px; color: var(--concrete); }
+header .contact a { color: var(--safety-yellow); text-decoration: none; font-weight: 700; }
 
-/* ============ LOGIN GATE ============ */
-.login-gate {
-  min-height: calc(100vh - 64px);
+.hero { background: linear-gradient(135deg, rgba(0,0,0,0.7), rgba(0,0,0,0.5)), repeating-linear-gradient(45deg, var(--steel) 0, var(--steel) 2px, var(--steel-light) 2px, var(--steel-light) 4px); padding: 70px 32px 60px; text-align: center; position: relative; overflow: hidden; }
+.hero::before { content: "BOOKING"; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-family: 'Archivo Black', sans-serif; font-size: clamp(120px, 25vw, 320px); color: rgba(255, 213, 0, 0.04); letter-spacing: -8px; pointer-events: none; z-index: 0; }
+.hero-content { position: relative; z-index: 1; max-width: 900px; margin: 0 auto; }
+.hero .badge { display: inline-block; background: var(--safety-yellow); color: var(--steel-dark); font-family: 'Space Mono', monospace; font-size: 12px; font-weight: 700; letter-spacing: 2px; padding: 8px 16px; margin-bottom: 32px; text-transform: uppercase; }
+
+/* ============ COMPRESSED + SLANTED HERO TEXT ============ */
+.hero-line {
+  font-family: 'Archivo Narrow', 'Archivo Black', sans-serif;
+  font-weight: 800;
+  font-size: clamp(46px, 8.5vw, 96px);
+  line-height: 0.95;
+  letter-spacing: -2px;
+  text-transform: uppercase;
+  display: block;
+  margin-bottom: 6px;
+  text-shadow:
+    3px 3px 0 rgba(0,0,0,0.45),
+    6px 6px 0 rgba(0,0,0,0.25),
+    9px 9px 14px rgba(0,0,0,0.5);
+  transform-origin: center;
+  animation: hero-pop-in 0.7s cubic-bezier(0.5, 1.6, 0.4, 1) both;
+}
+.hero-line.row-1 { transform: rotate(2deg); animation-delay: 0.05s; }
+.hero-line.row-3 { transform: rotate(5deg); animation-delay: 0.45s; }
+.hero-line.row-3 .highlight {
+  background: var(--safety-yellow);
+  color: var(--steel-dark);
+  padding: 0 16px;
+  display: inline-block;
+  text-shadow: none;
+  box-shadow: 6px 6px 0 rgba(0,0,0,0.45);
+}
+@keyframes hero-pop-in {
+  0%   { opacity: 0; transform: scale(0.9) rotate(0deg); }
+  100% { opacity: 1; }
+}
+
+.hero .subtitle { font-size: 19px; color: var(--concrete); margin-top: 32px; margin-bottom: 32px; max-width: 600px; margin-left: auto; margin-right: auto; }
+.hero .trust-row { display: flex; flex-wrap: wrap; justify-content: center; gap: 24px; font-family: 'Space Mono', monospace; font-size: 13px; color: var(--safety-yellow); }
+.hero .trust-row span::before { content: "✓ "; color: var(--confirmed-green); font-weight: 700; }
+
+/* ============ STOP LOOKING — TC LOLLIPOP SIGN ============ */
+.stop-looking-row {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 32px;
-}
-.login-card {
-  background: var(--steel);
-  border: 2px solid var(--steel-light);
-  padding: 40px;
-  max-width: 400px;
-  width: 100%;
-  text-align: center;
-}
-.login-card h1 {
-  font-family: 'Archivo Black', sans-serif;
-  font-size: 32px;
+  gap: 22px;
+  margin: 14px 0 14px;
+  font-family: 'Archivo Narrow', 'Archivo Black', sans-serif;
+  font-weight: 800;
+  font-size: clamp(46px, 8.5vw, 96px);
   text-transform: uppercase;
-  letter-spacing: -0.5px;
-  margin-bottom: 8px;
+  letter-spacing: -2px;
+  transform: rotate(-8deg);
+  animation: hero-pop-in 0.7s cubic-bezier(0.5, 1.6, 0.4, 1) 0.25s both;
 }
-.login-card .sub {
-  font-family: 'Space Mono', monospace;
-  font-size: 12px;
-  color: var(--concrete-dark);
-  margin-bottom: 24px;
+.stop-sign-svg {
+  width: clamp(110px, 16vw, 180px);
+  height: clamp(110px, 16vw, 180px);
+  flex-shrink: 0;
+  transition: transform 0.4s cubic-bezier(0.5, 1.7, 0.4, 1);
+  filter: drop-shadow(5px 5px 0 rgba(0,0,0,0.55));
 }
-.login-card input {
-  width: 100%;
-  background: var(--steel-dark);
-  border: 2px solid var(--steel-light);
+.stop-sign-svg:hover { transform: scale(1.06); }
+.stop-looking-row .word-looking {
   color: var(--white);
-  padding: 14px;
-  font-family: 'Space Mono', monospace;
-  font-size: 16px;
-  margin-bottom: 16px;
-  text-align: center;
-  letter-spacing: 2px;
-}
-.login-card input:focus { outline: none; border-color: var(--safety-yellow); }
-.login-card button {
-  width: 100%;
-  background: var(--safety-yellow);
-  color: var(--steel-dark);
-  border: none;
-  padding: 16px;
-  font-family: 'Archivo Black', sans-serif;
-  font-size: 16px;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  cursor: pointer;
-  transition: all 0.15s;
-  box-shadow: var(--shadow);
-}
-.login-card button:hover { transform: translate(-2px, -2px); box-shadow: 8px 8px 0 0 rgba(0,0,0,0.85); }
-.login-error {
-  background: var(--warning-red);
-  color: var(--white);
-  padding: 12px;
-  margin-top: 16px;
-  font-family: 'Space Mono', monospace;
-  font-size: 12px;
-  display: none;
-}
-.login-error.visible { display: block; }
-
-/* ============ ADMIN MAIN ============ */
-.admin-main { max-width: 1100px; margin: 0 auto; padding: 32px; display: none; }
-.admin-main.visible { display: block; }
-
-.admin-title {
-  font-family: 'Archivo Black', sans-serif;
-  font-size: 32px;
-  text-transform: uppercase;
-  letter-spacing: -0.5px;
-  margin-bottom: 8px;
-}
-.admin-subtitle {
-  font-family: 'Space Mono', monospace;
-  font-size: 13px;
-  color: var(--concrete-dark);
-  margin-bottom: 32px;
-}
-
-.admin-grid {
-  display: grid;
-  grid-template-columns: 2fr 1fr;
-  gap: 32px;
-}
-@media (max-width: 900px) { .admin-grid { grid-template-columns: 1fr; } }
-
-.panel {
-  background: var(--steel);
-  border: 2px solid var(--steel-light);
-  padding: 28px;
   position: relative;
+  display: inline-block;
+  text-shadow:
+    3px 3px 0 rgba(0,0,0,0.45),
+    6px 6px 0 rgba(0,0,0,0.25),
+    9px 9px 14px rgba(0,0,0,0.5);
 }
-.panel-label {
+.stop-looking-row .word-looking::after {
+  content: "";
   position: absolute;
-  top: -12px;
-  left: 20px;
-  background: var(--warning-red);
-  color: var(--white);
-  font-family: 'Space Mono', monospace;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 2px;
-  padding: 4px 10px;
-  text-transform: uppercase;
+  bottom: 4px;
+  left: 0;
+  right: 0;
+  height: 5px;
+  background: var(--safety-yellow);
+  transform: scaleX(0);
+  transform-origin: left;
+  animation: underline-grow 0.6s ease-out 1.1s forwards;
 }
-.panel h2 {
-  font-family: 'Archivo Black', sans-serif;
-  font-size: 22px;
-  text-transform: uppercase;
-  letter-spacing: -0.5px;
-  margin-bottom: 8px;
-}
-.panel .panel-sub {
-  font-family: 'Space Mono', monospace;
-  font-size: 11px;
-  color: var(--concrete-dark);
-  margin-bottom: 20px;
-}
+@keyframes underline-grow { to { transform: scaleX(1); } }
+
+.main-grid { max-width: 1200px; margin: 0 auto; padding: 60px 32px; display: grid; grid-template-columns: 1fr 1fr; gap: 48px; }
+@media (max-width: 900px) { .main-grid { grid-template-columns: 1fr; gap: 40px; } }
+
+.panel { background: var(--steel); border: 2px solid var(--steel-light); padding: 32px; position: relative; }
+.panel-label { position: absolute; top: -14px; left: 24px; background: var(--safety-yellow); color: var(--steel-dark); font-family: 'Space Mono', monospace; font-size: 11px; font-weight: 700; letter-spacing: 2px; padding: 4px 12px; text-transform: uppercase; }
+.panel h2 { font-family: 'Archivo Black', sans-serif; font-size: 28px; text-transform: uppercase; letter-spacing: -0.5px; margin-bottom: 8px; }
+.panel .panel-sub { font-family: 'Space Mono', monospace; font-size: 12px; color: var(--concrete-dark); margin-bottom: 24px; }
 
 .cal-controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
-.cal-controls button { background: var(--steel-light); border: none; color: var(--white); font-family: 'Space Mono', monospace; font-weight: 700; padding: 8px 16px; cursor: pointer; }
+.cal-controls button { background: var(--steel-light); border: none; color: var(--white); font-family: 'Space Mono', monospace; font-weight: 700; padding: 8px 16px; cursor: pointer; transition: background 0.15s; }
 .cal-controls button:hover { background: var(--safety-yellow); color: var(--steel-dark); }
-.cal-controls .month-label { font-family: 'Archivo Black', sans-serif; font-size: 16px; text-transform: uppercase; letter-spacing: 1px; }
-
+.cal-controls .month-label { font-family: 'Archivo Black', sans-serif; font-size: 18px; text-transform: uppercase; letter-spacing: 1px; }
 .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
 .cal-day-name { font-family: 'Space Mono', monospace; font-size: 10px; font-weight: 700; text-align: center; color: var(--concrete-dark); letter-spacing: 1px; padding: 8px 0; }
-.cal-day {
-  aspect-ratio: 1;
-  border: 1px solid var(--steel-light);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: 'Space Mono', monospace;
-  font-weight: 700;
-  font-size: 14px;
-  cursor: pointer;
-  transition: all 0.15s;
-  position: relative;
-  background: var(--steel-dark);
-}
+.cal-day { aspect-ratio: 1; border: 1px solid var(--steel-light); display: flex; align-items: center; justify-content: center; font-family: 'Space Mono', monospace; font-weight: 700; font-size: 14px; cursor: pointer; transition: all 0.15s; position: relative; background: var(--steel-dark); }
 .cal-day.empty { border-color: transparent; cursor: default; background: transparent; }
-.cal-day.past { color: var(--steel-light); cursor: not-allowed; opacity: 0.4; }
+.cal-day.available { background: var(--steel-dark); color: var(--white); }
+.cal-day.available:hover { background: var(--safety-yellow); color: var(--steel-dark); border-color: var(--safety-yellow); transform: scale(1.05); }
+.cal-day.selected { background: var(--safety-yellow); color: var(--steel-dark); border-color: var(--safety-yellow); box-shadow: 0 0 0 3px var(--steel-dark), 0 0 0 5px var(--safety-yellow); }
+.cal-day.booked { background: repeating-linear-gradient(-45deg, var(--warning-red) 0, var(--warning-red) 4px, var(--steel-dark) 4px, var(--steel-dark) 8px); color: var(--concrete-dark); cursor: not-allowed; opacity: 0.6; }
+.cal-day.booked::after { content: "✕"; position: absolute; font-size: 18px; color: var(--warning-red); }
+.cal-day.past { color: var(--steel-light); background: var(--steel-dark); cursor: not-allowed; opacity: 0.4; }
 .cal-day.today { border-color: var(--safety-yellow); border-width: 2px; }
-.cal-day:hover:not(.empty):not(.past) { transform: scale(1.05); border-color: var(--safety-yellow); }
-.cal-day.selected { box-shadow: 0 0 0 3px var(--steel-dark), 0 0 0 5px var(--safety-yellow); }
+.cal-day.night-only::before { content: "🌙"; position: absolute; top: 2px; right: 3px; font-size: 9px; pointer-events: none; filter: grayscale(0.3); }
 
-/* Status icons in top-right corner */
-.cal-day .status-icon {
-  position: absolute;
-  top: 2px;
-  right: 3px;
-  font-size: 11px;
-  pointer-events: none;
-}
-
-/* Coloured states */
-.cal-day.customer-booked {
-  background: repeating-linear-gradient(-45deg, var(--warning-red) 0, var(--warning-red) 4px, var(--steel-dark) 4px, var(--steel-dark) 8px);
-  color: var(--concrete-dark);
-}
-.cal-day.self-blocked {
-  background: var(--steel-light);
-  color: var(--warning-red);
-  border-color: var(--warning-red);
-}
-.cal-day.day-override {
-  background: var(--steel-dark);
-  color: var(--override-cyan);
-  border-color: var(--override-cyan);
-  border-width: 2px;
-}
-
-.cal-legend {
-  margin-top: 18px;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-  font-family: 'Space Mono', monospace;
-  font-size: 11px;
-  color: var(--concrete-dark);
-}
-.cal-legend > div { display: flex; align-items: center; gap: 6px; }
-.cal-legend .swatch { display: inline-block; width: 14px; height: 14px; flex-shrink: 0; border: 1px solid var(--steel-light); position: relative; }
-.cal-legend .swatch.normal { background: var(--steel-dark); }
+.cal-legend { margin-top: 20px; display: flex; flex-wrap: wrap; gap: 16px; font-family: 'Space Mono', monospace; font-size: 11px; color: var(--concrete-dark); }
+.cal-legend .swatch { display: inline-block; width: 14px; height: 14px; margin-right: 6px; vertical-align: middle; border: 1px solid var(--steel-light); }
+.cal-legend .swatch.available { background: var(--steel-dark); }
+.cal-legend .swatch.selected { background: var(--safety-yellow); }
 .cal-legend .swatch.booked { background: repeating-linear-gradient(-45deg, var(--warning-red) 0, var(--warning-red) 2px, var(--steel-dark) 2px, var(--steel-dark) 4px); }
-.cal-legend .swatch.blocked { background: var(--steel-light); border-color: var(--warning-red); }
-.cal-legend .swatch.override { background: var(--steel-dark); border-color: var(--override-cyan); border-width: 2px; }
+.cal-legend .swatch.night { background: var(--steel-dark); position: relative; }
+.cal-legend .swatch.night::after { content: "🌙"; position: absolute; top: -2px; right: -2px; font-size: 8px; }
 
-/* ============ ACTION PANEL ============ */
-.action-panel { background: var(--steel-dark); border: 2px solid var(--safety-yellow); padding: 24px; }
-.action-panel.empty { border-color: var(--steel-light); }
-.action-panel .empty-msg { text-align: center; font-family: 'Space Mono', monospace; font-size: 13px; color: var(--concrete-dark); padding: 32px 0; }
-.action-panel .selected-date {
-  background: var(--safety-yellow);
-  color: var(--steel-dark);
-  padding: 14px;
-  margin-bottom: 16px;
-  font-family: 'Space Mono', monospace;
-  font-weight: 700;
-  text-align: center;
-  font-size: 13px;
-}
-.action-panel .current-state {
-  background: var(--steel);
-  padding: 12px 14px;
-  margin-bottom: 18px;
-  font-family: 'Space Mono', monospace;
-  font-size: 12px;
-  border-left: 4px solid var(--concrete-dark);
-}
-.action-panel .current-state.booked { border-left-color: var(--warning-red); color: #ff8a91; }
-.action-panel .current-state.blocked { border-left-color: var(--warning-red); color: #ff8a91; }
-.action-panel .current-state.override { border-left-color: var(--override-cyan); color: var(--override-cyan); }
-.action-panel .current-state.normal { border-left-color: var(--confirmed-green); color: var(--concrete); }
-.action-panel .current-state strong { display: block; margin-bottom: 4px; font-size: 14px; }
+.form-group { margin-bottom: 18px; }
+.form-group label { display: block; font-family: 'Space Mono', monospace; font-size: 11px; font-weight: 700; letter-spacing: 1px; color: var(--safety-yellow); margin-bottom: 6px; text-transform: uppercase; }
+.form-group label .req { color: var(--warning-red); }
+.form-group input, .form-group select, .form-group textarea { width: 100%; background: var(--steel-dark); border: 2px solid var(--steel-light); color: var(--white); padding: 12px; font-family: 'Manrope', sans-serif; font-size: 15px; font-weight: 500; transition: border-color 0.15s; }
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: var(--safety-yellow); }
+.form-group input.invalid { border-color: var(--warning-red); background: rgba(230, 57, 70, 0.08); }
+.form-group textarea { resize: vertical; min-height: 80px; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 500px) { .form-row { grid-template-columns: 1fr; } }
 
-.action-btn {
-  width: 100%;
-  border: 2px solid var(--steel-light);
-  background: var(--steel);
-  color: var(--white);
-  padding: 14px;
-  font-family: 'Archivo Black', sans-serif;
-  font-size: 13px;
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
-  cursor: pointer;
-  transition: all 0.15s;
-  margin-bottom: 10px;
-  text-align: left;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-.action-btn .icon { font-size: 18px; flex-shrink: 0; }
-.action-btn .label-stack { display: flex; flex-direction: column; }
-.action-btn .label-stack .small { font-family: 'Space Mono', monospace; font-size: 10px; font-weight: 400; color: var(--concrete-dark); margin-top: 2px; text-transform: none; letter-spacing: 0; }
-.action-btn:hover { transform: translate(-2px, -2px); box-shadow: 4px 4px 0 0 rgba(0,0,0,0.85); }
-.action-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; box-shadow: none; }
+.selected-date-display { background: var(--safety-yellow); color: var(--steel-dark); padding: 16px; margin-bottom: 18px; font-family: 'Space Mono', monospace; font-weight: 700; text-align: center; letter-spacing: 1px; }
+.selected-date-display.empty { background: var(--steel-light); color: var(--concrete-dark); }
 
-.action-btn.block { border-color: var(--warning-red); }
-.action-btn.block:hover { background: var(--warning-red); color: var(--white); }
-.action-btn.override { border-color: var(--override-cyan); }
-.action-btn.override:hover { background: var(--override-cyan); color: var(--steel-dark); }
-.action-btn.clear { border-color: var(--confirmed-green); }
-.action-btn.clear:hover { background: var(--confirmed-green); color: var(--white); }
+.night-only-banner { background: var(--steel-dark); border: 2px solid var(--safety-yellow); border-left-width: 6px; padding: 12px 16px; margin-bottom: 18px; font-family: 'Space Mono', monospace; font-size: 13px; color: var(--white); display: none; }
+.night-only-banner.visible { display: block; }
+.night-only-banner strong { color: var(--safety-yellow); display: block; font-size: 14px; margin-bottom: 4px; }
 
-.status-msg { padding: 14px; margin-top: 14px; font-family: 'Space Mono', monospace; font-weight: 700; font-size: 12px; display: none; }
+.cost-panel { background: var(--steel-dark); border: 2px solid var(--safety-yellow); padding: 20px; margin-bottom: 18px; position: relative; }
+.cost-panel::before { content: "QUOTE"; position: absolute; top: -10px; left: 16px; background: var(--safety-yellow); color: var(--steel-dark); font-family: 'Space Mono', monospace; font-size: 10px; font-weight: 700; letter-spacing: 2px; padding: 2px 10px; }
+.cost-panel.empty { border-color: var(--steel-light); }
+.cost-panel.empty::before { background: var(--steel-light); color: var(--concrete-dark); }
+.cost-panel .empty-msg { text-align: center; font-family: 'Space Mono', monospace; font-size: 13px; color: var(--concrete-dark); padding: 12px 0; }
+.cost-line { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; font-family: 'Space Mono', monospace; font-size: 13px; }
+.cost-line.label-row { color: var(--concrete); }
+.cost-line.detail-row { color: var(--concrete-dark); font-size: 12px; }
+.cost-line.subtotal-row { border-top: 1px solid var(--steel-light); margin-top: 8px; padding-top: 12px; color: var(--white); font-weight: 700; }
+.cost-line.total-row { border-top: 2px solid var(--safety-yellow); margin-top: 8px; padding-top: 12px; font-family: 'Archivo Black', sans-serif; font-size: 22px; color: var(--safety-yellow); letter-spacing: -0.5px; }
+.cost-note { background: rgba(255, 213, 0, 0.1); color: var(--safety-yellow); padding: 8px 12px; margin-top: 8px; font-family: 'Space Mono', monospace; font-size: 11px; border-left: 3px solid var(--safety-yellow); }
+.cost-warning { background: rgba(230, 57, 70, 0.15); color: #ff8a91; padding: 8px 12px; margin-top: 8px; font-family: 'Space Mono', monospace; font-size: 11px; border-left: 3px solid var(--warning-red); }
+
+.fine-print { background: var(--steel-dark); border: 1px dashed var(--steel-light); padding: 12px; margin-bottom: 18px; font-family: 'Space Mono', monospace; font-size: 11px; color: var(--concrete-dark); line-height: 1.6; }
+.fine-print strong { color: var(--safety-yellow); }
+
+.submit-btn { width: 100%; background: var(--safety-yellow); color: var(--steel-dark); border: none; padding: 20px; font-family: 'Archivo Black', sans-serif; font-size: 18px; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; transition: all 0.15s; box-shadow: var(--shadow); }
+.submit-btn:hover:not(:disabled) { transform: translate(-2px, -2px); box-shadow: 10px 10px 0 0 rgba(0,0,0,0.85); }
+.submit-btn:disabled { background: var(--steel-light); color: var(--concrete-dark); cursor: not-allowed; box-shadow: none; }
+
+.status-msg { padding: 16px; margin-top: 16px; font-family: 'Space Mono', monospace; font-weight: 700; font-size: 14px; display: none; }
 .status-msg.success { background: var(--confirmed-green); color: var(--white); display: block; }
 .status-msg.error { background: var(--warning-red); color: var(--white); display: block; }
 .status-msg.loading { background: var(--steel-light); color: var(--safety-yellow); display: block; }
 
-footer { text-align: center; padding: 24px; font-family: 'Space Mono', monospace; font-size: 11px; color: var(--concrete-dark); }
+footer { background: var(--steel-dark); padding: 32px; text-align: center; border-top: 3px solid var(--safety-yellow); font-family: 'Space Mono', monospace; font-size: 12px; color: var(--concrete-dark); }
+footer .abn { color: var(--safety-yellow); }
 </style>
 </head>
 <body>
@@ -315,416 +229,529 @@ footer { text-align: center; padding: 24px; font-family: 'Space Mono', monospace
 <div class="hazard-stripe"></div>
 
 <header>
-  <div class="logo">ADMIN<span class="accent"> // </span>LUKE HEISER TC</div>
-  <a href="index.html" class="public-link">← Back to public site</a>
+  <div class="logo">LUKE HEISER<span class="accent"> // </span>TRAFFIC CONTROL</div>
+  <div class="contact">📞 <a href="tel:0433264319">0433 264 319</a> &nbsp;|&nbsp; ABN: 89 740 423 914</div>
 </header>
 
-<!-- ============ LOGIN GATE ============ -->
-<div class="login-gate" id="loginGate">
-  <div class="login-card">
-    <h1>🔒 Admin Access</h1>
-    <p class="sub">Enter password to manage your calendar.</p>
-    <input type="password" id="passwordInput" placeholder="PASSWORD" autocomplete="off" autofocus>
-    <button onclick="attemptLogin()">UNLOCK</button>
-    <div class="login-error" id="loginError">⚠ Wrong password.</div>
-  </div>
-</div>
+<section class="hero">
+  <div class="hero-content">
+    <span class="badge">★ AVAILABLE FOR SUBCONTRACT WORK ★</span>
 
-<!-- ============ ADMIN MAIN ============ -->
-<div class="admin-main" id="adminMain">
+    <span class="hero-line row-1">Need a Traffic Controller?</span>
 
-  <h1 class="admin-title">📅 Calendar Manager</h1>
-  <p class="admin-subtitle">Click any date below, then choose what to do with it.</p>
-
-  <div class="admin-grid">
-
-    <div class="panel">
-      <div class="panel-label">Calendar</div>
-      <h2>Your Schedule</h2>
-      <p class="panel-sub">Tap a date to manage it. Past dates are locked.</p>
-
-      <div class="cal-controls">
-        <button id="prevMonth">&larr; PREV</button>
-        <div class="month-label" id="monthLabel">—</div>
-        <button id="nextMonth">NEXT &rarr;</button>
-      </div>
-      <div class="cal-grid" id="calGrid"></div>
-
-      <div class="cal-legend">
-        <div><span class="swatch normal"></span>Available</div>
-        <div><span class="swatch booked"></span>Customer booking</div>
-        <div><span class="swatch blocked"></span>🚫 Self-blocked</div>
-        <div><span class="swatch override"></span>☀ Day override</div>
-      </div>
+    <div class="stop-looking-row">
+      <svg class="stop-sign-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" aria-label="Traffic controller stop sign">
+        <circle cx="100" cy="100" r="95" fill="#C8102E"/>
+        <circle cx="100" cy="100" r="80" fill="none" stroke="#ffffff" stroke-width="3"/>
+        <text x="100" y="115" font-family="Archivo Black, Arial Black, sans-serif"
+              font-size="44" font-weight="900" fill="#ffffff"
+              text-anchor="middle" letter-spacing="2">STOP</text>
+        <circle cx="100" cy="14" r="3" fill="rgba(0,0,0,0.25)"/>
+      </svg>
+      <span class="word-looking">Looking.</span>
     </div>
 
-    <div class="panel">
-      <div class="panel-label">Actions</div>
-      <h2>Manage Date</h2>
-      <p class="panel-sub">Pick a date to see options.</p>
+    <span class="hero-line row-3"><span class="highlight">Book the date.</span></span>
 
-      <div class="action-panel empty" id="actionPanel">
-        <div class="empty-msg">⚠ Click a date on the calendar to manage it</div>
+    <p class="subtitle">Licensed Traffic Controller — Sydney &amp; surrounds. TPWD licensed, fully insured, fast response. Pick a green day below — booked days are crossed out.</p>
+    <div class="trust-row">
+      <span>TPWD Licensed</span>
+      <span>Fully Insured</span>
+      <span>AS 1742.3 Trained</span>
+      <span>Same-day Invoicing</span>
+      <span>Short Notice Welcome</span>
+    </div>
+  </div>
+</section>
+
+<div class="main-grid">
+
+  <div class="panel">
+    <div class="panel-label">Step 1 // Pick a Date</div>
+    <h2>Availability</h2>
+    <p class="panel-sub">Crossed-out dates are already booked. 🌙 = night shift only (4PM start onwards). Click any date to select.</p>
+    <div class="cal-controls">
+      <button id="prevMonth">&larr; PREV</button>
+      <div class="month-label" id="monthLabel">—</div>
+      <button id="nextMonth">NEXT &rarr;</button>
+    </div>
+    <div class="cal-grid" id="calGrid"></div>
+    <div class="cal-legend">
+      <div><span class="swatch available"></span>Available</div>
+      <div><span class="swatch night"></span>🌙 Night only (4PM+)</div>
+      <div><span class="swatch selected"></span>Selected</div>
+      <div><span class="swatch booked"></span>Booked</div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-label">Step 2 // Job Details</div>
+    <h2>Booking Form</h2>
+    <p class="panel-sub">Fill in the job details. Quote updates live as you go.</p>
+
+    <div class="selected-date-display empty" id="selectedDateDisplay">No date selected — click a date on the left</div>
+
+    <div class="night-only-banner" id="nightOnlyBanner">
+      <strong>🌙 NIGHT SHIFT ONLY</strong>
+      Mon–Fri daytime is committed to other work. Start time must be 4:00 PM or later.
+    </div>
+
+    <form id="bookingForm">
+      <div class="form-row">
+        <div class="form-group"><label>Start Time <span class="req">*</span></label><input type="time" name="start_time" id="startTime" required></div>
+        <div class="form-group"><label>Finish Time <span class="req">*</span></label><input type="time" name="finish_time" id="finishTime" required></div>
       </div>
 
+      <div class="form-group">
+        <label>Site Address (full address) <span class="req">*</span></label>
+        <input type="text" name="site_address" id="siteAddress" placeholder="e.g. 123 Parramatta Rd, Auburn NSW 2144" required>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group"><label>Site Contact Name <span class="req">*</span></label><input type="text" name="site_contact_name" placeholder="On-site supervisor" required></div>
+        <div class="form-group"><label>Site Contact Phone <span class="req">*</span></label><input type="tel" name="site_contact_phone" placeholder="04XX XXX XXX" required></div>
+      </div>
+
+      <div class="form-group"><label>Company Name <span class="req">*</span></label><input type="text" name="company_name" placeholder="Booking company" required></div>
+
+      <div class="form-row">
+        <div class="form-group"><label>Scheduler Name <span class="req">*</span></label><input type="text" name="scheduler_name" placeholder="Your name" required></div>
+        <div class="form-group"><label>Scheduler Email <span class="req">*</span></label><input type="email" name="scheduler_email" placeholder="you@company.com.au" required></div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group"><label>Scheduler Phone <span class="req">*</span></label><input type="tel" name="scheduler_phone" placeholder="04XX XXX XXX" required></div>
+        <div class="form-group"><label>TCs Required <span class="req">*</span></label><input type="number" name="tcs_required" min="1" max="20" value="1" required></div>
+      </div>
+
+      <div class="form-group"><label>Special Requirements</label><textarea name="special_requirements" placeholder="e.g. yellow card required, ute needed, two-way radio..."></textarea></div>
+
+      <div class="cost-panel empty" id="costPanel">
+        <div class="empty-msg">⚠ Pick a date and time to see the quote</div>
+      </div>
+
+      <div class="form-group">
+        <label>Negotiated Rate (optional)</label>
+        <input type="number" name="negotiated_rate" id="negotiatedRate" placeholder="Leave blank to confirm at standard rate" step="0.01" min="0">
+      </div>
+
+      <div class="fine-print">
+        <strong>FINE PRINT:</strong> Minimum 4-hour engagement. Travel allowance ($0.99/km round-trip) applies past 30km from Rouse Hill. Cancellation under 4hrs notice = 2hr min charge. All quoted rates GST inclusive. Invoice issued same/next business day, payment due within 14 days.
+      </div>
+
+      <button type="submit" class="submit-btn" id="submitBtn" disabled>⚠ Pick a date first</button>
       <div class="status-msg" id="statusMsg"></div>
-    </div>
-
+    </form>
   </div>
 </div>
 
-<footer>LUKE HEISER TRAFFIC CONTROL // Admin Panel // ABN 89 740 423 914</footer>
+<footer>
+  <p>LUKE HEISER TRAFFIC CONTROL &nbsp;//&nbsp; <span class="abn">ABN 89 740 423 914</span> &nbsp;//&nbsp; TCT1069115</p>
+  <p style="margin-top: 8px;">📞 0433 264 319 &nbsp;|&nbsp; ✉ lukeheiser16@gmail.com &nbsp;|&nbsp; Based in Rouse Hill, Sydney NSW</p>
+</footer>
 
 <script>
-// ============================================================
-// LOGIN
-// ============================================================
-function attemptLogin() {
-  const input = document.getElementById('passwordInput');
-  const error = document.getElementById('loginError');
-  if (input.value === CONFIG.ADMIN_PASSWORD) {
-    sessionStorage.setItem('admin_unlocked', 'true');
-    showAdmin();
-  } else {
-    error.classList.add('visible');
-    input.value = '';
-    input.focus();
-  }
-}
-
-document.getElementById('passwordInput').addEventListener('keypress', (e) => {
-  if (e.key === 'Enter') attemptLogin();
-});
-
-function showAdmin() {
-  document.getElementById('loginGate').style.display = 'none';
-  document.getElementById('adminMain').classList.add('visible');
-  loadCalendarData();
-}
-
-// Auto-unlock if already logged in this session
-if (sessionStorage.getItem('admin_unlocked') === 'true') {
-  showAdmin();
-}
-
-// ============================================================
-// STATE
-// ============================================================
 let viewMonth = new Date().getMonth();
 let viewYear = new Date().getFullYear();
-let customerBookings = new Set();   // dates with customer bookings (red hatched)
-let selfBlocks = new Set();         // dates user has blocked (grey/red)
-let dayOverrides = new Set();       // dates user has marked as day-shift OK (cyan)
+let bookedDates = new Set();
+let dayOverrideDates = new Set();
 let selectedDate = null;
+let geocodeCache = {};
+let lastGeocodeTimer = null;
 
 const NSW_PUBLIC_HOLIDAYS = new Set([
   "2026-01-01","2026-01-26","2026-04-03","2026-04-04","2026-04-05","2026-04-06",
   "2026-04-25","2026-06-08","2026-10-05","2026-12-25","2026-12-26","2026-12-28","2027-01-01"
 ]);
 
-function isWeekday(dateStr) {
+function isNightOnly(dateStr) {
+  if (!dateStr) return false;
   if (NSW_PUBLIC_HOLIDAYS.has(dateStr)) return false;
+  if (dayOverrideDates.has(dateStr)) return false;
   const d = new Date(dateStr + 'T00:00:00');
   const day = d.getDay();
   return day >= 1 && day <= 5;
 }
 
-// ============================================================
-// LOAD DATA — from n8n or demo
-// ============================================================
-async function loadCalendarData() {
+function detectShiftType(dateStr, startTime) {
+  if (!dateStr || !startTime) return null;
+  if (NSW_PUBLIC_HOLIDAYS.has(dateStr)) return "Public Holiday";
+  const d = new Date(dateStr + 'T00:00:00');
+  const day = d.getDay();
+  if (day === 6) return "Saturday";
+  if (day === 0) return "Sunday";
+  const [h, m] = startTime.split(':').map(Number);
+  const totalMin = h * 60 + m;
+  if (totalMin >= 6*60  && totalMin < 18*60) return "Day";
+  if (totalMin >= 18*60 && totalMin < 22*60) return "Afternoon";
+  return "Night";
+}
+
+function calcHours(startTime, finishTime) {
+  if (!startTime || !finishTime) return 0;
+  const [sh, sm] = startTime.split(':').map(Number);
+  const [fh, fm] = finishTime.split(':').map(Number);
+  let diff = (fh*60 + fm) - (sh*60 + sm);
+  if (diff <= 0) diff += 24*60;
+  return diff / 60;
+}
+
+function haversineKm(lat1, lng1, lat2, lng2) {
+  const R = 6371;
+  const dLat = (lat2-lat1) * Math.PI/180;
+  const dLng = (lng2-lng1) * Math.PI/180;
+  const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) * Math.sin(dLng/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+async function geocodeAddress(address) {
+  if (!address || address.length < 8) return null;
+  if (geocodeCache[address]) return geocodeCache[address];
+  try {
+    const url = `https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=au&q=${encodeURIComponent(address)}`;
+    const res = await fetch(url, { headers: { "Accept-Language": "en-AU" } });
+    const data = await res.json();
+    if (!data || data.length === 0) return null;
+    const lat = parseFloat(data[0].lat);
+    const lng = parseFloat(data[0].lon);
+    const distanceKm = haversineKm(ROUSE_HILL.lat, ROUSE_HILL.lng, lat, lng);
+    const result = { lat, lng, distanceKm };
+    geocodeCache[address] = result;
+    return result;
+  } catch (err) { return null; }
+}
+
+function validateStartTime() {
+  const startInput = document.getElementById('startTime');
+  const startVal = startInput.value;
+  if (!selectedDate || !startVal) { startInput.classList.remove('invalid'); return true; }
+  if (!isNightOnly(selectedDate)) { startInput.classList.remove('invalid'); return true; }
+  const [h] = startVal.split(':').map(Number);
+  if (h < DAYJOB_MIN_START_HOUR) { startInput.classList.add('invalid'); return false; }
+  startInput.classList.remove('invalid');
+  return true;
+}
+
+async function updateCostPanel() {
+  const panel = document.getElementById('costPanel');
+  const startTime = document.getElementById('startTime').value;
+  const finishTime = document.getElementById('finishTime').value;
+  const address = document.getElementById('siteAddress').value;
+
+  if (!selectedDate || !startTime || !finishTime) {
+    panel.classList.add('empty');
+    panel.innerHTML = '<div class="empty-msg">⚠ Pick a date and time to see the quote</div>';
+    return;
+  }
+
+  if (isNightOnly(selectedDate)) {
+    const [h] = startTime.split(':').map(Number);
+    if (h < DAYJOB_MIN_START_HOUR) {
+      panel.classList.add('empty');
+      panel.innerHTML = '<div class="empty-msg" style="color:#ff8a91;">⚠ This is a Mon–Fri night-only date. Start time must be 4:00 PM or later.</div>';
+      return;
+    }
+  }
+
+  const shiftType = detectShiftType(selectedDate, startTime);
+  if (!shiftType) {
+    panel.classList.add('empty');
+    panel.innerHTML = '<div class="empty-msg">⚠ Need date + start time to calculate</div>';
+    return;
+  }
+
+  const rate = RATES[shiftType];
+  const actualHours = calcHours(startTime, finishTime);
+  const billedHours = Math.max(actualHours, MIN_HOURS);
+  const minBumped = actualHours < MIN_HOURS;
+
+  const labour = billedHours * rate.base;
+  let travel = 0;
+  let distanceKm = null;
+  let geocodeStatus = null;
+
+  if (address && address.length >= 8) {
+    const geo = await geocodeAddress(address);
+    if (geo) {
+      distanceKm = geo.distanceKm;
+      const billableKm = Math.max(0, distanceKm - TRAVEL_FREE_RADIUS_KM);
+      travel = billableKm * 2 * TRAVEL_RATE_PER_KM;
+      geocodeStatus = 'ok';
+    } else { geocodeStatus = 'failed'; }
+  }
+
+  const subtotal = labour + travel;
+  const gst = subtotal * GST_RATE;
+  const total = subtotal + gst;
+
+  panel.classList.remove('empty');
+  let html = `
+    <div class="cost-line label-row"><span>Shift Type</span><span style="color:var(--safety-yellow);font-weight:700;">${shiftType.toUpperCase()}</span></div>
+    <div class="cost-line detail-row"><span>${rate.label}</span><span>$${rate.base}/hr</span></div>
+    <div class="cost-line label-row"><span>Hours billed</span><span>${billedHours.toFixed(1)} hrs</span></div>
+    ${minBumped ? `<div class="cost-warning">⚠ 4-hour minimum applies (you entered ${actualHours.toFixed(1)} hrs)</div>` : ''}
+    <div class="cost-line label-row"><span>Labour</span><span>$${labour.toFixed(2)}</span></div>
+  `;
+
+  if (distanceKm !== null) {
+    if (distanceKm > TRAVEL_FREE_RADIUS_KM) {
+      const billableKm = distanceKm - TRAVEL_FREE_RADIUS_KM;
+      html += `
+        <div class="cost-line detail-row"><span>Distance from Rouse Hill</span><span>${distanceKm.toFixed(1)} km</span></div>
+        <div class="cost-line label-row"><span>Travel (${billableKm.toFixed(1)}km × 2 × $${TRAVEL_RATE_PER_KM})</span><span>$${travel.toFixed(2)}</span></div>
+      `;
+    } else {
+      html += `<div class="cost-line detail-row"><span>Distance from Rouse Hill</span><span>${distanceKm.toFixed(1)} km — within free radius ✓</span></div>`;
+    }
+  } else if (geocodeStatus === 'failed') {
+    html += `<div class="cost-note">📍 Couldn't auto-find address — travel will be calculated on confirmation</div>`;
+  } else if (address) {
+    html += `<div class="cost-line detail-row"><span>Calculating distance...</span><span>—</span></div>`;
+  }
+
+  html += `
+    <div class="cost-line subtotal-row"><span>Subtotal</span><span>$${subtotal.toFixed(2)}</span></div>
+    <div class="cost-line label-row"><span>GST (10%)</span><span>$${gst.toFixed(2)}</span></div>
+    <div class="cost-line total-row"><span>TOTAL</span><span>$${total.toFixed(2)}</span></div>
+    <div class="cost-note">Standard rate quote. Final invoice may adjust for actual hours worked. Travel is round-trip from Rouse Hill 2155.</div>
+  `;
+
+  panel.innerHTML = html;
+  panel.dataset.shiftType = shiftType;
+  panel.dataset.billedHours = billedHours;
+  panel.dataset.standardRate = rate.base;
+  panel.dataset.labour = labour;
+  panel.dataset.travel = travel;
+  panel.dataset.distanceKm = distanceKm || '';
+  panel.dataset.gst = gst;
+  panel.dataset.total = total;
+}
+
+function updateCostPanelDebounced() {
+  if (lastGeocodeTimer) clearTimeout(lastGeocodeTimer);
+  lastGeocodeTimer = setTimeout(updateCostPanel, 600);
+}
+
+function getDemoBookedDates() {
+  const today = new Date();
+  const fakeBookings = [];
+  for (let i = 0; i < 8; i++) {
+    const d = new Date(today);
+    d.setDate(today.getDate() + Math.floor(Math.random() * 45) + 2);
+    fakeBookings.push(d.toISOString().split('T')[0]);
+  }
+  return fakeBookings;
+}
+
+async function loadBookedDates() {
   if (CONFIG.DEMO_MODE) {
-    // Demo: a couple of fake bookings, blocks, and overrides
-    const today = new Date();
-    customerBookings = new Set();
-    selfBlocks = new Set();
-    dayOverrides = new Set();
-    for (let i = 0; i < 3; i++) {
-      const d = new Date(today);
-      d.setDate(today.getDate() + 3 + i*4);
-      customerBookings.add(d.toISOString().split('T')[0]);
-    }
-    for (let i = 0; i < 2; i++) {
-      const d = new Date(today);
-      d.setDate(today.getDate() + 7 + i*5);
-      selfBlocks.add(d.toISOString().split('T')[0]);
-    }
-    const od = new Date(today);
-    od.setDate(today.getDate() + 5);
-    dayOverrides.add(od.toISOString().split('T')[0]);
+    bookedDates = new Set(getDemoBookedDates());
+    dayOverrideDates = new Set();
     renderCalendar();
     return;
   }
   try {
-    const res = await fetch(CONFIG.GET_ALL_DATES_URL);
+    const res = await fetch(CONFIG.GET_BOOKED_DATES_URL);
     const data = await res.json();
-    customerBookings = new Set(data.customer_bookings || []);
-    selfBlocks = new Set(data.self_blocks || []);
-    dayOverrides = new Set(data.day_overrides || []);
+    bookedDates = new Set(data.booked_dates || []);
+    dayOverrideDates = new Set(data.day_override_dates || []);
     renderCalendar();
   } catch (err) {
-    showStatus('⚠ Could not load calendar. Check n8n is online.', 'error');
+    bookedDates = new Set();
+    dayOverrideDates = new Set();
+    renderCalendar();
   }
 }
 
-// ============================================================
-// CALENDAR RENDER
-// ============================================================
 function renderCalendar() {
   const grid = document.getElementById('calGrid');
   const monthLabel = document.getElementById('monthLabel');
-  const monthNames = ["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
+  const monthNames = ["JANUARY","FEBRUARY","MARCH","APRIL","MAY","JUNE","JULY","AUGUST","SEPTEMBER","OCTOBER","NOVEMBER","DECEMBER"];
   const dayNames = ["MON","TUE","WED","THU","FRI","SAT","SUN"];
-
   monthLabel.textContent = `${monthNames[viewMonth]} ${viewYear}`;
   grid.innerHTML = '';
-
-  dayNames.forEach(d => {
-    const el = document.createElement('div');
-    el.className = 'cal-day-name';
-    el.textContent = d;
-    grid.appendChild(el);
-  });
-
+  dayNames.forEach(d => { const el = document.createElement('div'); el.className = 'cal-day-name'; el.textContent = d; grid.appendChild(el); });
   const firstDay = new Date(viewYear, viewMonth, 1).getDay();
   const offset = (firstDay === 0) ? 6 : firstDay - 1;
-  for (let i = 0; i < offset; i++) {
-    const el = document.createElement('div');
-    el.className = 'cal-day empty';
-    grid.appendChild(el);
-  }
-
+  for (let i = 0; i < offset; i++) { const el = document.createElement('div'); el.className = 'cal-day empty'; grid.appendChild(el); }
   const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
   const today = new Date();
   const todayStr = today.toISOString().split('T')[0];
-
   for (let day = 1; day <= daysInMonth; day++) {
     const dateStr = `${viewYear}-${String(viewMonth+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
     const el = document.createElement('div');
     el.className = 'cal-day';
     el.textContent = day;
-
-    if (dateStr < todayStr) {
-      el.classList.add('past');
-    } else {
+    if (dateStr < todayStr) { el.classList.add('past'); }
+    else if (bookedDates.has(dateStr)) { el.classList.add('booked'); el.title = 'Already booked'; }
+    else {
+      el.classList.add('available');
       el.dataset.date = dateStr;
       el.addEventListener('click', () => selectDate(dateStr));
-
-      if (customerBookings.has(dateStr)) {
-        el.classList.add('customer-booked');
-        const icon = document.createElement('span');
-        icon.className = 'status-icon';
-        icon.textContent = '✕';
-        el.appendChild(icon);
-      } else if (selfBlocks.has(dateStr)) {
-        el.classList.add('self-blocked');
-        const icon = document.createElement('span');
-        icon.className = 'status-icon';
-        icon.textContent = '🚫';
-        el.appendChild(icon);
-      } else if (dayOverrides.has(dateStr)) {
-        el.classList.add('day-override');
-        const icon = document.createElement('span');
-        icon.className = 'status-icon';
-        icon.textContent = '☀';
-        el.appendChild(icon);
-      }
+      if (isNightOnly(dateStr)) { el.classList.add('night-only'); el.title = 'Night shift only — start 4:00 PM or later'; }
     }
-
     if (dateStr === todayStr) el.classList.add('today');
     if (dateStr === selectedDate) el.classList.add('selected');
     grid.appendChild(el);
   }
 }
 
-// ============================================================
-// SELECT A DATE
-// ============================================================
 function selectDate(dateStr) {
   selectedDate = dateStr;
   renderCalendar();
-  renderActionPanel();
+  updateSelectedDateDisplay();
+  updateNightOnlyBanner();
+  updateStartTimeConstraint();
+  updateSubmitButton();
+  updateCostPanel();
 }
 
-function renderActionPanel() {
-  const panel = document.getElementById('actionPanel');
-  if (!selectedDate) {
-    panel.classList.add('empty');
-    panel.innerHTML = '<div class="empty-msg">⚠ Click a date on the calendar to manage it</div>';
-    return;
-  }
-  panel.classList.remove('empty');
-
+function updateSelectedDateDisplay() {
+  const el = document.getElementById('selectedDateDisplay');
+  if (!selectedDate) { el.classList.add('empty'); el.textContent = 'No date selected — click a date on the left'; return; }
   const d = new Date(selectedDate + 'T00:00:00');
-  const dayName = ['SUN','MON','TUE','WED','THU','FRI','SAT'][d.getDay()];
+  const dayName = ['SUNDAY','MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY'][d.getDay()];
   const monthName = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'][d.getMonth()];
-  const dateLabel = `${dayName} ${d.getDate()} ${monthName} ${d.getFullYear()}`;
+  el.classList.remove('empty');
+  el.textContent = `📅 ${dayName} ${d.getDate()} ${monthName} ${d.getFullYear()}`;
+}
 
-  const isCustomer = customerBookings.has(selectedDate);
-  const isBlocked = selfBlocks.has(selectedDate);
-  const isOverride = dayOverrides.has(selectedDate);
-  const isWeekdayDate = isWeekday(selectedDate);
+function updateNightOnlyBanner() {
+  const banner = document.getElementById('nightOnlyBanner');
+  if (selectedDate && isNightOnly(selectedDate)) banner.classList.add('visible');
+  else banner.classList.remove('visible');
+}
 
-  let stateClass = 'normal';
-  let stateText = '';
-  if (isCustomer) {
-    stateClass = 'booked';
-    stateText = '<strong>📋 CUSTOMER BOOKING</strong>This date has a confirmed customer booking. Manage it in Notion or Supabase, not here.';
-  } else if (isBlocked) {
-    stateClass = 'blocked';
-    stateText = '<strong>🚫 SELF-BLOCKED</strong>You\'ve blocked this date. No one can book it.';
-  } else if (isOverride) {
-    stateClass = 'override';
-    stateText = '<strong>☀ DAY OVERRIDE</strong>Day shifts allowed on this Mon–Fri date.';
-  } else if (isWeekdayDate) {
-    stateClass = 'normal';
-    stateText = '<strong>🌙 NIGHT-ONLY (default)</strong>Mon–Fri night shifts only (4PM+). Use override to allow day shifts.';
-  } else {
-    stateClass = 'normal';
-    stateText = '<strong>✓ AVAILABLE</strong>Open for any shift on this weekend / public holiday.';
+function updateStartTimeConstraint() {
+  const startInput = document.getElementById('startTime');
+  if (selectedDate && isNightOnly(selectedDate)) {
+    startInput.min = "16:00";
+    if (startInput.value && startInput.value < "16:00") startInput.value = "16:00";
+  } else { startInput.removeAttribute('min'); }
+  validateStartTime();
+}
+
+function updateSubmitButton() {
+  const btn = document.getElementById('submitBtn');
+  if (!selectedDate) { btn.disabled = true; btn.textContent = '⚠ Pick a date first'; return; }
+  if (isNightOnly(selectedDate)) {
+    const startVal = document.getElementById('startTime').value;
+    if (startVal && startVal < "16:00") { btn.disabled = true; btn.textContent = '⚠ Start time must be 4PM or later'; return; }
   }
+  btn.disabled = false;
+  btn.textContent = '✓ Submit Booking Request';
+}
 
-  let html = `
-    <div class="selected-date">📅 ${dateLabel}</div>
-    <div class="current-state ${stateClass}">${stateText}</div>
-  `;
+document.getElementById('startTime').addEventListener('change', () => { validateStartTime(); updateSubmitButton(); updateCostPanel(); });
+document.getElementById('finishTime').addEventListener('change', updateCostPanel);
+document.getElementById('siteAddress').addEventListener('input', updateCostPanelDebounced);
 
-  // Show different action buttons based on current state
-  if (isCustomer) {
-    html += `<p style="font-family:'Space Mono',monospace;font-size:11px;color:var(--concrete-dark);text-align:center;padding:16px 0;">No admin actions available — this is a real customer booking.</p>`;
-  } else if (isBlocked) {
-    html += `
-      <button class="action-btn clear" onclick="clearDate()">
-        <span class="icon">✓</span>
-        <span class="label-stack">Unblock this date<span class="small">Make available again</span></span>
-      </button>
-    `;
-  } else if (isOverride) {
-    html += `
-      <button class="action-btn clear" onclick="clearDate()">
-        <span class="icon">✓</span>
-        <span class="label-stack">Remove override<span class="small">Back to night-only default</span></span>
-      </button>
-      <button class="action-btn block" onclick="setDate('self_block')">
-        <span class="icon">🚫</span>
-        <span class="label-stack">Block this date<span class="small">No one can book</span></span>
-      </button>
-    `;
-  } else {
-    // Normal date — offer block, and override if it's a weekday
-    html += `
-      <button class="action-btn block" onclick="setDate('self_block')">
-        <span class="icon">🚫</span>
-        <span class="label-stack">Block this date<span class="small">No one can book it</span></span>
-      </button>
-    `;
-    if (isWeekdayDate) {
-      html += `
-        <button class="action-btn override" onclick="setDate('day_override')">
-          <span class="icon">☀</span>
-          <span class="label-stack">Allow day shift<span class="small">Override the night-only default</span></span>
-        </button>
-      `;
+document.getElementById('prevMonth').addEventListener('click', () => { viewMonth--; if (viewMonth < 0) { viewMonth = 11; viewYear--; } renderCalendar(); });
+document.getElementById('nextMonth').addEventListener('click', () => { viewMonth++; if (viewMonth > 11) { viewMonth = 0; viewYear++; } renderCalendar(); });
+
+document.getElementById('bookingForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  if (!selectedDate) return;
+  if (isNightOnly(selectedDate)) {
+    const startVal = document.getElementById('startTime').value;
+    if (startVal && startVal < "16:00") {
+      const status = document.getElementById('statusMsg');
+      status.className = 'status-msg error';
+      status.textContent = '⚠ This is a Mon–Fri night-only date. Start time must be 4:00 PM or later.';
+      return;
     }
   }
 
-  panel.innerHTML = html;
-}
+  const status = document.getElementById('statusMsg');
+  const btn = document.getElementById('submitBtn');
+  const formData = new FormData(e.target);
+  const panel = document.getElementById('costPanel');
 
-// ============================================================
-// ACTIONS
-// ============================================================
-async function setDate(type) {
-  showStatus('⏳ Saving...', 'loading');
+  const payload = {
+    booking_date: selectedDate,
+    booking_type: 'customer',
+    start_time: formData.get('start_time'),
+    finish_time: formData.get('finish_time'),
+    shift_type: panel.dataset.shiftType || detectShiftType(selectedDate, formData.get('start_time')),
+    site_address: formData.get('site_address'),
+    site_contact_name: formData.get('site_contact_name'),
+    site_contact_phone: formData.get('site_contact_phone'),
+    company_name: formData.get('company_name'),
+    scheduler_name: formData.get('scheduler_name'),
+    scheduler_email: formData.get('scheduler_email'),
+    scheduler_phone: formData.get('scheduler_phone'),
+    tcs_required: parseInt(formData.get('tcs_required')) || 1,
+    special_requirements: formData.get('special_requirements') || '',
+    standard_rate: parseFloat(panel.dataset.standardRate) || null,
+    billed_hours: parseFloat(panel.dataset.billedHours) || null,
+    labour_cost: parseFloat(panel.dataset.labour) || null,
+    travel_cost: parseFloat(panel.dataset.travel) || null,
+    distance_km: parseFloat(panel.dataset.distanceKm) || null,
+    gst: parseFloat(panel.dataset.gst) || null,
+    standard_total: parseFloat(panel.dataset.total) || null,
+    negotiated_rate: formData.get('negotiated_rate') ? parseFloat(formData.get('negotiated_rate')) : null,
+    night_only_date: isNightOnly(selectedDate)
+  };
+
+  btn.disabled = true;
+  status.className = 'status-msg loading';
+  status.textContent = '⏳ Locking your date...';
+
   if (CONFIG.DEMO_MODE) {
     setTimeout(() => {
-      // Clear other states for this date first
-      selfBlocks.delete(selectedDate);
-      dayOverrides.delete(selectedDate);
-      // Apply new state
-      if (type === 'self_block') selfBlocks.add(selectedDate);
-      if (type === 'day_override') dayOverrides.add(selectedDate);
+      status.className = 'status-msg success';
+      const totalDisplay = payload.standard_total ? ` Quote: $${payload.standard_total.toFixed(2)} incl GST.` : '';
+      status.textContent = `✅ DEMO: Booking would be confirmed.${totalDisplay} Set DEMO_MODE = false to wire to n8n.`;
+      bookedDates.add(selectedDate);
+      selectedDate = null;
       renderCalendar();
-      renderActionPanel();
-      showStatus(`✅ DEMO: ${type === 'self_block' ? 'Date blocked' : 'Day override applied'} for ${selectedDate}`, 'success');
-    }, 500);
+      updateSelectedDateDisplay();
+      updateNightOnlyBanner();
+      updateStartTimeConstraint();
+      e.target.reset();
+      updateCostPanel();
+      btn.disabled = true;
+      btn.textContent = '⚠ Pick a date first';
+    }, 800);
     return;
   }
+
   try {
-    const res = await fetch(CONFIG.SET_DATE_URL, {
+    const res = await fetch(CONFIG.SUBMIT_BOOKING_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        booking_date: selectedDate,
-        booking_type: type,
-        admin_password: CONFIG.ADMIN_PASSWORD
-      })
+      body: JSON.stringify(payload)
     });
-    if (res.ok) {
-      await loadCalendarData();
-      renderActionPanel();
-      showStatus(`✅ ${type === 'self_block' ? 'Date blocked' : 'Day override applied'}`, 'success');
-    } else {
-      showStatus('⚠ Save failed', 'error');
-    }
-  } catch (err) {
-    showStatus('⚠ Network error', 'error');
-  }
-}
-
-async function clearDate() {
-  showStatus('⏳ Clearing...', 'loading');
-  if (CONFIG.DEMO_MODE) {
-    setTimeout(() => {
-      selfBlocks.delete(selectedDate);
-      dayOverrides.delete(selectedDate);
+    const data = await res.json();
+    if (res.ok && data.success) {
+      status.className = 'status-msg success';
+      status.textContent = '✅ Booking confirmed! Luke will reach out within a few hours.';
+      bookedDates.add(selectedDate);
+      selectedDate = null;
       renderCalendar();
-      renderActionPanel();
-      showStatus(`✅ DEMO: Cleared ${selectedDate}`, 'success');
-    }, 500);
-    return;
-  }
-  try {
-    const res = await fetch(CONFIG.DELETE_DATE_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        booking_date: selectedDate,
-        admin_password: CONFIG.ADMIN_PASSWORD
-      })
-    });
-    if (res.ok) {
-      await loadCalendarData();
-      renderActionPanel();
-      showStatus('✅ Cleared', 'success');
+      updateSelectedDateDisplay();
+      updateNightOnlyBanner();
+      updateStartTimeConstraint();
+      e.target.reset();
+      updateCostPanel();
+      btn.disabled = true;
+      btn.textContent = '⚠ Pick a date first';
     } else {
-      showStatus('⚠ Clear failed', 'error');
+      status.className = 'status-msg error';
+      status.textContent = '⚠ ' + (data.message || 'That date just got booked. Please pick another.');
+      await loadBookedDates();
+      btn.disabled = false;
+      btn.textContent = '✓ Submit Booking Request';
     }
   } catch (err) {
-    showStatus('⚠ Network error', 'error');
+    status.className = 'status-msg error';
+    status.textContent = '⚠ Network error. Please call/text 0433 264 319 directly.';
+    btn.disabled = false;
+    btn.textContent = '✓ Submit Booking Request';
   }
-}
-
-function showStatus(msg, type) {
-  const el = document.getElementById('statusMsg');
-  el.textContent = msg;
-  el.className = 'status-msg ' + type;
-  if (type === 'success') {
-    setTimeout(() => { el.className = 'status-msg'; }, 3000);
-  }
-}
-
-// ============================================================
-// MONTH NAV
-// ============================================================
-document.getElementById('prevMonth').addEventListener('click', () => {
-  viewMonth--; if (viewMonth < 0) { viewMonth = 11; viewYear--; }
-  renderCalendar();
 });
-document.getElementById('nextMonth').addEventListener('click', () => {
-  viewMonth++; if (viewMonth > 11) { viewMonth = 0; viewYear++; }
-  renderCalendar();
-});
+
+loadBookedDates();
 </script>
 
 </body>

@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin // Luke Heiser TC</title>
+
+<script>
+  // ============================================================
+  // ADMIN CONFIG — change ADMIN_PASSWORD any time
+  // ============================================================
+  const CONFIG = {
+    ADMIN_PASSWORD: "lollipop2026",                           // ← CHANGE THIS to your password
+    GET_ALL_DATES_URL: "https://safetytrafficcontrol.app.n8n.cloud/webhook/admin-get-dates",
+    SET_DATE_URL:      "https://safetytrafficcontrol.app.n8n.cloud/webhook/admin-set-date",
+    DELETE_DATE_URL:   "https://safetytrafficcontrol.app.n8n.cloud/webhook/admin-delete-date",
+    DEMO_MODE: true                                            // false when n8n is wired
+  };
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Space+Mono:wght@400;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --safety-yellow: #FFD500;
+  --steel: #2a2a2a;
+  --steel-dark: #1a1a1a;
+  --steel-light: #3a3a3a;
+  --concrete: #d4d4d0;
+  --concrete-dark: #8a8a85;
+  --warning-red: #E63946;
+  --stop-red: #C8102E;
+  --confirmed-green: #2D8F47;
+  --override-cyan: #29B6F6;
+  --white: #FAFAF7;
+  --shadow: 0 6px 0 0 rgba(0,0,0,0.85);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Manrope', sans-serif; background: var(--steel-dark); color: var(--white); line-height: 1.5; min-height: 100vh; }
+
+.hazard-stripe { height: 12px; background: repeating-linear-gradient(-45deg, var(--warning-red) 0, var(--warning-red) 16px, var(--steel-dark) 16px, var(--steel-dark) 32px); }
+
+header { background: var(--steel-dark); padding: 18px 24px; border-bottom: 3px solid var(--warning-red); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
+header .logo { font-family: 'Archivo Black', sans-serif; font-size: 18px; letter-spacing: -0.3px; text-transform: uppercase; }
+header .logo .accent { color: var(--warning-red); }
+header .public-link { font-family: 'Space Mono', monospace; font-size: 12px; color: var(--concrete-dark); text-decoration: none; padding: 6px 12px; border: 1px solid var(--steel-light); }
+header .public-link:hover { color: var(--safety-yellow); border-color: var(--safety-yellow); }
+
+/* ============ LOGIN GATE ============ */
+.login-gate {
+  min-height: calc(100vh - 64px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px;
+}
+.login-card {
+  background: var(--steel);
+  border: 2px solid var(--steel-light);
+  padding: 40px;
+  max-width: 400px;
+  width: 100%;
+  text-align: center;
+}
+.login-card h1 {
+  font-family: 'Archivo Black', sans-serif;
+  font-size: 32px;
+  text-transform: uppercase;
+  letter-spacing: -0.5px;
+  margin-bottom: 8px;
+}
+.login-card .sub {
+  font-family: 'Space Mono', monospace;
+  font-size: 12px;
+  color: var(--concrete-dark);
+  margin-bottom: 24px;
+}
+.login-card input {
+  width: 100%;
+  background: var(--steel-dark);
+  border: 2px solid var(--steel-light);
+  color: var(--white);
+  padding: 14px;
+  font-family: 'Space Mono', monospace;
+  font-size: 16px;
+  margin-bottom: 16px;
+  text-align: center;
+  letter-spacing: 2px;
+}
+.login-card input:focus { outline: none; border-color: var(--safety-yellow); }
+.login-card button {
+  width: 100%;
+  background: var(--safety-yellow);
+  color: var(--steel-dark);
+  border: none;
+  padding: 16px;
+  font-family: 'Archivo Black', sans-serif;
+  font-size: 16px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.15s;
+  box-shadow: var(--shadow);
+}
+.login-card button:hover { transform: translate(-2px, -2px); box-shadow: 8px 8px 0 0 rgba(0,0,0,0.85); }
+.login-error {
+  background: var(--warning-red);
+  color: var(--white);
+  padding: 12px;
+  margin-top: 16px;
+  font-family: 'Space Mono', monospace;
+  font-size: 12px;
+  display: none;
+}
+.login-error.visible { display: block; }
+
+/* ============ ADMIN MAIN ============ */
+.admin-main { max-width: 1100px; margin: 0 auto; padding: 32px; display: none; }
+.admin-main.visible { display: block; }
+
+.admin-title {
+  font-family: 'Archivo Black', sans-serif;
+  font-size: 32px;
+  text-transform: uppercase;
+  letter-spacing: -0.5px;
+  margin-bottom: 8px;
+}
+.admin-subtitle {
+  font-family: 'Space Mono', monospace;
+  font-size: 13px;
+  color: var(--concrete-dark);
+  margin-bottom: 32px;
+}
+
+.admin-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 32px;
+}
+@media (max-width: 900px) { .admin-grid { grid-template-columns: 1fr; } }
+
+.panel {
+  background: var(--steel);
+  border: 2px solid var(--steel-light);
+  padding: 28px;
+  position: relative;
+}
+.panel-label {
+  position: absolute;
+  top: -12px;
+  left: 20px;
+  background: var(--warning-red);
+  color: var(--white);
+  font-family: 'Space Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  padding: 4px 10px;
+  text-transform: uppercase;
+}
+.panel h2 {
+  font-family: 'Archivo Black', sans-serif;
+  font-size: 22px;
+  text-transform: uppercase;
+  letter-spacing: -0.5px;
+  margin-bottom: 8px;
+}
+.panel .panel-sub {
+  font-family: 'Space Mono', monospace;
+  font-size: 11px;
+  color: var(--concrete-dark);
+  margin-bottom: 20px;
+}
+
+.cal-controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+.cal-controls button { background: var(--steel-light); border: none; color: var(--white); font-family: 'Space Mono', monospace; font-weight: 700; padding: 8px 16px; cursor: pointer; }
+.cal-controls button:hover { background: var(--safety-yellow); color: var(--steel-dark); }
+.cal-controls .month-label { font-family: 'Archivo Black', sans-serif; font-size: 16px; text-transform: uppercase; letter-spacing: 1px; }
+
+.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+.cal-day-name { font-family: 'Space Mono', monospace; font-size: 10px; font-weight: 700; text-align: center; color: var(--concrete-dark); letter-spacing: 1px; padding: 8px 0; }
+.cal-day {
+  aspect-ratio: 1;
+  border: 1px solid var(--steel-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Space Mono', monospace;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.15s;
+  position: relative;
+  background: var(--steel-dark);
+}
+.cal-day.empty { border-color: transparent; cursor: default; background: transparent; }
+.cal-day.past { color: var(--steel-light); cursor: not-allowed; opacity: 0.4; }
+.cal-day.today { border-color: var(--safety-yellow); border-width: 2px; }
+.cal-day:hover:not(.empty):not(.past) { transform: scale(1.05); border-color: var(--safety-yellow); }
+.cal-day.selected { box-shadow: 0 0 0 3px var(--steel-dark), 0 0 0 5px var(--safety-yellow); }
+
+/* Status icons in top-right corner */
+.cal-day .status-icon {
+  position: absolute;
+  top: 2px;
+  right: 3px;
+  font-size: 11px;
+  pointer-events: none;
+}
+
+/* Coloured states */
+.cal-day.customer-booked {
+  background: repeating-linear-gradient(-45deg, var(--warning-red) 0, var(--warning-red) 4px, var(--steel-dark) 4px, var(--steel-dark) 8px);
+  color: var(--concrete-dark);
+}
+.cal-day.self-blocked {
+  background: var(--steel-light);
+  color: var(--warning-red);
+  border-color: var(--warning-red);
+}
+.cal-day.day-override {
+  background: var(--steel-dark);
+  color: var(--override-cyan);
+  border-color: var(--override-cyan);
+  border-width: 2px;
+}
+
+.cal-legend {
+  margin-top: 18px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  font-family: 'Space Mono', monospace;
+  font-size: 11px;
+  color: var(--concrete-dark);
+}
+.cal-legend > div { display: flex; align-items: center; gap: 6px; }
+.cal-legend .swatch { display: inline-block; width: 14px; height: 14px; flex-shrink: 0; border: 1px solid var(--steel-light); position: relative; }
+.cal-legend .swatch.normal { background: var(--steel-dark); }
+.cal-legend .swatch.booked { background: repeating-linear-gradient(-45deg, var(--warning-red) 0, var(--warning-red) 2px, var(--steel-dark) 2px, var(--steel-dark) 4px); }
+.cal-legend .swatch.blocked { background: var(--steel-light); border-color: var(--warning-red); }
+.cal-legend .swatch.override { background: var(--steel-dark); border-color: var(--override-cyan); border-width: 2px; }
+
+/* ============ ACTION PANEL ============ */
+.action-panel { background: var(--steel-dark); border: 2px solid var(--safety-yellow); padding: 24px; }
+.action-panel.empty { border-color: var(--steel-light); }
+.action-panel .empty-msg { text-align: center; font-family: 'Space Mono', monospace; font-size: 13px; color: var(--concrete-dark); padding: 32px 0; }
+.action-panel .selected-date {
+  background: var(--safety-yellow);
+  color: var(--steel-dark);
+  padding: 14px;
+  margin-bottom: 16px;
+  font-family: 'Space Mono', monospace;
+  font-weight: 700;
+  text-align: center;
+  font-size: 13px;
+}
+.action-panel .current-state {
+  background: var(--steel);
+  padding: 12px 14px;
+  margin-bottom: 18px;
+  font-family: 'Space Mono', monospace;
+  font-size: 12px;
+  border-left: 4px solid var(--concrete-dark);
+}
+.action-panel .current-state.booked { border-left-color: var(--warning-red); color: #ff8a91; }
+.action-panel .current-state.blocked { border-left-color: var(--warning-red); color: #ff8a91; }
+.action-panel .current-state.override { border-left-color: var(--override-cyan); color: var(--override-cyan); }
+.action-panel .current-state.normal { border-left-color: var(--confirmed-green); color: var(--concrete); }
+.action-panel .current-state strong { display: block; margin-bottom: 4px; font-size: 14px; }
+
+.action-btn {
+  width: 100%;
+  border: 2px solid var(--steel-light);
+  background: var(--steel);
+  color: var(--white);
+  padding: 14px;
+  font-family: 'Archivo Black', sans-serif;
+  font-size: 13px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.15s;
+  margin-bottom: 10px;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.action-btn .icon { font-size: 18px; flex-shrink: 0; }
+.action-btn .label-stack { display: flex; flex-direction: column; }
+.action-btn .label-stack .small { font-family: 'Space Mono', monospace; font-size: 10px; font-weight: 400; color: var(--concrete-dark); margin-top: 2px; text-transform: none; letter-spacing: 0; }
+.action-btn:hover { transform: translate(-2px, -2px); box-shadow: 4px 4px 0 0 rgba(0,0,0,0.85); }
+.action-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; box-shadow: none; }
+
+.action-btn.block { border-color: var(--warning-red); }
+.action-btn.block:hover { background: var(--warning-red); color: var(--white); }
+.action-btn.override { border-color: var(--override-cyan); }
+.action-btn.override:hover { background: var(--override-cyan); color: var(--steel-dark); }
+.action-btn.clear { border-color: var(--confirmed-green); }
+.action-btn.clear:hover { background: var(--confirmed-green); color: var(--white); }
+
+.status-msg { padding: 14px; margin-top: 14px; font-family: 'Space Mono', monospace; font-weight: 700; font-size: 12px; display: none; }
+.status-msg.success { background: var(--confirmed-green); color: var(--white); display: block; }
+.status-msg.error { background: var(--warning-red); color: var(--white); display: block; }
+.status-msg.loading { background: var(--steel-light); color: var(--safety-yellow); display: block; }
+
+footer { text-align: center; padding: 24px; font-family: 'Space Mono', monospace; font-size: 11px; color: var(--concrete-dark); }
+</style>
+</head>
+<body>
+
+<div class="hazard-stripe"></div>
+
+<header>
+  <div class="logo">ADMIN<span class="accent"> // </span>LUKE HEISER TC</div>
+  <a href="index.html" class="public-link">← Back to public site</a>
+</header>
+
+<!-- ============ LOGIN GATE ============ -->
+<div class="login-gate" id="loginGate">
+  <div class="login-card">
+    <h1>🔒 Admin Access</h1>
+    <p class="sub">Enter password to manage your calendar.</p>
+    <input type="password" id="passwordInput" placeholder="PASSWORD" autocomplete="off" autofocus>
+    <button onclick="attemptLogin()">UNLOCK</button>
+    <div class="login-error" id="loginError">⚠ Wrong password.</div>
+  </div>
+</div>
+
+<!-- ============ ADMIN MAIN ============ -->
+<div class="admin-main" id="adminMain">
+
+  <h1 class="admin-title">📅 Calendar Manager</h1>
+  <p class="admin-subtitle">Click any date below, then choose what to do with it.</p>
+
+  <div class="admin-grid">
+
+    <div class="panel">
+      <div class="panel-label">Calendar</div>
+      <h2>Your Schedule</h2>
+      <p class="panel-sub">Tap a date to manage it. Past dates are locked.</p>
+
+      <div class="cal-controls">
+        <button id="prevMonth">&larr; PREV</button>
+        <div class="month-label" id="monthLabel">—</div>
+        <button id="nextMonth">NEXT &rarr;</button>
+      </div>
+      <div class="cal-grid" id="calGrid"></div>
+
+      <div class="cal-legend">
+        <div><span class="swatch normal"></span>Available</div>
+        <div><span class="swatch booked"></span>Customer booking</div>
+        <div><span class="swatch blocked"></span>🚫 Self-blocked</div>
+        <div><span class="swatch override"></span>☀ Day override</div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-label">Actions</div>
+      <h2>Manage Date</h2>
+      <p class="panel-sub">Pick a date to see options.</p>
+
+      <div class="action-panel empty" id="actionPanel">
+        <div class="empty-msg">⚠ Click a date on the calendar to manage it</div>
+      </div>
+
+      <div class="status-msg" id="statusMsg"></div>
+    </div>
+
+  </div>
+</div>
+
+<footer>LUKE HEISER TRAFFIC CONTROL // Admin Panel // ABN 89 740 423 914</footer>
+
+<script>
+// ============================================================
+// LOGIN
+// ============================================================
+function attemptLogin() {
+  const input = document.getElementById('passwordInput');
+  const error = document.getElementById('loginError');
+  if (input.value === CONFIG.ADMIN_PASSWORD) {
+    sessionStorage.setItem('admin_unlocked', 'true');
+    showAdmin();
+  } else {
+    error.classList.add('visible');
+    input.value = '';
+    input.focus();
+  }
+}
+
+document.getElementById('passwordInput').addEventListener('keypress', (e) => {
+  if (e.key === 'Enter') attemptLogin();
+});
+
+function showAdmin() {
+  document.getElementById('loginGate').style.display = 'none';
+  document.getElementById('adminMain').classList.add('visible');
+  loadCalendarData();
+}
+
+// Auto-unlock if already logged in this session
+if (sessionStorage.getItem('admin_unlocked') === 'true') {
+  showAdmin();
+}
+
+// ============================================================
+// STATE
+// ============================================================
+let viewMonth = new Date().getMonth();
+let viewYear = new Date().getFullYear();
+let customerBookings = new Set();   // dates with customer bookings (red hatched)
+let selfBlocks = new Set();         // dates user has blocked (grey/red)
+let dayOverrides = new Set();       // dates user has marked as day-shift OK (cyan)
+let selectedDate = null;
+
+const NSW_PUBLIC_HOLIDAYS = new Set([
+  "2026-01-01","2026-01-26","2026-04-03","2026-04-04","2026-04-05","2026-04-06",
+  "2026-04-25","2026-06-08","2026-10-05","2026-12-25","2026-12-26","2026-12-28","2027-01-01"
+]);
+
+function isWeekday(dateStr) {
+  if (NSW_PUBLIC_HOLIDAYS.has(dateStr)) return false;
+  const d = new Date(dateStr + 'T00:00:00');
+  const day = d.getDay();
+  return day >= 1 && day <= 5;
+}
+
+// ============================================================
+// LOAD DATA — from n8n or demo
+// ============================================================
+async function loadCalendarData() {
+  if (CONFIG.DEMO_MODE) {
+    // Demo: a couple of fake bookings, blocks, and overrides
+    const today = new Date();
+    customerBookings = new Set();
+    selfBlocks = new Set();
+    dayOverrides = new Set();
+    for (let i = 0; i < 3; i++) {
+      const d = new Date(today);
+      d.setDate(today.getDate() + 3 + i*4);
+      customerBookings.add(d.toISOString().split('T')[0]);
+    }
+    for (let i = 0; i < 2; i++) {
+      const d = new Date(today);
+      d.setDate(today.getDate() + 7 + i*5);
+      selfBlocks.add(d.toISOString().split('T')[0]);
+    }
+    const od = new Date(today);
+    od.setDate(today.getDate() + 5);
+    dayOverrides.add(od.toISOString().split('T')[0]);
+    renderCalendar();
+    return;
+  }
+  try {
+    const res = await fetch(CONFIG.GET_ALL_DATES_URL);
+    const data = await res.json();
+    customerBookings = new Set(data.customer_bookings || []);
+    selfBlocks = new Set(data.self_blocks || []);
+    dayOverrides = new Set(data.day_overrides || []);
+    renderCalendar();
+  } catch (err) {
+    showStatus('⚠ Could not load calendar. Check n8n is online.', 'error');
+  }
+}
+
+// ============================================================
+// CALENDAR RENDER
+// ============================================================
+function renderCalendar() {
+  const grid = document.getElementById('calGrid');
+  const monthLabel = document.getElementById('monthLabel');
+  const monthNames = ["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
+  const dayNames = ["MON","TUE","WED","THU","FRI","SAT","SUN"];
+
+  monthLabel.textContent = `${monthNames[viewMonth]} ${viewYear}`;
+  grid.innerHTML = '';
+
+  dayNames.forEach(d => {
+    const el = document.createElement('div');
+    el.className = 'cal-day-name';
+    el.textContent = d;
+    grid.appendChild(el);
+  });
+
+  const firstDay = new Date(viewYear, viewMonth, 1).getDay();
+  const offset = (firstDay === 0) ? 6 : firstDay - 1;
+  for (let i = 0; i < offset; i++) {
+    const el = document.createElement('div');
+    el.className = 'cal-day empty';
+    grid.appendChild(el);
+  }
+
+  const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
+  const today = new Date();
+  const todayStr = today.toISOString().split('T')[0];
+
+  for (let day = 1; day <= daysInMonth; day++) {
+    const dateStr = `${viewYear}-${String(viewMonth+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+    const el = document.createElement('div');
+    el.className = 'cal-day';
+    el.textContent = day;
+
+    if (dateStr < todayStr) {
+      el.classList.add('past');
+    } else {
+      el.dataset.date = dateStr;
+      el.addEventListener('click', () => selectDate(dateStr));
+
+      if (customerBookings.has(dateStr)) {
+        el.classList.add('customer-booked');
+        const icon = document.createElement('span');
+        icon.className = 'status-icon';
+        icon.textContent = '✕';
+        el.appendChild(icon);
+      } else if (selfBlocks.has(dateStr)) {
+        el.classList.add('self-blocked');
+        const icon = document.createElement('span');
+        icon.className = 'status-icon';
+        icon.textContent = '🚫';
+        el.appendChild(icon);
+      } else if (dayOverrides.has(dateStr)) {
+        el.classList.add('day-override');
+        const icon = document.createElement('span');
+        icon.className = 'status-icon';
+        icon.textContent = '☀';
+        el.appendChild(icon);
+      }
+    }
+
+    if (dateStr === todayStr) el.classList.add('today');
+    if (dateStr === selectedDate) el.classList.add('selected');
+    grid.appendChild(el);
+  }
+}
+
+// ============================================================
+// SELECT A DATE
+// ============================================================
+function selectDate(dateStr) {
+  selectedDate = dateStr;
+  renderCalendar();
+  renderActionPanel();
+}
+
+function renderActionPanel() {
+  const panel = document.getElementById('actionPanel');
+  if (!selectedDate) {
+    panel.classList.add('empty');
+    panel.innerHTML = '<div class="empty-msg">⚠ Click a date on the calendar to manage it</div>';
+    return;
+  }
+  panel.classList.remove('empty');
+
+  const d = new Date(selectedDate + 'T00:00:00');
+  const dayName = ['SUN','MON','TUE','WED','THU','FRI','SAT'][d.getDay()];
+  const monthName = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'][d.getMonth()];
+  const dateLabel = `${dayName} ${d.getDate()} ${monthName} ${d.getFullYear()}`;
+
+  const isCustomer = customerBookings.has(selectedDate);
+  const isBlocked = selfBlocks.has(selectedDate);
+  const isOverride = dayOverrides.has(selectedDate);
+  const isWeekdayDate = isWeekday(selectedDate);
+
+  let stateClass = 'normal';
+  let stateText = '';
+  if (isCustomer) {
+    stateClass = 'booked';
+    stateText = '<strong>📋 CUSTOMER BOOKING</strong>This date has a confirmed customer booking. Manage it in Notion or Supabase, not here.';
+  } else if (isBlocked) {
+    stateClass = 'blocked';
+    stateText = '<strong>🚫 SELF-BLOCKED</strong>You\'ve blocked this date. No one can book it.';
+  } else if (isOverride) {
+    stateClass = 'override';
+    stateText = '<strong>☀ DAY OVERRIDE</strong>Day shifts allowed on this Mon–Fri date.';
+  } else if (isWeekdayDate) {
+    stateClass = 'normal';
+    stateText = '<strong>🌙 NIGHT-ONLY (default)</strong>Mon–Fri night shifts only (4PM+). Use override to allow day shifts.';
+  } else {
+    stateClass = 'normal';
+    stateText = '<strong>✓ AVAILABLE</strong>Open for any shift on this weekend / public holiday.';
+  }
+
+  let html = `
+    <div class="selected-date">📅 ${dateLabel}</div>
+    <div class="current-state ${stateClass}">${stateText}</div>
+  `;
+
+  // Show different action buttons based on current state
+  if (isCustomer) {
+    html += `<p style="font-family:'Space Mono',monospace;font-size:11px;color:var(--concrete-dark);text-align:center;padding:16px 0;">No admin actions available — this is a real customer booking.</p>`;
+  } else if (isBlocked) {
+    html += `
+      <button class="action-btn clear" onclick="clearDate()">
+        <span class="icon">✓</span>
+        <span class="label-stack">Unblock this date<span class="small">Make available again</span></span>
+      </button>
+    `;
+  } else if (isOverride) {
+    html += `
+      <button class="action-btn clear" onclick="clearDate()">
+        <span class="icon">✓</span>
+        <span class="label-stack">Remove override<span class="small">Back to night-only default</span></span>
+      </button>
+      <button class="action-btn block" onclick="setDate('self_block')">
+        <span class="icon">🚫</span>
+        <span class="label-stack">Block this date<span class="small">No one can book</span></span>
+      </button>
+    `;
+  } else {
+    // Normal date — offer block, and override if it's a weekday
+    html += `
+      <button class="action-btn block" onclick="setDate('self_block')">
+        <span class="icon">🚫</span>
+        <span class="label-stack">Block this date<span class="small">No one can book it</span></span>
+      </button>
+    `;
+    if (isWeekdayDate) {
+      html += `
+        <button class="action-btn override" onclick="setDate('day_override')">
+          <span class="icon">☀</span>
+          <span class="label-stack">Allow day shift<span class="small">Override the night-only default</span></span>
+        </button>
+      `;
+    }
+  }
+
+  panel.innerHTML = html;
+}
+
+// ============================================================
+// ACTIONS
+// ============================================================
+async function setDate(type) {
+  showStatus('⏳ Saving...', 'loading');
+  if (CONFIG.DEMO_MODE) {
+    setTimeout(() => {
+      // Clear other states for this date first
+      selfBlocks.delete(selectedDate);
+      dayOverrides.delete(selectedDate);
+      // Apply new state
+      if (type === 'self_block') selfBlocks.add(selectedDate);
+      if (type === 'day_override') dayOverrides.add(selectedDate);
+      renderCalendar();
+      renderActionPanel();
+      showStatus(`✅ DEMO: ${type === 'self_block' ? 'Date blocked' : 'Day override applied'} for ${selectedDate}`, 'success');
+    }, 500);
+    return;
+  }
+  try {
+    const res = await fetch(CONFIG.SET_DATE_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        booking_date: selectedDate,
+        booking_type: type,
+        admin_password: CONFIG.ADMIN_PASSWORD
+      })
+    });
+    if (res.ok) {
+      await loadCalendarData();
+      renderActionPanel();
+      showStatus(`✅ ${type === 'self_block' ? 'Date blocked' : 'Day override applied'}`, 'success');
+    } else {
+      showStatus('⚠ Save failed', 'error');
+    }
+  } catch (err) {
+    showStatus('⚠ Network error', 'error');
+  }
+}
+
+async function clearDate() {
+  showStatus('⏳ Clearing...', 'loading');
+  if (CONFIG.DEMO_MODE) {
+    setTimeout(() => {
+      selfBlocks.delete(selectedDate);
+      dayOverrides.delete(selectedDate);
+      renderCalendar();
+      renderActionPanel();
+      showStatus(`✅ DEMO: Cleared ${selectedDate}`, 'success');
+    }, 500);
+    return;
+  }
+  try {
+    const res = await fetch(CONFIG.DELETE_DATE_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        booking_date: selectedDate,
+        admin_password: CONFIG.ADMIN_PASSWORD
+      })
+    });
+    if (res.ok) {
+      await loadCalendarData();
+      renderActionPanel();
+      showStatus('✅ Cleared', 'success');
+    } else {
+      showStatus('⚠ Clear failed', 'error');
+    }
+  } catch (err) {
+    showStatus('⚠ Network error', 'error');
+  }
+}
+
+function showStatus(msg, type) {
+  const el = document.getElementById('statusMsg');
+  el.textContent = msg;
+  el.className = 'status-msg ' + type;
+  if (type === 'success') {
+    setTimeout(() => { el.className = 'status-msg'; }, 3000);
+  }
+}
+
+// ============================================================
+// MONTH NAV
+// ============================================================
+document.getElementById('prevMonth').addEventListener('click', () => {
+  viewMonth--; if (viewMonth < 0) { viewMonth = 11; viewYear--; }
+  renderCalendar();
+});
+document.getElementById('nextMonth').addEventListener('click', () => {
+  viewMonth++; if (viewMonth > 11) { viewMonth = 0; viewYear++; }
+  renderCalendar();
+});
+</script>
+
+</body>
+</html>

@@ -68,11 +68,11 @@ header .contact a { color: var(--safety-yellow); text-decoration: none; font-wei
   font-family: 'Archivo Narrow', 'Archivo Black', sans-serif;
   font-weight: 800;
   font-size: clamp(46px, 8.5vw, 96px);
-  line-height: 0.95;
+  line-height: 0.9;
   letter-spacing: -2px;
   text-transform: uppercase;
   display: block;
-  margin-bottom: 6px;
+  margin-bottom: -4px;
   text-shadow:
     3px 3px 0 rgba(0,0,0,0.45),
     6px 6px 0 rgba(0,0,0,0.25),
@@ -81,7 +81,7 @@ header .contact a { color: var(--safety-yellow); text-decoration: none; font-wei
   animation: hero-pop-in 0.7s cubic-bezier(0.5, 1.6, 0.4, 1) both;
 }
 .hero-line.row-1 { transform: rotate(2deg); animation-delay: 0.05s; }
-.hero-line.row-3 { transform: rotate(5deg); animation-delay: 0.45s; }
+.hero-line.row-3 { transform: rotate(2deg); animation-delay: 0.45s; }
 .hero-line.row-3 .highlight {
   background: var(--safety-yellow);
   color: var(--steel-dark);
@@ -105,27 +105,28 @@ header .contact a { color: var(--safety-yellow); text-decoration: none; font-wei
   align-items: center;
   justify-content: center;
   gap: 22px;
-  margin: 14px 0 14px;
+  margin: 4px 0 4px;
   font-family: 'Archivo Narrow', 'Archivo Black', sans-serif;
   font-weight: 800;
   font-size: clamp(46px, 8.5vw, 96px);
   text-transform: uppercase;
   letter-spacing: -2px;
-  transform: rotate(-8deg);
   animation: hero-pop-in 0.7s cubic-bezier(0.5, 1.6, 0.4, 1) 0.25s both;
 }
 .stop-sign-svg {
   width: clamp(110px, 16vw, 180px);
   height: clamp(110px, 16vw, 180px);
   flex-shrink: 0;
+  transform: rotate(-8deg);
   transition: transform 0.4s cubic-bezier(0.5, 1.7, 0.4, 1);
   filter: drop-shadow(5px 5px 0 rgba(0,0,0,0.55));
 }
-.stop-sign-svg:hover { transform: scale(1.06); }
+.stop-sign-svg:hover { transform: rotate(-8deg) scale(1.06); }
 .stop-looking-row .word-looking {
   color: var(--white);
   position: relative;
   display: inline-block;
+  transform: rotate(-2deg);
   text-shadow:
     3px 3px 0 rgba(0,0,0,0.45),
     6px 6px 0 rgba(0,0,0,0.25),
@@ -187,6 +188,111 @@ header .contact a { color: var(--safety-yellow); text-decoration: none; font-wei
 .form-group textarea { resize: vertical; min-height: 80px; }
 .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 @media (max-width: 500px) { .form-row { grid-template-columns: 1fr; } }
+
+/* Input with $ prefix */
+.input-with-prefix {
+  position: relative;
+}
+.input-with-prefix::before {
+  content: "$";
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-family: 'Space Mono', monospace;
+  font-weight: 700;
+  font-size: 18px;
+  color: var(--safety-yellow);
+  pointer-events: none;
+  z-index: 1;
+}
+.input-with-prefix input {
+  padding-left: 32px !important;
+}
+
+/* TC Picker — click stop signs to indicate how many TCs you need */
+.tc-picker {
+  background: var(--steel-dark);
+  border: 2px solid var(--steel-light);
+  padding: 14px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: flex-start;
+  min-height: 72px;
+  position: relative;
+}
+.tc-picker.has-data { border-color: var(--safety-yellow); }
+.tc-picker-empty {
+  font-family: 'Space Mono', monospace;
+  font-size: 12px;
+  color: var(--concrete-dark);
+  text-align: center;
+  width: 100%;
+  font-style: italic;
+  padding: 12px 0;
+}
+.tc-figure {
+  width: 42px;
+  height: 52px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.2s cubic-bezier(0.5, 1.6, 0.4, 1);
+}
+.tc-figure:hover { transform: translateY(-3px) scale(1.08); }
+.tc-figure .tc-disc { fill: var(--steel-light); transition: fill 0.2s; }
+.tc-figure .tc-ring { stroke: transparent; transition: stroke 0.2s; }
+.tc-figure .tc-stop { fill: transparent; transition: fill 0.2s; }
+.tc-figure .tc-pole { fill: #555; transition: fill 0.2s; }
+.tc-figure.lit .tc-disc { fill: var(--stop-red); }
+.tc-figure.lit .tc-ring { stroke: #ffffff; }
+.tc-figure.lit .tc-stop { fill: #ffffff; }
+.tc-figure.lit .tc-pole { fill: #888; }
+.tc-figure.lit { filter: drop-shadow(0 0 5px rgba(255, 213, 0, 0.4)); }
+
+.tc-picker-summary {
+  width: 100%;
+  margin-top: 8px;
+  padding-top: 10px;
+  border-top: 1px solid var(--steel-light);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: 'Space Mono', monospace;
+  font-size: 11px;
+  color: var(--concrete-dark);
+}
+.tc-picker-summary .selected-count { color: var(--safety-yellow); font-weight: 700; font-size: 13px; }
+
+/* AM/PM Time Picker */
+.time-picker {
+  display: flex;
+  gap: 6px;
+  align-items: stretch;
+}
+.time-picker select {
+  width: auto;
+  flex: 1;
+  padding: 12px 8px;
+  background: var(--steel-dark);
+  border: 2px solid var(--steel-light);
+  color: var(--white);
+  font-family: 'Space Mono', monospace;
+  font-size: 15px;
+  font-weight: 700;
+  text-align: center;
+  cursor: pointer;
+}
+.time-picker select:focus { outline: none; border-color: var(--safety-yellow); }
+.time-picker .time-sep {
+  font-family: 'Archivo Black', sans-serif;
+  font-size: 22px;
+  color: var(--concrete-dark);
+  display: flex;
+  align-items: center;
+  padding: 0 2px;
+}
+.time-picker select.ampm { flex: 0 0 56px; color: var(--safety-yellow); }
 
 .selected-date-display { background: var(--safety-yellow); color: var(--steel-dark); padding: 16px; margin-bottom: 18px; font-family: 'Space Mono', monospace; font-weight: 700; text-align: center; letter-spacing: 1px; }
 .selected-date-display.empty { background: var(--steel-light); color: var(--concrete-dark); }
@@ -298,8 +404,26 @@ footer .abn { color: var(--safety-yellow); }
 
     <form id="bookingForm">
       <div class="form-row">
-        <div class="form-group"><label>Start Time <span class="req">*</span></label><input type="time" name="start_time" id="startTime" required></div>
-        <div class="form-group"><label>Finish Time <span class="req">*</span></label><input type="time" name="finish_time" id="finishTime" required></div>
+        <div class="form-group">
+          <label>Start Time <span class="req">*</span></label>
+          <div class="time-picker">
+            <select id="startHour" required><option value="">Hr</option></select>
+            <span class="time-sep">:</span>
+            <select id="startMin" required><option value="">Min</option></select>
+            <select id="startAmPm" class="ampm" required><option value="AM">AM</option><option value="PM">PM</option></select>
+          </div>
+          <input type="hidden" name="start_time" id="startTime">
+        </div>
+        <div class="form-group">
+          <label>Finish Time <span class="req">*</span></label>
+          <div class="time-picker">
+            <select id="finishHour" required><option value="">Hr</option></select>
+            <span class="time-sep">:</span>
+            <select id="finishMin" required><option value="">Min</option></select>
+            <select id="finishAmPm" class="ampm" required><option value="AM">AM</option><option value="PM">PM</option></select>
+          </div>
+          <input type="hidden" name="finish_time" id="finishTime">
+        </div>
       </div>
 
       <div class="form-group">
@@ -321,7 +445,13 @@ footer .abn { color: var(--safety-yellow); }
 
       <div class="form-row">
         <div class="form-group"><label>Scheduler Phone <span class="req">*</span></label><input type="tel" name="scheduler_phone" placeholder="04XX XXX XXX" required></div>
-        <div class="form-group"><label>TCs Required <span class="req">*</span></label><input type="number" name="tcs_required" min="1" max="20" value="1" required></div>
+        <div class="form-group">
+          <label>TCs Required <span class="req">*</span></label>
+          <div class="tc-picker" id="tcPicker">
+            <div class="tc-picker-empty" id="tcPickerEmpty">Pick a date first</div>
+          </div>
+          <input type="hidden" name="tcs_required" id="tcsRequired" value="1">
+        </div>
       </div>
 
       <div class="form-group"><label>Special Requirements</label><textarea name="special_requirements" placeholder="e.g. yellow card required, ute needed, two-way radio..."></textarea></div>
@@ -332,7 +462,9 @@ footer .abn { color: var(--safety-yellow); }
 
       <div class="form-group">
         <label>Negotiated Rate (optional)</label>
-        <input type="number" name="negotiated_rate" id="negotiatedRate" placeholder="Leave blank to confirm at standard rate" step="0.01" min="0">
+        <div class="input-with-prefix">
+          <input type="number" name="negotiated_rate" id="negotiatedRate" placeholder="Leave blank to confirm at standard rate" step="0.01" min="0">
+        </div>
       </div>
 
       <div class="fine-print">
@@ -355,9 +487,15 @@ let viewMonth = new Date().getMonth();
 let viewYear = new Date().getFullYear();
 let bookedDates = new Set();
 let dayOverrideDates = new Set();
+let tcsAvailableMap = {}; // dateStr -> number of TCs available (default 1 if not set)
 let selectedDate = null;
 let geocodeCache = {};
 let lastGeocodeTimer = null;
+
+// Get TCs available for a date (default = 1)
+function getTCsAvailable(dateStr) {
+  return tcsAvailableMap[dateStr] || 1;
+}
 
 const NSW_PUBLIC_HOLIDAYS = new Set([
   "2026-01-01","2026-01-26","2026-04-03","2026-04-04","2026-04-05","2026-04-06",
@@ -374,6 +512,7 @@ function isNightOnly(dateStr) {
 }
 
 function detectShiftType(dateStr, startTime) {
+  // Used for display label only — the actual billing now uses time bands
   if (!dateStr || !startTime) return null;
   if (NSW_PUBLIC_HOLIDAYS.has(dateStr)) return "Public Holiday";
   const d = new Date(dateStr + 'T00:00:00');
@@ -385,6 +524,54 @@ function detectShiftType(dateStr, startTime) {
   if (totalMin >= 6*60  && totalMin < 18*60) return "Day";
   if (totalMin >= 18*60 && totalMin < 22*60) return "Afternoon";
   return "Night";
+}
+
+// ============================================================
+// TIME-BAND BILLING — splits a shift across rate bands
+// Returns { bands: [{name, rate, hours, cost}], totalLabour, totalHours, isFlat }
+// ============================================================
+function calculateBillingBands(dateStr, startTime, finishTime) {
+  if (!dateStr || !startTime || !finishTime) return null;
+
+  const totalHours = calcHours(startTime, finishTime);
+  if (totalHours <= 0) return null;
+
+  // Weekend / Public Holiday = single flat rate, no splitting
+  const isPH = NSW_PUBLIC_HOLIDAYS.has(dateStr);
+  const d = new Date(dateStr + 'T00:00:00');
+  const day = d.getDay();
+
+  if (isPH) {
+    return { bands: [{ name: "Public Holiday", rate: RATES["Public Holiday"].base, hours: totalHours, cost: totalHours * RATES["Public Holiday"].base }], totalHours, isFlat: true };
+  }
+  if (day === 6) {
+    return { bands: [{ name: "Saturday", rate: RATES.Saturday.base, hours: totalHours, cost: totalHours * RATES.Saturday.base }], totalHours, isFlat: true };
+  }
+  if (day === 0) {
+    return { bands: [{ name: "Sunday", rate: RATES.Sunday.base, hours: totalHours, cost: totalHours * RATES.Sunday.base }], totalHours, isFlat: true };
+  }
+
+  // Mon–Fri: split into Day / Afternoon / Night bands
+  // Walk minute-by-minute, classify each minute, accumulate
+  const [sh, sm] = startTime.split(':').map(Number);
+  const startMin = sh * 60 + sm; // minutes from start of day
+  const endMin = startMin + (totalHours * 60); // can exceed 24*60 if shift crosses midnight
+
+  const dayMins = { Day: 0, Afternoon: 0, Night: 0 };
+
+  for (let m = startMin; m < endMin; m++) {
+    const minOfDay = m % (24 * 60); // wrap into 0-1440
+    if (minOfDay >= 6*60 && minOfDay < 18*60) dayMins.Day++;
+    else if (minOfDay >= 18*60 && minOfDay < 22*60) dayMins.Afternoon++;
+    else dayMins.Night++;  // 10pm-6am
+  }
+
+  const bands = [];
+  if (dayMins.Day > 0)       bands.push({ name: "Day",       rate: RATES.Day.base,       hours: dayMins.Day / 60,       cost: (dayMins.Day / 60) * RATES.Day.base });
+  if (dayMins.Afternoon > 0) bands.push({ name: "Afternoon", rate: RATES.Afternoon.base, hours: dayMins.Afternoon / 60, cost: (dayMins.Afternoon / 60) * RATES.Afternoon.base });
+  if (dayMins.Night > 0)     bands.push({ name: "Night",     rate: RATES.Night.base,     hours: dayMins.Night / 60,     cost: (dayMins.Night / 60) * RATES.Night.base });
+
+  return { bands, totalHours, isFlat: false };
 }
 
 function calcHours(startTime, finishTime) {
@@ -422,13 +609,12 @@ async function geocodeAddress(address) {
 }
 
 function validateStartTime() {
-  const startInput = document.getElementById('startTime');
-  const startVal = startInput.value;
-  if (!selectedDate || !startVal) { startInput.classList.remove('invalid'); return true; }
-  if (!isNightOnly(selectedDate)) { startInput.classList.remove('invalid'); return true; }
+  const startVal = document.getElementById('startTime').value;
+  const picker = document.getElementById('startHour').closest('.time-picker');
+  if (!selectedDate || !startVal) { picker.style.borderLeft = ''; return true; }
+  if (!isNightOnly(selectedDate)) { return true; }
   const [h] = startVal.split(':').map(Number);
-  if (h < DAYJOB_MIN_START_HOUR) { startInput.classList.add('invalid'); return false; }
-  startInput.classList.remove('invalid');
+  if (h < DAYJOB_MIN_START_HOUR) { return false; }
   return true;
 }
 
@@ -453,19 +639,31 @@ async function updateCostPanel() {
     }
   }
 
-  const shiftType = detectShiftType(selectedDate, startTime);
-  if (!shiftType) {
+  const billing = calculateBillingBands(selectedDate, startTime, finishTime);
+  if (!billing) {
     panel.classList.add('empty');
-    panel.innerHTML = '<div class="empty-msg">⚠ Need date + start time to calculate</div>';
+    panel.innerHTML = '<div class="empty-msg">⚠ Need date + start + finish time to calculate</div>';
     return;
   }
 
-  const rate = RATES[shiftType];
-  const actualHours = calcHours(startTime, finishTime);
-  const billedHours = Math.max(actualHours, MIN_HOURS);
+  const actualHours = billing.totalHours;
   const minBumped = actualHours < MIN_HOURS;
 
-  const labour = billedHours * rate.base;
+  // Calculate labour from the bands
+  let labour = billing.bands.reduce((sum, b) => sum + b.cost, 0);
+
+  // 4hr min padding — bill the extra hours at the HIGHEST rate touched
+  let padHours = 0;
+  let padRate = 0;
+  if (minBumped) {
+    padHours = MIN_HOURS - actualHours;
+    padRate = Math.max(...billing.bands.map(b => b.rate));
+    labour += padHours * padRate;
+  }
+
+  const tcsRequired = parseInt(document.getElementById('tcsRequired').value) || 1;
+  labour = labour * tcsRequired;
+
   let travel = 0;
   let distanceKm = null;
   let geocodeStatus = null;
@@ -484,14 +682,34 @@ async function updateCostPanel() {
   const gst = subtotal * GST_RATE;
   const total = subtotal + gst;
 
+  // Build display
   panel.classList.remove('empty');
-  let html = `
-    <div class="cost-line label-row"><span>Shift Type</span><span style="color:var(--safety-yellow);font-weight:700;">${shiftType.toUpperCase()}</span></div>
-    <div class="cost-line detail-row"><span>${rate.label}</span><span>$${rate.base}/hr</span></div>
-    <div class="cost-line label-row"><span>Hours billed</span><span>${billedHours.toFixed(1)} hrs</span></div>
-    ${minBumped ? `<div class="cost-warning">⚠ 4-hour minimum applies (you entered ${actualHours.toFixed(1)} hrs)</div>` : ''}
-    <div class="cost-line label-row"><span>Labour</span><span>$${labour.toFixed(2)}</span></div>
-  `;
+  let html = '';
+
+  // Shift type label
+  const shiftLabel = billing.isFlat ? billing.bands[0].name.toUpperCase() : 'SPLIT (' + billing.bands.map(b => b.name.toUpperCase()).join(' + ') + ')';
+  html += `<div class="cost-line label-row"><span>Shift Type</span><span style="color:var(--safety-yellow);font-weight:700;font-size:11px;">${shiftLabel}</span></div>`;
+
+  // Each band on its own line
+  billing.bands.forEach(b => {
+    html += `<div class="cost-line detail-row"><span>${b.name} — ${b.hours.toFixed(2)}hr × $${b.rate}/hr</span><span>$${b.cost.toFixed(2)}</span></div>`;
+  });
+
+  // 4hr min padding
+  if (minBumped) {
+    html += `<div class="cost-warning">⚠ 4-hour minimum applies (you entered ${actualHours.toFixed(2)} hrs). Padding ${padHours.toFixed(2)}hr at highest rate touched ($${padRate}/hr) = $${(padHours * padRate).toFixed(2)}</div>`;
+  }
+
+  // Hours billed total
+  const billedHours = Math.max(actualHours, MIN_HOURS);
+  html += `<div class="cost-line label-row"><span>Hours billed</span><span>${billedHours.toFixed(2)} hrs</span></div>`;
+
+  // TCs multiplier
+  if (tcsRequired > 1) {
+    html += `<div class="cost-line detail-row"><span>× ${tcsRequired} TCs</span><span>—</span></div>`;
+  }
+
+  html += `<div class="cost-line label-row"><span>Labour total</span><span>$${labour.toFixed(2)}</span></div>`;
 
   if (distanceKm !== null) {
     if (distanceKm > TRAVEL_FREE_RADIUS_KM) {
@@ -517,14 +735,14 @@ async function updateCostPanel() {
   `;
 
   panel.innerHTML = html;
-  panel.dataset.shiftType = shiftType;
   panel.dataset.billedHours = billedHours;
-  panel.dataset.standardRate = rate.base;
   panel.dataset.labour = labour;
   panel.dataset.travel = travel;
   panel.dataset.distanceKm = distanceKm || '';
   panel.dataset.gst = gst;
   panel.dataset.total = total;
+  panel.dataset.shiftType = billing.isFlat ? billing.bands[0].name : 'Split';
+  panel.dataset.standardRate = billing.bands[0].rate;
 }
 
 function updateCostPanelDebounced() {
@@ -547,6 +765,14 @@ async function loadBookedDates() {
   if (CONFIG.DEMO_MODE) {
     bookedDates = new Set(getDemoBookedDates());
     dayOverrideDates = new Set();
+    // Demo: pretend a couple of dates have multiple TCs available
+    const today = new Date();
+    tcsAvailableMap = {};
+    for (let i = 0; i < 3; i++) {
+      const d = new Date(today);
+      d.setDate(today.getDate() + 4 + i*6);
+      tcsAvailableMap[d.toISOString().split('T')[0]] = 2 + i; // 2, 3, 4 TCs
+    }
     renderCalendar();
     return;
   }
@@ -555,10 +781,12 @@ async function loadBookedDates() {
     const data = await res.json();
     bookedDates = new Set(data.booked_dates || []);
     dayOverrideDates = new Set(data.day_override_dates || []);
+    tcsAvailableMap = data.tcs_available_map || {};
     renderCalendar();
   } catch (err) {
     bookedDates = new Set();
     dayOverrideDates = new Set();
+    tcsAvailableMap = {};
     renderCalendar();
   }
 }
@@ -602,8 +830,67 @@ function selectDate(dateStr) {
   updateSelectedDateDisplay();
   updateNightOnlyBanner();
   updateStartTimeConstraint();
+  updateTCsAvailable();
   updateSubmitButton();
   updateCostPanel();
+}
+
+function updateTCsAvailable() {
+  const picker = document.getElementById('tcPicker');
+  const hidden = document.getElementById('tcsRequired');
+
+  if (!selectedDate) {
+    picker.classList.remove('has-data');
+    picker.innerHTML = '<div class="tc-picker-empty">Pick a date first</div>';
+    hidden.value = '1';
+    return;
+  }
+
+  const available = getTCsAvailable(selectedDate);
+  let selected = parseInt(hidden.value) || 1;
+  if (selected > available) selected = 1; // reset if previous selection now too high
+  hidden.value = selected;
+
+  picker.classList.add('has-data');
+  picker.innerHTML = '';
+
+  // Build TC stop signs
+  for (let i = 1; i <= available; i++) {
+    const fig = document.createElement('div');
+    fig.className = 'tc-figure' + (i <= selected ? ' lit' : '');
+    fig.dataset.num = i;
+    fig.innerHTML = `
+      <svg viewBox="0 0 42 52" xmlns="http://www.w3.org/2000/svg">
+        <!-- Sign disc -->
+        <circle class="tc-disc" cx="21" cy="17" r="16"/>
+        <!-- Inner white ring (only visible when lit) -->
+        <circle class="tc-ring" cx="21" cy="17" r="12.5" fill="none" stroke-width="1"/>
+        <!-- STOP text (only visible when lit) -->
+        <text class="tc-stop" x="21" y="20" font-family="Archivo Black, sans-serif"
+              font-size="7.5" font-weight="900" text-anchor="middle">STOP</text>
+        <!-- Pole/handle -->
+        <rect class="tc-pole" x="20" y="33" width="2" height="19"/>
+      </svg>
+    `;
+    fig.addEventListener('click', () => selectTCs(i));
+    picker.appendChild(fig);
+  }
+
+  // Summary line
+  const summary = document.createElement('div');
+  summary.className = 'tc-picker-summary';
+  summary.innerHTML = `
+    <span>Tap to set how many TCs you need</span>
+    <span><span class="selected-count">${selected}</span> of ${available} available</span>
+  `;
+  picker.appendChild(summary);
+}
+
+function selectTCs(num) {
+  const hidden = document.getElementById('tcsRequired');
+  hidden.value = num;
+  updateTCsAvailable(); // re-render with new lit state
+  updateCostPanel(); // recalc cost (multiplies by TCs)
 }
 
 function updateSelectedDateDisplay() {
@@ -623,11 +910,17 @@ function updateNightOnlyBanner() {
 }
 
 function updateStartTimeConstraint() {
-  const startInput = document.getElementById('startTime');
   if (selectedDate && isNightOnly(selectedDate)) {
-    startInput.min = "16:00";
-    if (startInput.value && startInput.value < "16:00") startInput.value = "16:00";
-  } else { startInput.removeAttribute('min'); }
+    // If user has picked a start time before 4pm, bump it to 4pm
+    const currentStart = document.getElementById('startTime').value;
+    if (currentStart && currentStart < "16:00") {
+      // Set picker to 4:00 PM
+      document.getElementById('startHour').value = '4';
+      document.getElementById('startMin').value = '0';
+      document.getElementById('startAmPm').value = 'PM';
+      document.getElementById('startTime').value = '16:00';
+    }
+  }
   validateStartTime();
 }
 
@@ -642,8 +935,62 @@ function updateSubmitButton() {
   btn.textContent = '✓ Submit Booking Request';
 }
 
-document.getElementById('startTime').addEventListener('change', () => { validateStartTime(); updateSubmitButton(); updateCostPanel(); });
-document.getElementById('finishTime').addEventListener('change', updateCostPanel);
+// ============================================================
+// AM/PM TIME PICKER — populates dropdowns + syncs hidden 24h fields
+// ============================================================
+function populateTimeDropdowns() {
+  ['startHour', 'finishHour'].forEach(id => {
+    const sel = document.getElementById(id);
+    sel.innerHTML = '<option value="">Hr</option>';
+    for (let h = 1; h <= 12; h++) {
+      const opt = document.createElement('option');
+      opt.value = h;
+      opt.textContent = h.toString().padStart(2, '0');
+      sel.appendChild(opt);
+    }
+  });
+  ['startMin', 'finishMin'].forEach(id => {
+    const sel = document.getElementById(id);
+    sel.innerHTML = '<option value="">Min</option>';
+    for (let m = 0; m < 60; m += 15) {
+      const opt = document.createElement('option');
+      opt.value = m;
+      opt.textContent = m.toString().padStart(2, '0');
+      sel.appendChild(opt);
+    }
+  });
+}
+
+function ampmTo24h(hour, minute, ampm) {
+  if (!hour || minute === '' || !ampm) return '';
+  let h = parseInt(hour);
+  const m = parseInt(minute);
+  if (ampm === 'AM' && h === 12) h = 0;
+  else if (ampm === 'PM' && h !== 12) h += 12;
+  return `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}`;
+}
+
+function syncStartTime() {
+  const h = document.getElementById('startHour').value;
+  const m = document.getElementById('startMin').value;
+  const a = document.getElementById('startAmPm').value;
+  document.getElementById('startTime').value = ampmTo24h(h, m, a);
+  validateStartTime();
+  updateSubmitButton();
+  updateCostPanel();
+}
+function syncFinishTime() {
+  const h = document.getElementById('finishHour').value;
+  const m = document.getElementById('finishMin').value;
+  const a = document.getElementById('finishAmPm').value;
+  document.getElementById('finishTime').value = ampmTo24h(h, m, a);
+  updateCostPanel();
+}
+
+populateTimeDropdowns();
+['startHour','startMin','startAmPm'].forEach(id => document.getElementById(id).addEventListener('change', syncStartTime));
+['finishHour','finishMin','finishAmPm'].forEach(id => document.getElementById(id).addEventListener('change', syncFinishTime));
+
 document.getElementById('siteAddress').addEventListener('input', updateCostPanelDebounced);
 
 document.getElementById('prevMonth').addEventListener('click', () => { viewMonth--; if (viewMonth < 0) { viewMonth = 11; viewYear--; } renderCalendar(); });

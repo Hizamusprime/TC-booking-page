@@ -10,7 +10,7 @@
   // ADMIN CONFIG — change ADMIN_PASSWORD any time
   // ============================================================
   const CONFIG = {
-    ADMIN_PASSWORD: "lollipop2026",                           // ← CHANGE THIS to your password
+    ADMIN_PASSWORD: "47pass",                                  // ← CHANGE THIS to your password
     GET_ALL_DATES_URL: "https://safetytrafficcontrol.app.n8n.cloud/webhook/admin-get-dates",
     SET_DATE_URL:      "https://safetytrafficcontrol.app.n8n.cloud/webhook/admin-set-date",
     DELETE_DATE_URL:   "https://safetytrafficcontrol.app.n8n.cloud/webhook/admin-delete-date",
@@ -301,6 +301,19 @@ header .public-link:hover { color: var(--safety-yellow); border-color: var(--saf
 .action-btn.override:hover { background: var(--override-cyan); color: var(--steel-dark); }
 .action-btn.clear { border-color: var(--confirmed-green); }
 .action-btn.clear:hover { background: var(--confirmed-green); color: var(--white); }
+.action-btn.tcs { border-color: var(--safety-yellow); }
+.action-btn.tcs:hover { background: var(--safety-yellow); color: var(--steel-dark); }
+
+/* Rates Table */
+.rates-table { width: 100%; border-collapse: collapse; margin-bottom: 8px; }
+.rates-table th { text-align: left; font-family: 'Space Mono', monospace; font-size: 11px; font-weight: 700; letter-spacing: 1px; color: var(--safety-yellow); padding: 8px 12px; border-bottom: 2px solid var(--steel-light); text-transform: uppercase; }
+.rates-table td { padding: 10px 12px; border-bottom: 1px solid var(--steel-light); font-family: 'Space Mono', monospace; font-size: 13px; vertical-align: middle; }
+.rates-table tr:last-child td { border-bottom: none; }
+.rates-table .shift-name { font-weight: 700; color: var(--white); }
+.rates-table .shift-desc { color: var(--concrete-dark); font-size: 11px; }
+.rates-table input[type="number"] { width: 90px; background: var(--steel-dark); border: 1px solid var(--steel-light); color: var(--white); padding: 8px 10px; font-family: 'Space Mono', monospace; font-size: 14px; font-weight: 700; text-align: right; }
+.rates-table input[type="number"]:focus { outline: none; border-color: var(--safety-yellow); }
+.rates-table .dollar-prefix { color: var(--safety-yellow); font-weight: 700; margin-right: 4px; }
 
 .status-msg { padding: 14px; margin-top: 14px; font-family: 'Space Mono', monospace; font-weight: 700; font-size: 12px; display: none; }
 .status-msg.success { background: var(--confirmed-green); color: var(--white); display: block; }
@@ -371,6 +384,31 @@ footer { text-align: center; padding: 24px; font-family: 'Space Mono', monospace
     </div>
 
   </div>
+
+  <!-- ============ RATES MANAGER ============ -->
+  <div class="panel" style="margin-top: 32px;">
+    <div class="panel-label">Rate Card</div>
+    <h2>💰 Hourly Rates</h2>
+    <p class="panel-sub">Edit your rates here. Changes apply to all new quotes immediately.</p>
+
+    <table class="rates-table" id="ratesTable">
+      <thead>
+        <tr>
+          <th>Shift Type</th>
+          <th>Description</th>
+          <th>Rate ($/hr)</th>
+        </tr>
+      </thead>
+      <tbody id="ratesBody"></tbody>
+    </table>
+
+    <button class="action-btn clear" style="max-width: 200px; margin-top: 12px;" onclick="saveRates()">
+      <span class="icon">💾</span>
+      <span class="label-stack">Save rate card<span class="small">Apply changes</span></span>
+    </button>
+
+    <div class="status-msg" id="ratesStatusMsg"></div>
+  </div>
 </div>
 
 <footer>LUKE HEISER TRAFFIC CONTROL // Admin Panel // ABN 89 740 423 914</footer>
@@ -400,6 +438,7 @@ function showAdmin() {
   document.getElementById('loginGate').style.display = 'none';
   document.getElementById('adminMain').classList.add('visible');
   loadCalendarData();
+  loadRates();
 }
 
 // Auto-unlock if already logged in this session
@@ -412,10 +451,99 @@ if (sessionStorage.getItem('admin_unlocked') === 'true') {
 // ============================================================
 let viewMonth = new Date().getMonth();
 let viewYear = new Date().getFullYear();
-let customerBookings = new Set();   // dates with customer bookings (red hatched)
-let selfBlocks = new Set();         // dates user has blocked (grey/red)
-let dayOverrides = new Set();       // dates user has marked as day-shift OK (cyan)
+let customerBookings = new Set();
+let selfBlocks = new Set();
+let dayOverrides = new Set();
+let tcsAvailableMap = {};
 let selectedDate = null;
+
+// ============================================================
+// RATE CARD — defaults shown here; loaded from n8n in production
+// ============================================================
+const DEFAULT_RATES = {
+  Day:              { base: 50,  label: "Mon–Fri 6am–6pm" },
+  Afternoon:        { base: 60,  label: "Mon–Fri 6pm–10pm" },
+  Night:            { base: 70,  label: "Mon–Fri 10pm–6am" },
+  Saturday:         { base: 72,  label: "All day Saturday" },
+  Sunday:           { base: 87,  label: "All day Sunday" },
+  "Public Holiday": { base: 107, label: "All day (NSW PH)" }
+};
+let currentRates = JSON.parse(JSON.stringify(DEFAULT_RATES));
+
+function renderRatesTable() {
+  const body = document.getElementById('ratesBody');
+  body.innerHTML = '';
+  Object.keys(currentRates).forEach(key => {
+    const r = currentRates[key];
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td class="shift-name">${key}</td>
+      <td class="shift-desc">${r.label}</td>
+      <td><span class="dollar-prefix">$</span><input type="number" min="0" step="0.5" value="${r.base}" data-key="${key}"></td>
+    `;
+    body.appendChild(row);
+  });
+}
+
+async function loadRates() {
+  if (CONFIG.DEMO_MODE) {
+    // In demo, just use defaults (or anything saved in sessionStorage for nicer UX)
+    const saved = sessionStorage.getItem('admin_rates');
+    if (saved) {
+      try { currentRates = JSON.parse(saved); } catch (e) {}
+    }
+    renderRatesTable();
+    return;
+  }
+  try {
+    const res = await fetch(CONFIG.GET_RATES_URL || (CONFIG.GET_ALL_DATES_URL.replace('admin-get-dates', 'admin-get-rates')));
+    const data = await res.json();
+    if (data.rates) currentRates = data.rates;
+    renderRatesTable();
+  } catch (err) {
+    renderRatesTable();
+  }
+}
+
+async function saveRates() {
+  // Read current values from inputs
+  const inputs = document.querySelectorAll('#ratesBody input[type="number"]');
+  inputs.forEach(inp => {
+    const key = inp.dataset.key;
+    const val = parseFloat(inp.value);
+    if (!isNaN(val) && val >= 0) currentRates[key].base = val;
+  });
+
+  showRatesStatus('⏳ Saving rates...', 'loading');
+
+  if (CONFIG.DEMO_MODE) {
+    sessionStorage.setItem('admin_rates', JSON.stringify(currentRates));
+    setTimeout(() => {
+      showRatesStatus('✅ DEMO: Rates saved. (Real save happens via n8n once wired.)', 'success');
+    }, 400);
+    return;
+  }
+  try {
+    const res = await fetch((CONFIG.SET_RATES_URL || CONFIG.SET_DATE_URL.replace('admin-set-date', 'admin-set-rates')), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ rates: currentRates, admin_password: CONFIG.ADMIN_PASSWORD })
+    });
+    if (res.ok) showRatesStatus('✅ Rates saved', 'success');
+    else showRatesStatus('⚠ Save failed', 'error');
+  } catch (err) {
+    showRatesStatus('⚠ Network error', 'error');
+  }
+}
+
+function showRatesStatus(msg, type) {
+  const el = document.getElementById('ratesStatusMsg');
+  el.textContent = msg;
+  el.className = 'status-msg ' + type;
+  if (type === 'success') {
+    setTimeout(() => { el.className = 'status-msg'; }, 3000);
+  }
+}
 
 const NSW_PUBLIC_HOLIDAYS = new Set([
   "2026-01-01","2026-01-26","2026-04-03","2026-04-04","2026-04-05","2026-04-06",
@@ -439,6 +567,7 @@ async function loadCalendarData() {
     customerBookings = new Set();
     selfBlocks = new Set();
     dayOverrides = new Set();
+    tcsAvailableMap = {};
     for (let i = 0; i < 3; i++) {
       const d = new Date(today);
       d.setDate(today.getDate() + 3 + i*4);
@@ -452,6 +581,12 @@ async function loadCalendarData() {
     const od = new Date(today);
     od.setDate(today.getDate() + 5);
     dayOverrides.add(od.toISOString().split('T')[0]);
+    // Demo: a couple of dates with extra TCs available
+    for (let i = 0; i < 2; i++) {
+      const d = new Date(today);
+      d.setDate(today.getDate() + 10 + i*7);
+      tcsAvailableMap[d.toISOString().split('T')[0]] = 3;
+    }
     renderCalendar();
     return;
   }
@@ -461,10 +596,15 @@ async function loadCalendarData() {
     customerBookings = new Set(data.customer_bookings || []);
     selfBlocks = new Set(data.self_blocks || []);
     dayOverrides = new Set(data.day_overrides || []);
+    tcsAvailableMap = data.tcs_available_map || {};
     renderCalendar();
   } catch (err) {
     showStatus('⚠ Could not load calendar. Check n8n is online.', 'error');
   }
+}
+
+function getTCsAvailable(dateStr) {
+  return tcsAvailableMap[dateStr] || 1;
 }
 
 // ============================================================
@@ -628,6 +768,17 @@ function renderActionPanel() {
     }
   }
 
+  // TCs Available button — show on every non-customer-booked date
+  if (!isCustomer) {
+    const currentTCs = getTCsAvailable(selectedDate);
+    html += `
+      <button class="action-btn tcs" onclick="promptSetTCs()">
+        <span class="icon">👷</span>
+        <span class="label-stack">TCs available: ${currentTCs}<span class="small">Tap to change how many TCs you have on this date</span></span>
+      </button>
+    `;
+  }
+
   panel.innerHTML = html;
 }
 
@@ -699,6 +850,56 @@ async function clearDate() {
       showStatus('✅ Cleared', 'success');
     } else {
       showStatus('⚠ Clear failed', 'error');
+    }
+  } catch (err) {
+    showStatus('⚠ Network error', 'error');
+  }
+}
+
+function promptSetTCs() {
+  const current = getTCsAvailable(selectedDate);
+  const input = prompt(`How many TCs are available on ${selectedDate}?\n\n(Currently: ${current})`, current);
+  if (input === null) return;
+  const num = parseInt(input);
+  if (isNaN(num) || num < 1 || num > 20) {
+    showStatus('⚠ Enter a number between 1 and 20', 'error');
+    return;
+  }
+  setTCsAvailable(num);
+}
+
+async function setTCsAvailable(count) {
+  showStatus('⏳ Saving TCs availability...', 'loading');
+  if (CONFIG.DEMO_MODE) {
+    setTimeout(() => {
+      if (count === 1) {
+        delete tcsAvailableMap[selectedDate];
+      } else {
+        tcsAvailableMap[selectedDate] = count;
+      }
+      renderCalendar();
+      renderActionPanel();
+      showStatus(`✅ DEMO: TCs available set to ${count}`, 'success');
+    }, 400);
+    return;
+  }
+  try {
+    const res = await fetch(CONFIG.SET_DATE_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        booking_date: selectedDate,
+        booking_type: 'availability',
+        tcs_available: count,
+        admin_password: CONFIG.ADMIN_PASSWORD
+      })
+    });
+    if (res.ok) {
+      await loadCalendarData();
+      renderActionPanel();
+      showStatus(`✅ TCs available set to ${count}`, 'success');
+    } else {
+      showStatus('⚠ Save failed', 'error');
     }
   } catch (err) {
     showStatus('⚠ Network error', 'error');

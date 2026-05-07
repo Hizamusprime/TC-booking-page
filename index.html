@@ -968,7 +968,6 @@ function populateTimeDropdowns() {
     });
     sel.value = '0'; // default to :00
   });
-}
 
 // Auto-set minutes to :00 if user picks an hour but hasn't touched minutes
 ['startHour', 'finishHour'].forEach(id => {
@@ -978,16 +977,6 @@ function populateTimeDropdowns() {
     if (!minSel.value) minSel.value = '0';
   });
 });
-  ['startMin', 'finishMin'].forEach(id => {
-    const sel = document.getElementById(id);
-    sel.innerHTML = '<option value="">Min</option>';
-    for (let m = 0; m < 60; m += 15) {
-      const opt = document.createElement('option');
-      opt.value = m;
-      opt.textContent = m.toString().padStart(2, '0');
-      sel.appendChild(opt);
-    }
-  });
 }
 
 function ampmTo24h(hour, minute, ampm) {

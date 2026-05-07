@@ -7,9 +7,8 @@
 
 <script>
   const CONFIG = {
-    GET_BOOKED_DATES_URL: "https://tcbookings.app.n8n.cloud/webhook-test/get-booked-dates",
-    SUBMIT_BOOKING_URL:  "https://tcbookings.app.n8n.cloud/webhook-test/submit-booking",
-    DEMO_MODE: true
+    SUPABASE_URL: "https://ulmwldoyhapqtcuhzkcr.supabase.co",
+    SUPABASE_KEY: "sb_publishable_RSReGSAfH8AYvVVwuZE9tA_2MrQ_C_q"
   };
 
   const RATES = {
@@ -31,6 +30,9 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Archivo+Narrow:wght@700;800&family=Space+Mono:wght@400;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<!-- Supabase JS SDK -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 
 <style>
 :root {
@@ -750,40 +752,45 @@ function updateCostPanelDebounced() {
   lastGeocodeTimer = setTimeout(updateCostPanel, 600);
 }
 
+// Initialize Supabase client
+const supabase = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_KEY);
+
 function getDemoBookedDates() {
-  const today = new Date();
-  const fakeBookings = [];
-  for (let i = 0; i < 8; i++) {
-    const d = new Date(today);
-    d.setDate(today.getDate() + Math.floor(Math.random() * 45) + 2);
-    fakeBookings.push(d.toISOString().split('T')[0]);
-  }
-  return fakeBookings;
+  // Kept for fallback only — no longer used in production
+  return [];
 }
 
 async function loadBookedDates() {
-  if (CONFIG.DEMO_MODE) {
-    bookedDates = new Set(getDemoBookedDates());
-    dayOverrideDates = new Set();
-    // Demo: pretend a couple of dates have multiple TCs available
-    const today = new Date();
-    tcsAvailableMap = {};
-    for (let i = 0; i < 3; i++) {
-      const d = new Date(today);
-      d.setDate(today.getDate() + 4 + i*6);
-      tcsAvailableMap[d.toISOString().split('T')[0]] = 2 + i; // 2, 3, 4 TCs
-    }
-    renderCalendar();
-    return;
-  }
   try {
-    const res = await fetch(CONFIG.GET_BOOKED_DATES_URL);
-    const data = await res.json();
-    bookedDates = new Set(data.booked_dates || []);
-    dayOverrideDates = new Set(data.day_override_dates || []);
-    tcsAvailableMap = data.tcs_available_map || {};
+    const { data, error } = await supabase
+      .from('bookings')
+      .select('booking_date, booking_type, status, tcs_required');
+
+    if (error) throw error;
+
+    bookedDates = new Set();
+    dayOverrideDates = new Set();
+    tcsAvailableMap = {};
+
+    (data || []).forEach(r => {
+      const date = r.booking_date;
+      const type = r.booking_type || 'customer';
+      const status = r.status;
+
+      if ((type === 'customer' || type === 'self_block') && status !== 'Cancelled') {
+        bookedDates.add(date);
+      }
+      if (type === 'day_override') {
+        dayOverrideDates.add(date);
+      }
+      if (type === 'availability') {
+        tcsAvailableMap[date] = r.tcs_required || 1;
+      }
+    });
+
     renderCalendar();
   } catch (err) {
+    console.error('Failed to load bookings:', err);
     bookedDates = new Set();
     dayOverrideDates = new Set();
     tcsAvailableMap = {};
@@ -1044,11 +1051,30 @@ document.getElementById('bookingForm').addEventListener('submit', async (e) => {
   status.className = 'status-msg loading';
   status.textContent = '⏳ Locking your date...';
 
-  if (CONFIG.DEMO_MODE) {
-    setTimeout(() => {
+  try {
+    const { data, error } = await supabase
+      .from('bookings')
+      .insert([payload])
+      .select();
+
+    if (error) {
+      // Unique constraint violation = date already booked
+      if (error.code === '23505' || (error.message && error.message.toLowerCase().includes('duplicate'))) {
+        status.className = 'status-msg error';
+        status.textContent = '⚠ Sorry, that date just got booked. Please pick another.';
+        await loadBookedDates();
+        btn.disabled = false;
+        btn.textContent = '✓ Submit Booking Request';
+      } else {
+        status.className = 'status-msg error';
+        status.textContent = '⚠ ' + (error.message || 'Could not submit booking. Please call/text 0433 264 319.');
+        btn.disabled = false;
+        btn.textContent = '✓ Submit Booking Request';
+      }
+    } else {
       status.className = 'status-msg success';
       const totalDisplay = payload.standard_total ? ` Quote: $${payload.standard_total.toFixed(2)} incl GST.` : '';
-      status.textContent = `✅ DEMO: Booking would be confirmed.${totalDisplay} Set DEMO_MODE = false to wire to n8n.`;
+      status.textContent = `✅ Booking confirmed!${totalDisplay} Luke will reach out within a few hours.`;
       bookedDates.add(selectedDate);
       selectedDate = null;
       renderCalendar();
@@ -1059,38 +1085,9 @@ document.getElementById('bookingForm').addEventListener('submit', async (e) => {
       updateCostPanel();
       btn.disabled = true;
       btn.textContent = '⚠ Pick a date first';
-    }, 800);
-    return;
-  }
-
-  try {
-    const res = await fetch(CONFIG.SUBMIT_BOOKING_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-    const data = await res.json();
-    if (res.ok && data.success) {
-      status.className = 'status-msg success';
-      status.textContent = '✅ Booking confirmed! Luke will reach out within a few hours.';
-      bookedDates.add(selectedDate);
-      selectedDate = null;
-      renderCalendar();
-      updateSelectedDateDisplay();
-      updateNightOnlyBanner();
-      updateStartTimeConstraint();
-      e.target.reset();
-      updateCostPanel();
-      btn.disabled = true;
-      btn.textContent = '⚠ Pick a date first';
-    } else {
-      status.className = 'status-msg error';
-      status.textContent = '⚠ ' + (data.message || 'That date just got booked. Please pick another.');
-      await loadBookedDates();
-      btn.disabled = false;
-      btn.textContent = '✓ Submit Booking Request';
     }
   } catch (err) {
+    console.error('Booking error:', err);
     status.className = 'status-msg error';
     status.textContent = '⚠ Network error. Please call/text 0433 264 319 directly.';
     btn.disabled = false;

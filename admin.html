@@ -10,19 +10,17 @@
   // ADMIN CONFIG — change ADMIN_PASSWORD any time
   // ============================================================
   const CONFIG = {
-    ADMIN_PASSWORD: "47pass",                                  // ← CHANGE THIS to your password
-    GET_ALL_DATES_URL: "https://tcbookings.app.n8n.cloud/webhook-test/admin-get-dates",
-    SET_DATE_URL:      "https://tcbookings.app.n8n.cloud/webhook-test/admin-set-date",
-    DELETE_DATE_URL:   "https://tcbookings.app.n8n.cloud/webhook-test/admin-delete-date",
-    GET_RATES_URL:     "https://tcbookings.app.n8n.cloud/webhook-test/admin-get-rates",
-    SET_RATES_URL:     "https://tcbookings.app.n8n.cloud/webhook-test/admin-set-rates",
-    DEMO_MODE: true                                            // false when n8n is wired
+    SUPABASE_URL: "https://ulmwldoyhapqtcuhzkcr.supabase.co",
+    SUPABASE_KEY: "sb_publishable_RSReGSAfH8AYvVVwuZE9tA_2MrQ_C_q"
   };
 </script>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Space+Mono:wght@400;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<!-- Supabase JS SDK -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 
 <style>
 :root {
@@ -331,17 +329,21 @@ footer { text-align: center; padding: 24px; font-family: 'Space Mono', monospace
 
 <header>
   <div class="logo">ADMIN<span class="accent"> // </span>LUKE HEISER TC</div>
-  <a href="index.html" class="public-link">← Back to public site</a>
+  <div style="display:flex; gap:8px; align-items:center;">
+    <a href="index.html" class="public-link">← Back to public site</a>
+    <a href="#" class="public-link" onclick="signOut(); return false;">Sign out</a>
+  </div>
 </header>
 
 <!-- ============ LOGIN GATE ============ -->
 <div class="login-gate" id="loginGate">
   <div class="login-card">
     <h1>🔒 Admin Access</h1>
-    <p class="sub">Enter password to manage your calendar.</p>
-    <input type="password" id="passwordInput" placeholder="PASSWORD" autocomplete="off" autofocus>
-    <button onclick="attemptLogin()">UNLOCK</button>
-    <div class="login-error" id="loginError">⚠ Wrong password.</div>
+    <p class="sub">Sign in with your Supabase admin email + password.</p>
+    <input type="email" id="emailInput" placeholder="EMAIL" autocomplete="email" style="margin-bottom: 12px;">
+    <input type="password" id="passwordInput" placeholder="PASSWORD" autocomplete="current-password">
+    <button onclick="attemptLogin()">SIGN IN</button>
+    <div class="login-error" id="loginError">⚠ Wrong email or password.</div>
   </div>
 </div>
 
@@ -416,24 +418,39 @@ footer { text-align: center; padding: 24px; font-family: 'Space Mono', monospace
 <footer>LUKE HEISER TRAFFIC CONTROL // Admin Panel // ABN 89 740 423 914</footer>
 
 <script>
+// Initialize Supabase client
+const supabase = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_KEY);
+
 // ============================================================
-// LOGIN
+// LOGIN — uses real Supabase Auth
 // ============================================================
-function attemptLogin() {
-  const input = document.getElementById('passwordInput');
+async function attemptLogin() {
+  const email = document.getElementById('emailInput').value.trim();
+  const password = document.getElementById('passwordInput').value;
   const error = document.getElementById('loginError');
-  if (input.value === CONFIG.ADMIN_PASSWORD) {
-    sessionStorage.setItem('admin_unlocked', 'true');
-    showAdmin();
-  } else {
+
+  if (!email || !password) {
+    error.textContent = '⚠ Enter email + password';
     error.classList.add('visible');
-    input.value = '';
-    input.focus();
+    return;
   }
+
+  const { data, error: authError } = await supabase.auth.signInWithPassword({ email, password });
+  if (authError) {
+    error.textContent = '⚠ ' + (authError.message || 'Wrong email or password.');
+    error.classList.add('visible');
+    document.getElementById('passwordInput').value = '';
+    return;
+  }
+
+  showAdmin();
 }
 
 document.getElementById('passwordInput').addEventListener('keypress', (e) => {
   if (e.key === 'Enter') attemptLogin();
+});
+document.getElementById('emailInput').addEventListener('keypress', (e) => {
+  if (e.key === 'Enter') document.getElementById('passwordInput').focus();
 });
 
 function showAdmin() {
@@ -443,10 +460,11 @@ function showAdmin() {
   loadRates();
 }
 
-// Auto-unlock if already logged in this session
-if (sessionStorage.getItem('admin_unlocked') === 'true') {
-  showAdmin();
-}
+// Auto-unlock if already logged in (Supabase session is persistent)
+(async () => {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (session) showAdmin();
+})();
 
 // ============================================================
 // STATE
@@ -488,21 +506,19 @@ function renderRatesTable() {
 }
 
 async function loadRates() {
-  if (CONFIG.DEMO_MODE) {
-    // In demo, just use defaults (or anything saved in sessionStorage for nicer UX)
-    const saved = sessionStorage.getItem('admin_rates');
-    if (saved) {
-      try { currentRates = JSON.parse(saved); } catch (e) {}
+  try {
+    const { data, error } = await supabase
+      .from('rate_card')
+      .select('rates')
+      .eq('id', 1)
+      .single();
+
+    if (!error && data && data.rates) {
+      currentRates = data.rates;
     }
     renderRatesTable();
-    return;
-  }
-  try {
-    const res = await fetch(CONFIG.GET_RATES_URL || (CONFIG.GET_ALL_DATES_URL.replace('admin-get-dates', 'admin-get-rates')));
-    const data = await res.json();
-    if (data.rates) currentRates = data.rates;
-    renderRatesTable();
   } catch (err) {
+    console.error(err);
     renderRatesTable();
   }
 }
@@ -518,23 +534,17 @@ async function saveRates() {
 
   showRatesStatus('⏳ Saving rates...', 'loading');
 
-  if (CONFIG.DEMO_MODE) {
-    sessionStorage.setItem('admin_rates', JSON.stringify(currentRates));
-    setTimeout(() => {
-      showRatesStatus('✅ DEMO: Rates saved. (Real save happens via n8n once wired.)', 'success');
-    }, 400);
-    return;
-  }
   try {
-    const res = await fetch((CONFIG.SET_RATES_URL || CONFIG.SET_DATE_URL.replace('admin-set-date', 'admin-set-rates')), {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ rates: currentRates, admin_password: CONFIG.ADMIN_PASSWORD })
-    });
-    if (res.ok) showRatesStatus('✅ Rates saved', 'success');
-    else showRatesStatus('⚠ Save failed', 'error');
+    const { error } = await supabase
+      .from('rate_card')
+      .update({ rates: currentRates, updated_at: new Date().toISOString() })
+      .eq('id', 1);
+
+    if (error) throw error;
+    showRatesStatus('✅ Rates saved', 'success');
   } catch (err) {
-    showRatesStatus('⚠ Network error', 'error');
+    console.error(err);
+    showRatesStatus('⚠ Save failed: ' + err.message, 'error');
   }
 }
 
@@ -563,45 +573,38 @@ function isWeekday(dateStr) {
 // LOAD DATA — from n8n or demo
 // ============================================================
 async function loadCalendarData() {
-  if (CONFIG.DEMO_MODE) {
-    // Demo: a couple of fake bookings, blocks, and overrides
-    const today = new Date();
+  try {
+    const { data, error } = await supabase
+      .from('bookings')
+      .select('booking_date, booking_type, status, tcs_required');
+
+    if (error) throw error;
+
     customerBookings = new Set();
     selfBlocks = new Set();
     dayOverrides = new Set();
     tcsAvailableMap = {};
-    for (let i = 0; i < 3; i++) {
-      const d = new Date(today);
-      d.setDate(today.getDate() + 3 + i*4);
-      customerBookings.add(d.toISOString().split('T')[0]);
-    }
-    for (let i = 0; i < 2; i++) {
-      const d = new Date(today);
-      d.setDate(today.getDate() + 7 + i*5);
-      selfBlocks.add(d.toISOString().split('T')[0]);
-    }
-    const od = new Date(today);
-    od.setDate(today.getDate() + 5);
-    dayOverrides.add(od.toISOString().split('T')[0]);
-    // Demo: a couple of dates with extra TCs available
-    for (let i = 0; i < 2; i++) {
-      const d = new Date(today);
-      d.setDate(today.getDate() + 10 + i*7);
-      tcsAvailableMap[d.toISOString().split('T')[0]] = 3;
-    }
-    renderCalendar();
-    return;
-  }
-  try {
-    const res = await fetch(CONFIG.GET_ALL_DATES_URL);
-    const data = await res.json();
-    customerBookings = new Set(data.customer_bookings || []);
-    selfBlocks = new Set(data.self_blocks || []);
-    dayOverrides = new Set(data.day_overrides || []);
-    tcsAvailableMap = data.tcs_available_map || {};
+
+    (data || []).forEach(r => {
+      const date = r.booking_date;
+      const type = r.booking_type || 'customer';
+      const status = r.status;
+
+      if (type === 'customer' && status !== 'Cancelled') {
+        customerBookings.add(date);
+      } else if (type === 'self_block') {
+        selfBlocks.add(date);
+      } else if (type === 'day_override') {
+        dayOverrides.add(date);
+      } else if (type === 'availability') {
+        tcsAvailableMap[date] = r.tcs_required || 1;
+      }
+    });
+
     renderCalendar();
   } catch (err) {
-    showStatus('⚠ Could not load calendar. Check n8n is online.', 'error');
+    console.error(err);
+    showStatus('⚠ Could not load calendar: ' + err.message, 'error');
   }
 }
 
@@ -789,72 +792,53 @@ function renderActionPanel() {
 // ============================================================
 async function setDate(type) {
   showStatus('⏳ Saving...', 'loading');
-  if (CONFIG.DEMO_MODE) {
-    setTimeout(() => {
-      // Clear other states for this date first
-      selfBlocks.delete(selectedDate);
-      dayOverrides.delete(selectedDate);
-      // Apply new state
-      if (type === 'self_block') selfBlocks.add(selectedDate);
-      if (type === 'day_override') dayOverrides.add(selectedDate);
-      renderCalendar();
-      renderActionPanel();
-      showStatus(`✅ DEMO: ${type === 'self_block' ? 'Date blocked' : 'Day override applied'} for ${selectedDate}`, 'success');
-    }, 500);
-    return;
-  }
   try {
-    const res = await fetch(CONFIG.SET_DATE_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
+    // First, clear any existing admin row of this type for this date
+    await supabase
+      .from('bookings')
+      .delete()
+      .eq('booking_date', selectedDate)
+      .eq('booking_type', type);
+
+    // Insert the new admin row
+    const { error } = await supabase
+      .from('bookings')
+      .insert([{
         booking_date: selectedDate,
         booking_type: type,
-        admin_password: CONFIG.ADMIN_PASSWORD
-      })
-    });
-    if (res.ok) {
-      await loadCalendarData();
-      renderActionPanel();
-      showStatus(`✅ ${type === 'self_block' ? 'Date blocked' : 'Day override applied'}`, 'success');
-    } else {
-      showStatus('⚠ Save failed', 'error');
-    }
+        status: 'Confirmed',
+        tcs_required: 1
+      }]);
+
+    if (error) throw error;
+
+    await loadCalendarData();
+    renderActionPanel();
+    showStatus(`✅ ${type === 'self_block' ? 'Date blocked' : 'Day override applied'}`, 'success');
   } catch (err) {
-    showStatus('⚠ Network error', 'error');
+    console.error(err);
+    showStatus('⚠ Save failed: ' + err.message, 'error');
   }
 }
 
 async function clearDate() {
   showStatus('⏳ Clearing...', 'loading');
-  if (CONFIG.DEMO_MODE) {
-    setTimeout(() => {
-      selfBlocks.delete(selectedDate);
-      dayOverrides.delete(selectedDate);
-      renderCalendar();
-      renderActionPanel();
-      showStatus(`✅ DEMO: Cleared ${selectedDate}`, 'success');
-    }, 500);
-    return;
-  }
   try {
-    const res = await fetch(CONFIG.DELETE_DATE_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        booking_date: selectedDate,
-        admin_password: CONFIG.ADMIN_PASSWORD
-      })
-    });
-    if (res.ok) {
-      await loadCalendarData();
-      renderActionPanel();
-      showStatus('✅ Cleared', 'success');
-    } else {
-      showStatus('⚠ Clear failed', 'error');
-    }
+    // Delete all admin rows for this date (but never customer bookings — RLS protects that)
+    const { error } = await supabase
+      .from('bookings')
+      .delete()
+      .eq('booking_date', selectedDate)
+      .neq('booking_type', 'customer');
+
+    if (error) throw error;
+
+    await loadCalendarData();
+    renderActionPanel();
+    showStatus('✅ Cleared', 'success');
   } catch (err) {
-    showStatus('⚠ Network error', 'error');
+    console.error(err);
+    showStatus('⚠ Clear failed: ' + err.message, 'error');
   }
 }
 
@@ -872,39 +856,33 @@ function promptSetTCs() {
 
 async function setTCsAvailable(count) {
   showStatus('⏳ Saving TCs availability...', 'loading');
-  if (CONFIG.DEMO_MODE) {
-    setTimeout(() => {
-      if (count === 1) {
-        delete tcsAvailableMap[selectedDate];
-      } else {
-        tcsAvailableMap[selectedDate] = count;
-      }
-      renderCalendar();
-      renderActionPanel();
-      showStatus(`✅ DEMO: TCs available set to ${count}`, 'success');
-    }, 400);
-    return;
-  }
   try {
-    const res = await fetch(CONFIG.SET_DATE_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        booking_date: selectedDate,
-        booking_type: 'availability',
-        tcs_available: count,
-        admin_password: CONFIG.ADMIN_PASSWORD
-      })
-    });
-    if (res.ok) {
-      await loadCalendarData();
-      renderActionPanel();
-      showStatus(`✅ TCs available set to ${count}`, 'success');
-    } else {
-      showStatus('⚠ Save failed', 'error');
+    // Delete any existing availability row for this date
+    await supabase
+      .from('bookings')
+      .delete()
+      .eq('booking_date', selectedDate)
+      .eq('booking_type', 'availability');
+
+    // Only insert if count > 1 (default is 1, no row needed)
+    if (count > 1) {
+      const { error } = await supabase
+        .from('bookings')
+        .insert([{
+          booking_date: selectedDate,
+          booking_type: 'availability',
+          status: 'Confirmed',
+          tcs_required: count
+        }]);
+      if (error) throw error;
     }
+
+    await loadCalendarData();
+    renderActionPanel();
+    showStatus(`✅ TCs available set to ${count}`, 'success');
   } catch (err) {
-    showStatus('⚠ Network error', 'error');
+    console.error(err);
+    showStatus('⚠ Save failed: ' + err.message, 'error');
   }
 }
 
@@ -920,6 +898,11 @@ function showStatus(msg, type) {
 // ============================================================
 // MONTH NAV
 // ============================================================
+async function signOut() {
+  await supabase.auth.signOut();
+  location.reload();
+}
+
 document.getElementById('prevMonth').addEventListener('click', () => {
   viewMonth--; if (viewMonth < 0) { viewMonth = 11; viewYear--; }
   renderCalendar();

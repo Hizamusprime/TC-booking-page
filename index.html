@@ -960,10 +960,11 @@ function populateTimeDropdowns() {
   ['startMin', 'finishMin'].forEach(id => {
     const sel = document.getElementById(id);
     sel.innerHTML = '';
-    [0, 30].forEach(m => {
+    [0, 30].forEach((m, idx) => {
       const opt = document.createElement('option');
       opt.value = m;
       opt.textContent = m.toString().padStart(2, '0');
+      if (idx === 0) opt.defaultSelected = true;
       sel.appendChild(opt);
     });
     sel.value = '0'; // default to :00
@@ -990,7 +991,7 @@ function ampmTo24h(hour, minute, ampm) {
 
 function syncStartTime() {
   const h = document.getElementById('startHour').value;
-  const m = document.getElementById('startMin').value;
+  const m = document.getElementById('startMin').value || '0';
   const a = document.getElementById('startAmPm').value;
   document.getElementById('startTime').value = ampmTo24h(h, m, a);
   validateStartTime();
@@ -999,7 +1000,7 @@ function syncStartTime() {
 }
 function syncFinishTime() {
   const h = document.getElementById('finishHour').value;
-  const m = document.getElementById('finishMin').value;
+  const m = document.getElementById('finishMin').value || '0';
   const a = document.getElementById('finishAmPm').value;
   document.getElementById('finishTime').value = ampmTo24h(h, m, a);
   updateCostPanel();
@@ -1093,6 +1094,7 @@ document.getElementById('bookingForm').addEventListener('submit', async (e) => {
       updateNightOnlyBanner();
       updateStartTimeConstraint();
       e.target.reset();
+      populateTimeDropdowns(); // re-init dropdowns after reset clears them
       updateCostPanel();
       btn.disabled = true;
       btn.textContent = '⚠ Pick a date first';
@@ -1107,6 +1109,14 @@ document.getElementById('bookingForm').addEventListener('submit', async (e) => {
 });
 
 loadBookedDates();
+
+// Live calendar — re-fetch whenever any booking row changes
+supabase
+  .channel('bookings-live')
+  .on('postgres_changes', { event: '*', schema: 'public', table: 'bookings' }, () => {
+    loadBookedDates();
+  })
+  .subscribe();
 </script>
 
 </body>

@@ -956,6 +956,28 @@ function populateTimeDropdowns() {
       sel.appendChild(opt);
     }
   });
+  // Minute dropdowns: only 00 and 30, default to 00
+  ['startMin', 'finishMin'].forEach(id => {
+    const sel = document.getElementById(id);
+    sel.innerHTML = '';
+    [0, 30].forEach(m => {
+      const opt = document.createElement('option');
+      opt.value = m;
+      opt.textContent = m.toString().padStart(2, '0');
+      sel.appendChild(opt);
+    });
+    sel.value = '0'; // default to :00
+  });
+}
+
+// Auto-set minutes to :00 if user picks an hour but hasn't touched minutes
+['startHour', 'finishHour'].forEach(id => {
+  document.getElementById(id).addEventListener('change', () => {
+    const minId = id.replace('Hour', 'Min');
+    const minSel = document.getElementById(minId);
+    if (!minSel.value) minSel.value = '0';
+  });
+});
   ['startMin', 'finishMin'].forEach(id => {
     const sel = document.getElementById(id);
     sel.innerHTML = '<option value="">Min</option>';

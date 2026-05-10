@@ -485,6 +485,7 @@ footer .abn { color: var(--safety-yellow); }
 </footer>
 
 <script>
+window.addEventListener('load', () => {
 let viewMonth = new Date().getMonth();
 let viewYear = new Date().getFullYear();
 let bookedDates = new Set();
@@ -1107,6 +1108,7 @@ document.getElementById('bookingForm').addEventListener('submit', async (e) => {
 });
 
 loadBookedDates();
+});
 </script>
 
 </body>

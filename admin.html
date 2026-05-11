@@ -6,9 +6,6 @@
 <title>Admin // Luke Heiser TC</title>
 
 <script>
-  // ============================================================
-  // ADMIN CONFIG — change ADMIN_PASSWORD any time
-  // ============================================================
   const CONFIG = {
     SUPABASE_URL: "https://ulmwldoyhapqtcuhzkcr.supabase.co",
     SUPABASE_KEY: "sb_publishable_RSReGSAfH8AYvVVwuZE9tA_2MrQ_C_q"
@@ -19,7 +16,6 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Space+Mono:wght@400;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-<!-- Supabase JS SDK -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 
 <style>
@@ -39,262 +35,71 @@
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: 'Manrope', sans-serif; background: var(--steel-dark); color: var(--white); line-height: 1.5; min-height: 100vh; }
-
 .hazard-stripe { height: 12px; background: repeating-linear-gradient(-45deg, var(--warning-red) 0, var(--warning-red) 16px, var(--steel-dark) 16px, var(--steel-dark) 32px); }
-
 header { background: var(--steel-dark); padding: 18px 24px; border-bottom: 3px solid var(--warning-red); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
 header .logo { font-family: 'Archivo Black', sans-serif; font-size: 18px; letter-spacing: -0.3px; text-transform: uppercase; }
 header .logo .accent { color: var(--warning-red); }
 header .public-link { font-family: 'Space Mono', monospace; font-size: 12px; color: var(--concrete-dark); text-decoration: none; padding: 6px 12px; border: 1px solid var(--steel-light); }
 header .public-link:hover { color: var(--safety-yellow); border-color: var(--safety-yellow); }
-
-/* ============ LOGIN GATE ============ */
-.login-gate {
-  min-height: calc(100vh - 64px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 32px;
-}
-.login-card {
-  background: var(--steel);
-  border: 2px solid var(--steel-light);
-  padding: 40px;
-  max-width: 400px;
-  width: 100%;
-  text-align: center;
-}
-.login-card h1 {
-  font-family: 'Archivo Black', sans-serif;
-  font-size: 32px;
-  text-transform: uppercase;
-  letter-spacing: -0.5px;
-  margin-bottom: 8px;
-}
-.login-card .sub {
-  font-family: 'Space Mono', monospace;
-  font-size: 12px;
-  color: var(--concrete-dark);
-  margin-bottom: 24px;
-}
-.login-card input {
-  width: 100%;
-  background: var(--steel-dark);
-  border: 2px solid var(--steel-light);
-  color: var(--white);
-  padding: 14px;
-  font-family: 'Space Mono', monospace;
-  font-size: 16px;
-  margin-bottom: 16px;
-  text-align: center;
-  letter-spacing: 2px;
-}
+.login-gate { min-height: calc(100vh - 64px); display: flex; align-items: center; justify-content: center; padding: 32px; }
+.login-card { background: var(--steel); border: 2px solid var(--steel-light); padding: 40px; max-width: 400px; width: 100%; text-align: center; }
+.login-card h1 { font-family: 'Archivo Black', sans-serif; font-size: 32px; text-transform: uppercase; letter-spacing: -0.5px; margin-bottom: 8px; }
+.login-card .sub { font-family: 'Space Mono', monospace; font-size: 12px; color: var(--concrete-dark); margin-bottom: 24px; }
+.login-card input { width: 100%; background: var(--steel-dark); border: 2px solid var(--steel-light); color: var(--white); padding: 14px; font-family: 'Space Mono', monospace; font-size: 16px; margin-bottom: 16px; text-align: center; letter-spacing: 2px; }
 .login-card input:focus { outline: none; border-color: var(--safety-yellow); }
-.login-card button {
-  width: 100%;
-  background: var(--safety-yellow);
-  color: var(--steel-dark);
-  border: none;
-  padding: 16px;
-  font-family: 'Archivo Black', sans-serif;
-  font-size: 16px;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  cursor: pointer;
-  transition: all 0.15s;
-  box-shadow: var(--shadow);
-}
+.login-card button { width: 100%; background: var(--safety-yellow); color: var(--steel-dark); border: none; padding: 16px; font-family: 'Archivo Black', sans-serif; font-size: 16px; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; transition: all 0.15s; box-shadow: var(--shadow); }
 .login-card button:hover { transform: translate(-2px, -2px); box-shadow: 8px 8px 0 0 rgba(0,0,0,0.85); }
-.login-error {
-  background: var(--warning-red);
-  color: var(--white);
-  padding: 12px;
-  margin-top: 16px;
-  font-family: 'Space Mono', monospace;
-  font-size: 12px;
-  display: none;
-}
+.login-error { background: var(--warning-red); color: var(--white); padding: 12px; margin-top: 16px; font-family: 'Space Mono', monospace; font-size: 12px; display: none; }
 .login-error.visible { display: block; }
-
-/* ============ ADMIN MAIN ============ */
 .admin-main { max-width: 1100px; margin: 0 auto; padding: 32px; display: none; }
 .admin-main.visible { display: block; }
-
-.admin-title {
-  font-family: 'Archivo Black', sans-serif;
-  font-size: 32px;
-  text-transform: uppercase;
-  letter-spacing: -0.5px;
-  margin-bottom: 8px;
-}
-.admin-subtitle {
-  font-family: 'Space Mono', monospace;
-  font-size: 13px;
-  color: var(--concrete-dark);
-  margin-bottom: 32px;
-}
-
-.admin-grid {
-  display: grid;
-  grid-template-columns: 2fr 1fr;
-  gap: 32px;
-}
+.admin-title { font-family: 'Archivo Black', sans-serif; font-size: 32px; text-transform: uppercase; letter-spacing: -0.5px; margin-bottom: 8px; }
+.admin-subtitle { font-family: 'Space Mono', monospace; font-size: 13px; color: var(--concrete-dark); margin-bottom: 32px; }
+.admin-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 32px; }
 @media (max-width: 900px) { .admin-grid { grid-template-columns: 1fr; } }
-
-.panel {
-  background: var(--steel);
-  border: 2px solid var(--steel-light);
-  padding: 28px;
-  position: relative;
-}
-.panel-label {
-  position: absolute;
-  top: -12px;
-  left: 20px;
-  background: var(--warning-red);
-  color: var(--white);
-  font-family: 'Space Mono', monospace;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 2px;
-  padding: 4px 10px;
-  text-transform: uppercase;
-}
-.panel h2 {
-  font-family: 'Archivo Black', sans-serif;
-  font-size: 22px;
-  text-transform: uppercase;
-  letter-spacing: -0.5px;
-  margin-bottom: 8px;
-}
-.panel .panel-sub {
-  font-family: 'Space Mono', monospace;
-  font-size: 11px;
-  color: var(--concrete-dark);
-  margin-bottom: 20px;
-}
-
+.panel { background: var(--steel); border: 2px solid var(--steel-light); padding: 28px; position: relative; }
+.panel-label { position: absolute; top: -12px; left: 20px; background: var(--warning-red); color: var(--white); font-family: 'Space Mono', monospace; font-size: 10px; font-weight: 700; letter-spacing: 2px; padding: 4px 10px; text-transform: uppercase; }
+.panel h2 { font-family: 'Archivo Black', sans-serif; font-size: 22px; text-transform: uppercase; letter-spacing: -0.5px; margin-bottom: 8px; }
+.panel .panel-sub { font-family: 'Space Mono', monospace; font-size: 11px; color: var(--concrete-dark); margin-bottom: 20px; }
 .cal-controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
 .cal-controls button { background: var(--steel-light); border: none; color: var(--white); font-family: 'Space Mono', monospace; font-weight: 700; padding: 8px 16px; cursor: pointer; }
 .cal-controls button:hover { background: var(--safety-yellow); color: var(--steel-dark); }
 .cal-controls .month-label { font-family: 'Archivo Black', sans-serif; font-size: 16px; text-transform: uppercase; letter-spacing: 1px; }
-
 .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
 .cal-day-name { font-family: 'Space Mono', monospace; font-size: 10px; font-weight: 700; text-align: center; color: var(--concrete-dark); letter-spacing: 1px; padding: 8px 0; }
-.cal-day {
-  aspect-ratio: 1;
-  border: 1px solid var(--steel-light);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: 'Space Mono', monospace;
-  font-weight: 700;
-  font-size: 14px;
-  cursor: pointer;
-  transition: all 0.15s;
-  position: relative;
-  background: var(--steel-dark);
-}
+.cal-day { aspect-ratio: 1; border: 1px solid var(--steel-light); display: flex; align-items: center; justify-content: center; font-family: 'Space Mono', monospace; font-weight: 700; font-size: 14px; cursor: pointer; transition: all 0.15s; position: relative; background: var(--steel-dark); }
 .cal-day.empty { border-color: transparent; cursor: default; background: transparent; }
 .cal-day.past { color: var(--steel-light); cursor: not-allowed; opacity: 0.4; }
 .cal-day.today { border-color: var(--safety-yellow); border-width: 2px; }
 .cal-day:hover:not(.empty):not(.past) { transform: scale(1.05); border-color: var(--safety-yellow); }
 .cal-day.selected { box-shadow: 0 0 0 3px var(--steel-dark), 0 0 0 5px var(--safety-yellow); }
-
-/* Status icons in top-right corner */
-.cal-day .status-icon {
-  position: absolute;
-  top: 2px;
-  right: 3px;
-  font-size: 11px;
-  pointer-events: none;
-}
-
-/* Coloured states */
-.cal-day.customer-booked {
-  background: repeating-linear-gradient(-45deg, var(--warning-red) 0, var(--warning-red) 4px, var(--steel-dark) 4px, var(--steel-dark) 8px);
-  color: var(--concrete-dark);
-}
-.cal-day.self-blocked {
-  background: var(--steel-light);
-  color: var(--warning-red);
-  border-color: var(--warning-red);
-}
-.cal-day.day-override {
-  background: var(--steel-dark);
-  color: var(--override-cyan);
-  border-color: var(--override-cyan);
-  border-width: 2px;
-}
-
-.cal-legend {
-  margin-top: 18px;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-  font-family: 'Space Mono', monospace;
-  font-size: 11px;
-  color: var(--concrete-dark);
-}
+.cal-day .status-icon { position: absolute; top: 2px; right: 3px; font-size: 11px; pointer-events: none; }
+.cal-day.customer-booked { background: repeating-linear-gradient(-45deg, var(--warning-red) 0, var(--warning-red) 4px, var(--steel-dark) 4px, var(--steel-dark) 8px); color: var(--concrete-dark); }
+.cal-day.self-blocked { background: var(--steel-light); color: var(--warning-red); border-color: var(--warning-red); }
+.cal-day.day-override { background: var(--steel-dark); color: var(--override-cyan); border-color: var(--override-cyan); border-width: 2px; }
+.cal-legend { margin-top: 18px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-family: 'Space Mono', monospace; font-size: 11px; color: var(--concrete-dark); }
 .cal-legend > div { display: flex; align-items: center; gap: 6px; }
 .cal-legend .swatch { display: inline-block; width: 14px; height: 14px; flex-shrink: 0; border: 1px solid var(--steel-light); position: relative; }
 .cal-legend .swatch.normal { background: var(--steel-dark); }
 .cal-legend .swatch.booked { background: repeating-linear-gradient(-45deg, var(--warning-red) 0, var(--warning-red) 2px, var(--steel-dark) 2px, var(--steel-dark) 4px); }
 .cal-legend .swatch.blocked { background: var(--steel-light); border-color: var(--warning-red); }
 .cal-legend .swatch.override { background: var(--steel-dark); border-color: var(--override-cyan); border-width: 2px; }
-
-/* ============ ACTION PANEL ============ */
 .action-panel { background: var(--steel-dark); border: 2px solid var(--safety-yellow); padding: 24px; }
 .action-panel.empty { border-color: var(--steel-light); }
 .action-panel .empty-msg { text-align: center; font-family: 'Space Mono', monospace; font-size: 13px; color: var(--concrete-dark); padding: 32px 0; }
-.action-panel .selected-date {
-  background: var(--safety-yellow);
-  color: var(--steel-dark);
-  padding: 14px;
-  margin-bottom: 16px;
-  font-family: 'Space Mono', monospace;
-  font-weight: 700;
-  text-align: center;
-  font-size: 13px;
-}
-.action-panel .current-state {
-  background: var(--steel);
-  padding: 12px 14px;
-  margin-bottom: 18px;
-  font-family: 'Space Mono', monospace;
-  font-size: 12px;
-  border-left: 4px solid var(--concrete-dark);
-}
+.action-panel .selected-date { background: var(--safety-yellow); color: var(--steel-dark); padding: 14px; margin-bottom: 16px; font-family: 'Space Mono', monospace; font-weight: 700; text-align: center; font-size: 13px; }
+.action-panel .current-state { background: var(--steel); padding: 12px 14px; margin-bottom: 18px; font-family: 'Space Mono', monospace; font-size: 12px; border-left: 4px solid var(--concrete-dark); }
 .action-panel .current-state.booked { border-left-color: var(--warning-red); color: #ff8a91; }
 .action-panel .current-state.blocked { border-left-color: var(--warning-red); color: #ff8a91; }
 .action-panel .current-state.override { border-left-color: var(--override-cyan); color: var(--override-cyan); }
 .action-panel .current-state.normal { border-left-color: var(--confirmed-green); color: var(--concrete); }
 .action-panel .current-state strong { display: block; margin-bottom: 4px; font-size: 14px; }
-
-.action-btn {
-  width: 100%;
-  border: 2px solid var(--steel-light);
-  background: var(--steel);
-  color: var(--white);
-  padding: 14px;
-  font-family: 'Archivo Black', sans-serif;
-  font-size: 13px;
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
-  cursor: pointer;
-  transition: all 0.15s;
-  margin-bottom: 10px;
-  text-align: left;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
+.action-btn { width: 100%; border: 2px solid var(--steel-light); background: var(--steel); color: var(--white); padding: 14px; font-family: 'Archivo Black', sans-serif; font-size: 13px; letter-spacing: 0.5px; text-transform: uppercase; cursor: pointer; transition: all 0.15s; margin-bottom: 10px; text-align: left; display: flex; align-items: center; gap: 12px; }
 .action-btn .icon { font-size: 18px; flex-shrink: 0; }
 .action-btn .label-stack { display: flex; flex-direction: column; }
 .action-btn .label-stack .small { font-family: 'Space Mono', monospace; font-size: 10px; font-weight: 400; color: var(--concrete-dark); margin-top: 2px; text-transform: none; letter-spacing: 0; }
 .action-btn:hover { transform: translate(-2px, -2px); box-shadow: 4px 4px 0 0 rgba(0,0,0,0.85); }
 .action-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; box-shadow: none; }
-
 .action-btn.block { border-color: var(--warning-red); }
 .action-btn.block:hover { background: var(--warning-red); color: var(--white); }
 .action-btn.override { border-color: var(--override-cyan); }
@@ -303,8 +108,6 @@ header .public-link:hover { color: var(--safety-yellow); border-color: var(--saf
 .action-btn.clear:hover { background: var(--confirmed-green); color: var(--white); }
 .action-btn.tcs { border-color: var(--safety-yellow); }
 .action-btn.tcs:hover { background: var(--safety-yellow); color: var(--steel-dark); }
-
-/* Rates Table */
 .rates-table { width: 100%; border-collapse: collapse; margin-bottom: 8px; }
 .rates-table th { text-align: left; font-family: 'Space Mono', monospace; font-size: 11px; font-weight: 700; letter-spacing: 1px; color: var(--safety-yellow); padding: 8px 12px; border-bottom: 2px solid var(--steel-light); text-transform: uppercase; }
 .rates-table td { padding: 10px 12px; border-bottom: 1px solid var(--steel-light); font-family: 'Space Mono', monospace; font-size: 13px; vertical-align: middle; }
@@ -314,12 +117,10 @@ header .public-link:hover { color: var(--safety-yellow); border-color: var(--saf
 .rates-table input[type="number"] { width: 90px; background: var(--steel-dark); border: 1px solid var(--steel-light); color: var(--white); padding: 8px 10px; font-family: 'Space Mono', monospace; font-size: 14px; font-weight: 700; text-align: right; }
 .rates-table input[type="number"]:focus { outline: none; border-color: var(--safety-yellow); }
 .rates-table .dollar-prefix { color: var(--safety-yellow); font-weight: 700; margin-right: 4px; }
-
 .status-msg { padding: 14px; margin-top: 14px; font-family: 'Space Mono', monospace; font-weight: 700; font-size: 12px; display: none; }
 .status-msg.success { background: var(--confirmed-green); color: var(--white); display: block; }
 .status-msg.error { background: var(--warning-red); color: var(--white); display: block; }
 .status-msg.loading { background: var(--steel-light); color: var(--safety-yellow); display: block; }
-
 footer { text-align: center; padding: 24px; font-family: 'Space Mono', monospace; font-size: 11px; color: var(--concrete-dark); }
 </style>
 </head>
@@ -335,7 +136,6 @@ footer { text-align: center; padding: 24px; font-family: 'Space Mono', monospace
   </div>
 </header>
 
-<!-- ============ LOGIN GATE ============ -->
 <div class="login-gate" id="loginGate">
   <div class="login-card">
     <h1>🔒 Admin Access</h1>
@@ -347,26 +147,21 @@ footer { text-align: center; padding: 24px; font-family: 'Space Mono', monospace
   </div>
 </div>
 
-<!-- ============ ADMIN MAIN ============ -->
 <div class="admin-main" id="adminMain">
-
   <h1 class="admin-title">📅 Calendar Manager</h1>
   <p class="admin-subtitle">Click any date below, then choose what to do with it.</p>
 
   <div class="admin-grid">
-
     <div class="panel">
       <div class="panel-label">Calendar</div>
       <h2>Your Schedule</h2>
       <p class="panel-sub">Tap a date to manage it. Past dates are locked.</p>
-
       <div class="cal-controls">
         <button id="prevMonth">&larr; PREV</button>
         <div class="month-label" id="monthLabel">—</div>
         <button id="nextMonth">NEXT &rarr;</button>
       </div>
       <div class="cal-grid" id="calGrid"></div>
-
       <div class="cal-legend">
         <div><span class="swatch normal"></span>Available</div>
         <div><span class="swatch booked"></span>Customer booking</div>
@@ -379,22 +174,17 @@ footer { text-align: center; padding: 24px; font-family: 'Space Mono', monospace
       <div class="panel-label">Actions</div>
       <h2>Manage Date</h2>
       <p class="panel-sub">Pick a date to see options.</p>
-
       <div class="action-panel empty" id="actionPanel">
         <div class="empty-msg">⚠ Click a date on the calendar to manage it</div>
       </div>
-
       <div class="status-msg" id="statusMsg"></div>
     </div>
-
   </div>
 
-  <!-- ============ RATES MANAGER ============ -->
   <div class="panel" style="margin-top: 32px;">
     <div class="panel-label">Rate Card</div>
     <h2>💰 Hourly Rates</h2>
     <p class="panel-sub">Edit your rates here. Changes apply to all new quotes immediately.</p>
-
     <table class="rates-table" id="ratesTable">
       <thead>
         <tr>
@@ -405,12 +195,10 @@ footer { text-align: center; padding: 24px; font-family: 'Space Mono', monospace
       </thead>
       <tbody id="ratesBody"></tbody>
     </table>
-
     <button class="action-btn clear" style="max-width: 200px; margin-top: 12px;" onclick="saveRates()">
       <span class="icon">💾</span>
       <span class="label-stack">Save rate card<span class="small">Apply changes</span></span>
     </button>
-
     <div class="status-msg" id="ratesStatusMsg"></div>
   </div>
 </div>
@@ -419,22 +207,48 @@ footer { text-align: center; padding: 24px; font-family: 'Space Mono', monospace
 
 <script>
 window.addEventListener('load', () => {
-// Initialize Supabase client
+
 const supabase = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_KEY);
-// ============================================================
-// LOGIN — uses real Supabase Auth
-// ============================================================
-async function attemptLogin() {
+
+let viewMonth = new Date().getMonth();
+let viewYear = new Date().getFullYear();
+let customerBookings = new Set();
+let selfBlocks = new Set();
+let dayOverrides = new Set();
+let tcsAvailableMap = {};
+let selectedDate = null;
+
+const DEFAULT_RATES = {
+  Day:              { base: 50,  label: "Mon–Fri 6am–6pm" },
+  Afternoon:        { base: 60,  label: "Mon–Fri 6pm–10pm" },
+  Night:            { base: 70,  label: "Mon–Fri 10pm–6am" },
+  Saturday:         { base: 72,  label: "All day Saturday" },
+  Sunday:           { base: 87,  label: "All day Sunday" },
+  "Public Holiday": { base: 107, label: "All day (NSW PH)" }
+};
+let currentRates = JSON.parse(JSON.stringify(DEFAULT_RATES));
+
+const NSW_PUBLIC_HOLIDAYS = new Set([
+  "2026-01-01","2026-01-26","2026-04-03","2026-04-04","2026-04-05","2026-04-06",
+  "2026-04-25","2026-06-08","2026-10-05","2026-12-25","2026-12-26","2026-12-28","2027-01-01"
+]);
+
+function isWeekday(dateStr) {
+  if (NSW_PUBLIC_HOLIDAYS.has(dateStr)) return false;
+  const d = new Date(dateStr + 'T00:00:00');
+  const day = d.getDay();
+  return day >= 1 && day <= 5;
+}
+
+window.attemptLogin = async function() {
   const email = document.getElementById('emailInput').value.trim();
   const password = document.getElementById('passwordInput').value;
   const error = document.getElementById('loginError');
-
   if (!email || !password) {
     error.textContent = '⚠ Enter email + password';
     error.classList.add('visible');
     return;
   }
-
   const { data, error: authError } = await supabase.auth.signInWithPassword({ email, password });
   if (authError) {
     error.textContent = '⚠ ' + (authError.message || 'Wrong email or password.');
@@ -442,9 +256,13 @@ async function attemptLogin() {
     document.getElementById('passwordInput').value = '';
     return;
   }
-
   showAdmin();
-}
+};
+
+window.signOut = async function() {
+  await supabase.auth.signOut();
+  location.reload();
+};
 
 document.getElementById('passwordInput').addEventListener('keypress', (e) => {
   if (e.key === 'Enter') attemptLogin();
@@ -460,147 +278,30 @@ function showAdmin() {
   loadRates();
 }
 
-// Auto-unlock if already logged in (Supabase session is persistent)
 (async () => {
   const { data: { session } } = await supabase.auth.getSession();
   if (session) showAdmin();
 })();
 
-// ============================================================
-// STATE
-// ============================================================
-let viewMonth = new Date().getMonth();
-let viewYear = new Date().getFullYear();
-let customerBookings = new Set();
-let selfBlocks = new Set();
-let dayOverrides = new Set();
-let tcsAvailableMap = {};
-let selectedDate = null;
-
-// ============================================================
-// RATE CARD — defaults shown here; loaded from n8n in production
-// ============================================================
-const DEFAULT_RATES = {
-  Day:              { base: 50,  label: "Mon–Fri 6am–6pm" },
-  Afternoon:        { base: 60,  label: "Mon–Fri 6pm–10pm" },
-  Night:            { base: 70,  label: "Mon–Fri 10pm–6am" },
-  Saturday:         { base: 72,  label: "All day Saturday" },
-  Sunday:           { base: 87,  label: "All day Sunday" },
-  "Public Holiday": { base: 107, label: "All day (NSW PH)" }
-};
-let currentRates = JSON.parse(JSON.stringify(DEFAULT_RATES));
-
-function renderRatesTable() {
-  const body = document.getElementById('ratesBody');
-  body.innerHTML = '';
-  Object.keys(currentRates).forEach(key => {
-    const r = currentRates[key];
-    const row = document.createElement('tr');
-    row.innerHTML = `
-      <td class="shift-name">${key}</td>
-      <td class="shift-desc">${r.label}</td>
-      <td><span class="dollar-prefix">$</span><input type="number" min="0" step="0.5" value="${r.base}" data-key="${key}"></td>
-    `;
-    body.appendChild(row);
-  });
-}
-
-async function loadRates() {
-  try {
-    const { data, error } = await supabase
-      .from('rate_card')
-      .select('rates')
-      .eq('id', 1)
-      .single();
-
-    if (!error && data && data.rates) {
-      currentRates = data.rates;
-    }
-    renderRatesTable();
-  } catch (err) {
-    console.error(err);
-    renderRatesTable();
-  }
-}
-
-async function saveRates() {
-  // Read current values from inputs
-  const inputs = document.querySelectorAll('#ratesBody input[type="number"]');
-  inputs.forEach(inp => {
-    const key = inp.dataset.key;
-    const val = parseFloat(inp.value);
-    if (!isNaN(val) && val >= 0) currentRates[key].base = val;
-  });
-
-  showRatesStatus('⏳ Saving rates...', 'loading');
-
-  try {
-    const { error } = await supabase
-      .from('rate_card')
-      .update({ rates: currentRates, updated_at: new Date().toISOString() })
-      .eq('id', 1);
-
-    if (error) throw error;
-    showRatesStatus('✅ Rates saved', 'success');
-  } catch (err) {
-    console.error(err);
-    showRatesStatus('⚠ Save failed: ' + err.message, 'error');
-  }
-}
-
-function showRatesStatus(msg, type) {
-  const el = document.getElementById('ratesStatusMsg');
-  el.textContent = msg;
-  el.className = 'status-msg ' + type;
-  if (type === 'success') {
-    setTimeout(() => { el.className = 'status-msg'; }, 3000);
-  }
-}
-
-const NSW_PUBLIC_HOLIDAYS = new Set([
-  "2026-01-01","2026-01-26","2026-04-03","2026-04-04","2026-04-05","2026-04-06",
-  "2026-04-25","2026-06-08","2026-10-05","2026-12-25","2026-12-26","2026-12-28","2027-01-01"
-]);
-
-function isWeekday(dateStr) {
-  if (NSW_PUBLIC_HOLIDAYS.has(dateStr)) return false;
-  const d = new Date(dateStr + 'T00:00:00');
-  const day = d.getDay();
-  return day >= 1 && day <= 5;
-}
-
-// ============================================================
-// LOAD DATA — from n8n or demo
-// ============================================================
 async function loadCalendarData() {
   try {
     const { data, error } = await supabase
       .from('bookings')
       .select('booking_date, booking_type, status, tcs_required');
-
     if (error) throw error;
-
     customerBookings = new Set();
     selfBlocks = new Set();
     dayOverrides = new Set();
     tcsAvailableMap = {};
-
     (data || []).forEach(r => {
       const date = r.booking_date;
       const type = r.booking_type || 'customer';
       const status = r.status;
-
-      if (type === 'customer' && status !== 'Cancelled') {
-        customerBookings.add(date);
-      } else if (type === 'self_block') {
-        selfBlocks.add(date);
-      } else if (type === 'day_override') {
-        dayOverrides.add(date);
-      } else if (type === 'availability') {
-        tcsAvailableMap[date] = r.tcs_required || 1;
-      }
+      if (type === 'customer' && status !== 'Cancelled') customerBookings.add(date);
+      else if (type === 'self_block') selfBlocks.add(date);
+      else if (type === 'day_override') dayOverrides.add(date);
+      else if (type === 'availability') tcsAvailableMap[date] = r.tcs_required || 1;
     });
-
     renderCalendar();
   } catch (err) {
     console.error(err);
@@ -608,29 +309,21 @@ async function loadCalendarData() {
   }
 }
 
-function getTCsAvailable(dateStr) {
-  return tcsAvailableMap[dateStr] || 1;
-}
+function getTCsAvailable(dateStr) { return tcsAvailableMap[dateStr] || 1; }
 
-// ============================================================
-// CALENDAR RENDER
-// ============================================================
 function renderCalendar() {
   const grid = document.getElementById('calGrid');
   const monthLabel = document.getElementById('monthLabel');
   const monthNames = ["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
   const dayNames = ["MON","TUE","WED","THU","FRI","SAT","SUN"];
-
   monthLabel.textContent = `${monthNames[viewMonth]} ${viewYear}`;
   grid.innerHTML = '';
-
   dayNames.forEach(d => {
     const el = document.createElement('div');
     el.className = 'cal-day-name';
     el.textContent = d;
     grid.appendChild(el);
   });
-
   const firstDay = new Date(viewYear, viewMonth, 1).getDay();
   const offset = (firstDay === 0) ? 6 : firstDay - 1;
   for (let i = 0; i < offset; i++) {
@@ -638,23 +331,18 @@ function renderCalendar() {
     el.className = 'cal-day empty';
     grid.appendChild(el);
   }
-
   const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
   const today = new Date();
   const todayStr = today.toISOString().split('T')[0];
-
   for (let day = 1; day <= daysInMonth; day++) {
     const dateStr = `${viewYear}-${String(viewMonth+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
     const el = document.createElement('div');
     el.className = 'cal-day';
     el.textContent = day;
-
-    if (dateStr < todayStr) {
-      el.classList.add('past');
-    } else {
+    if (dateStr < todayStr) { el.classList.add('past'); }
+    else {
       el.dataset.date = dateStr;
       el.addEventListener('click', () => selectDate(dateStr));
-
       if (customerBookings.has(dateStr)) {
         el.classList.add('customer-booked');
         const icon = document.createElement('span');
@@ -675,16 +363,12 @@ function renderCalendar() {
         el.appendChild(icon);
       }
     }
-
     if (dateStr === todayStr) el.classList.add('today');
     if (dateStr === selectedDate) el.classList.add('selected');
     grid.appendChild(el);
   }
 }
 
-// ============================================================
-// SELECT A DATE
-// ============================================================
 function selectDate(dateStr) {
   selectedDate = dateStr;
   renderCalendar();
@@ -699,208 +383,134 @@ function renderActionPanel() {
     return;
   }
   panel.classList.remove('empty');
-
   const d = new Date(selectedDate + 'T00:00:00');
   const dayName = ['SUN','MON','TUE','WED','THU','FRI','SAT'][d.getDay()];
   const monthName = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'][d.getMonth()];
   const dateLabel = `${dayName} ${d.getDate()} ${monthName} ${d.getFullYear()}`;
-
   const isCustomer = customerBookings.has(selectedDate);
   const isBlocked = selfBlocks.has(selectedDate);
   const isOverride = dayOverrides.has(selectedDate);
   const isWeekdayDate = isWeekday(selectedDate);
-
   let stateClass = 'normal';
   let stateText = '';
-  if (isCustomer) {
-    stateClass = 'booked';
-    stateText = '<strong>📋 CUSTOMER BOOKING</strong>This date has a confirmed customer booking. Manage it in Notion or Supabase, not here.';
-  } else if (isBlocked) {
-    stateClass = 'blocked';
-    stateText = '<strong>🚫 SELF-BLOCKED</strong>You\'ve blocked this date. No one can book it.';
-  } else if (isOverride) {
-    stateClass = 'override';
-    stateText = '<strong>☀ DAY OVERRIDE</strong>Day shifts allowed on this Mon–Fri date.';
-  } else if (isWeekdayDate) {
-    stateClass = 'normal';
-    stateText = '<strong>🌙 NIGHT-ONLY (default)</strong>Mon–Fri night shifts only (4PM+). Use override to allow day shifts.';
-  } else {
-    stateClass = 'normal';
-    stateText = '<strong>✓ AVAILABLE</strong>Open for any shift on this weekend / public holiday.';
-  }
-
-  let html = `
-    <div class="selected-date">📅 ${dateLabel}</div>
-    <div class="current-state ${stateClass}">${stateText}</div>
-  `;
-
-  // Show different action buttons based on current state
+  if (isCustomer) { stateClass = 'booked'; stateText = '<strong>📋 CUSTOMER BOOKING</strong>This date has a confirmed customer booking.'; }
+  else if (isBlocked) { stateClass = 'blocked'; stateText = '<strong>🚫 SELF-BLOCKED</strong>You\'ve blocked this date. No one can book it.'; }
+  else if (isOverride) { stateClass = 'override'; stateText = '<strong>☀ DAY OVERRIDE</strong>Day shifts allowed on this Mon–Fri date.'; }
+  else if (isWeekdayDate) { stateClass = 'normal'; stateText = '<strong>🌙 NIGHT-ONLY (default)</strong>Mon–Fri night shifts only (4PM+). Use override to allow day shifts.'; }
+  else { stateClass = 'normal'; stateText = '<strong>✓ AVAILABLE</strong>Open for any shift on this weekend / public holiday.'; }
+  let html = `<div class="selected-date">📅 ${dateLabel}</div><div class="current-state ${stateClass}">${stateText}</div>`;
   if (isCustomer) {
     html += `<p style="font-family:'Space Mono',monospace;font-size:11px;color:var(--concrete-dark);text-align:center;padding:16px 0;">No admin actions available — this is a real customer booking.</p>`;
   } else if (isBlocked) {
-    html += `
-      <button class="action-btn clear" onclick="clearDate()">
-        <span class="icon">✓</span>
-        <span class="label-stack">Unblock this date<span class="small">Make available again</span></span>
-      </button>
-    `;
+    html += `<button class="action-btn clear" onclick="clearDate()"><span class="icon">✓</span><span class="label-stack">Unblock this date<span class="small">Make available again</span></span></button>`;
   } else if (isOverride) {
-    html += `
-      <button class="action-btn clear" onclick="clearDate()">
-        <span class="icon">✓</span>
-        <span class="label-stack">Remove override<span class="small">Back to night-only default</span></span>
-      </button>
-      <button class="action-btn block" onclick="setDate('self_block')">
-        <span class="icon">🚫</span>
-        <span class="label-stack">Block this date<span class="small">No one can book</span></span>
-      </button>
-    `;
+    html += `<button class="action-btn clear" onclick="clearDate()"><span class="icon">✓</span><span class="label-stack">Remove override<span class="small">Back to night-only default</span></span></button>`;
+    html += `<button class="action-btn block" onclick="setDate('self_block')"><span class="icon">🚫</span><span class="label-stack">Block this date<span class="small">No one can book</span></span></button>`;
   } else {
-    // Normal date — offer block, and override if it's a weekday
-    html += `
-      <button class="action-btn block" onclick="setDate('self_block')">
-        <span class="icon">🚫</span>
-        <span class="label-stack">Block this date<span class="small">No one can book it</span></span>
-      </button>
-    `;
+    html += `<button class="action-btn block" onclick="setDate('self_block')"><span class="icon">🚫</span><span class="label-stack">Block this date<span class="small">No one can book it</span></span></button>`;
     if (isWeekdayDate) {
-      html += `
-        <button class="action-btn override" onclick="setDate('day_override')">
-          <span class="icon">☀</span>
-          <span class="label-stack">Allow day shift<span class="small">Override the night-only default</span></span>
-        </button>
-      `;
+      html += `<button class="action-btn override" onclick="setDate('day_override')"><span class="icon">☀</span><span class="label-stack">Allow day shift<span class="small">Override the night-only default</span></span></button>`;
     }
   }
-
-  // TCs Available button — show on every non-customer-booked date
   if (!isCustomer) {
     const currentTCs = getTCsAvailable(selectedDate);
-    html += `
-      <button class="action-btn tcs" onclick="promptSetTCs()">
-        <span class="icon">👷</span>
-        <span class="label-stack">TCs available: ${currentTCs}<span class="small">Tap to change how many TCs you have on this date</span></span>
-      </button>
-    `;
+    html += `<button class="action-btn tcs" onclick="promptSetTCs()"><span class="icon">👷</span><span class="label-stack">TCs available: ${currentTCs}<span class="small">Tap to change how many TCs you have on this date</span></span></button>`;
   }
-
   panel.innerHTML = html;
 }
 
-// ============================================================
-// ACTIONS
-// ============================================================
-async function setDate(type) {
+window.setDate = async function(type) {
   showStatus('⏳ Saving...', 'loading');
   try {
-    // First, clear any existing admin row of this type for this date
-    await supabase
-      .from('bookings')
-      .delete()
-      .eq('booking_date', selectedDate)
-      .eq('booking_type', type);
-
-    // Insert the new admin row
-    const { error } = await supabase
-      .from('bookings')
-      .insert([{
-        booking_date: selectedDate,
-        booking_type: type,
-        status: 'Confirmed',
-        tcs_required: 1
-      }]);
-
+    await supabase.from('bookings').delete().eq('booking_date', selectedDate).eq('booking_type', type);
+    const { error } = await supabase.from('bookings').insert([{ booking_date: selectedDate, booking_type: type, status: 'Confirmed', tcs_required: 1 }]);
     if (error) throw error;
-
     await loadCalendarData();
     renderActionPanel();
     showStatus(`✅ ${type === 'self_block' ? 'Date blocked' : 'Day override applied'}`, 'success');
-  } catch (err) {
-    console.error(err);
-    showStatus('⚠ Save failed: ' + err.message, 'error');
-  }
-}
+  } catch (err) { console.error(err); showStatus('⚠ Save failed: ' + err.message, 'error'); }
+};
 
-async function clearDate() {
+window.clearDate = async function() {
   showStatus('⏳ Clearing...', 'loading');
   try {
-    // Delete all admin rows for this date (but never customer bookings — RLS protects that)
-    const { error } = await supabase
-      .from('bookings')
-      .delete()
-      .eq('booking_date', selectedDate)
-      .neq('booking_type', 'customer');
-
+    const { error } = await supabase.from('bookings').delete().eq('booking_date', selectedDate).neq('booking_type', 'customer');
     if (error) throw error;
-
     await loadCalendarData();
     renderActionPanel();
     showStatus('✅ Cleared', 'success');
-  } catch (err) {
-    console.error(err);
-    showStatus('⚠ Clear failed: ' + err.message, 'error');
-  }
-}
+  } catch (err) { console.error(err); showStatus('⚠ Clear failed: ' + err.message, 'error'); }
+};
 
-function promptSetTCs() {
+window.promptSetTCs = function() {
   const current = getTCsAvailable(selectedDate);
   const input = prompt(`How many TCs are available on ${selectedDate}?\n\n(Currently: ${current})`, current);
   if (input === null) return;
   const num = parseInt(input);
-  if (isNaN(num) || num < 1 || num > 20) {
-    showStatus('⚠ Enter a number between 1 and 20', 'error');
-    return;
-  }
+  if (isNaN(num) || num < 1 || num > 20) { showStatus('⚠ Enter a number between 1 and 20', 'error'); return; }
   setTCsAvailable(num);
-}
+};
 
 async function setTCsAvailable(count) {
   showStatus('⏳ Saving TCs availability...', 'loading');
   try {
-    // Delete any existing availability row for this date
-    await supabase
-      .from('bookings')
-      .delete()
-      .eq('booking_date', selectedDate)
-      .eq('booking_type', 'availability');
-
-    // Only insert if count > 1 (default is 1, no row needed)
+    await supabase.from('bookings').delete().eq('booking_date', selectedDate).eq('booking_type', 'availability');
     if (count > 1) {
-      const { error } = await supabase
-        .from('bookings')
-        .insert([{
-          booking_date: selectedDate,
-          booking_type: 'availability',
-          status: 'Confirmed',
-          tcs_required: count
-        }]);
+      const { error } = await supabase.from('bookings').insert([{ booking_date: selectedDate, booking_type: 'availability', status: 'Confirmed', tcs_required: count }]);
       if (error) throw error;
     }
-
     await loadCalendarData();
     renderActionPanel();
     showStatus(`✅ TCs available set to ${count}`, 'success');
-  } catch (err) {
-    console.error(err);
-    showStatus('⚠ Save failed: ' + err.message, 'error');
-  }
+  } catch (err) { console.error(err); showStatus('⚠ Save failed: ' + err.message, 'error'); }
 }
 
 function showStatus(msg, type) {
   const el = document.getElementById('statusMsg');
   el.textContent = msg;
   el.className = 'status-msg ' + type;
-  if (type === 'success') {
-    setTimeout(() => { el.className = 'status-msg'; }, 3000);
-  }
+  if (type === 'success') setTimeout(() => { el.className = 'status-msg'; }, 3000);
 }
 
-// ============================================================
-// MONTH NAV
-// ============================================================
-async function signOut() {
-  await supabase.auth.signOut();
-  location.reload();
+function renderRatesTable() {
+  const body = document.getElementById('ratesBody');
+  body.innerHTML = '';
+  Object.keys(currentRates).forEach(key => {
+    const r = currentRates[key];
+    const row = document.createElement('tr');
+    row.innerHTML = `<td class="shift-name">${key}</td><td class="shift-desc">${r.label}</td><td><span class="dollar-prefix">$</span><input type="number" min="0" step="0.5" value="${r.base}" data-key="${key}"></td>`;
+    body.appendChild(row);
+  });
+}
+
+async function loadRates() {
+  try {
+    const { data, error } = await supabase.from('rate_card').select('rates').eq('id', 1).single();
+    if (!error && data && data.rates) currentRates = data.rates;
+    renderRatesTable();
+  } catch (err) { console.error(err); renderRatesTable(); }
+}
+
+window.saveRates = async function() {
+  const inputs = document.querySelectorAll('#ratesBody input[type="number"]');
+  inputs.forEach(inp => {
+    const key = inp.dataset.key;
+    const val = parseFloat(inp.value);
+    if (!isNaN(val) && val >= 0) currentRates[key].base = val;
+  });
+  showRatesStatus('⏳ Saving rates...', 'loading');
+  try {
+    const { error } = await supabase.from('rate_card').update({ rates: currentRates, updated_at: new Date().toISOString() }).eq('id', 1);
+    if (error) throw error;
+    showRatesStatus('✅ Rates saved', 'success');
+  } catch (err) { console.error(err); showRatesStatus('⚠ Save failed: ' + err.message, 'error'); }
+};
+
+function showRatesStatus(msg, type) {
+  const el = document.getElementById('ratesStatusMsg');
+  el.textContent = msg;
+  el.className = 'status-msg ' + type;
+  if (type === 'success') setTimeout(() => { el.className = 'status-msg'; }, 3000);
 }
 
 document.getElementById('prevMonth').addEventListener('click', () => {
@@ -911,7 +521,8 @@ document.getElementById('nextMonth').addEventListener('click', () => {
   viewMonth++; if (viewMonth > 11) { viewMonth = 0; viewYear++; }
   renderCalendar();
 });
-}); // <-- closes the window.addEventListener('load')
+
+}); // closes window.addEventListener('load')
 </script>
 
 </body>

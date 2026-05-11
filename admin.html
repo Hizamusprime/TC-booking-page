@@ -418,9 +418,9 @@ footer { text-align: center; padding: 24px; font-family: 'Space Mono', monospace
 <footer>LUKE HEISER TRAFFIC CONTROL // Admin Panel // ABN 89 740 423 914</footer>
 
 <script>
+window.addEventListener('load', () => {
 // Initialize Supabase client
 const supabase = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_KEY);
-
 // ============================================================
 // LOGIN — uses real Supabase Auth
 // ============================================================
@@ -469,7 +469,6 @@ function showAdmin() {
 // ============================================================
 // STATE
 // ============================================================
-window.addEventListener('load', () => {
 let viewMonth = new Date().getMonth();
 let viewYear = new Date().getFullYear();
 let customerBookings = new Set();
@@ -912,6 +911,7 @@ document.getElementById('nextMonth').addEventListener('click', () => {
   viewMonth++; if (viewMonth > 11) { viewMonth = 0; viewYear++; }
   renderCalendar();
 });
+}); // <-- closes the window.addEventListener('load')
 </script>
 
 </body>

@@ -61,18 +61,23 @@ header .public-link:hover { color: var(--safety-yellow); border-color: var(--saf
 .panel-label { position: absolute; top: -12px; left: 20px; background: var(--warning-red); color: var(--white); font-family: 'Space Mono', monospace; font-size: 10px; font-weight: 700; letter-spacing: 2px; padding: 4px 10px; text-transform: uppercase; }
 .panel h2 { font-family: 'Archivo Black', sans-serif; font-size: 22px; text-transform: uppercase; letter-spacing: -0.5px; margin-bottom: 8px; }
 .panel .panel-sub { font-family: 'Space Mono', monospace; font-size: 11px; color: var(--concrete-dark); margin-bottom: 20px; }
+
+/* Multi-select hint banner */
+.multi-hint { background: var(--steel-dark); border: 1px dashed var(--steel-light); padding: 10px 14px; margin-bottom: 14px; font-family: 'Space Mono', monospace; font-size: 11px; color: var(--concrete-dark); line-height: 1.6; }
+.multi-hint kbd { background: var(--steel-light); color: var(--safety-yellow); padding: 1px 6px; border-radius: 2px; font-size: 10px; font-weight: 700; }
+
 .cal-controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
 .cal-controls button { background: var(--steel-light); border: none; color: var(--white); font-family: 'Space Mono', monospace; font-weight: 700; padding: 8px 16px; cursor: pointer; }
 .cal-controls button:hover { background: var(--safety-yellow); color: var(--steel-dark); }
 .cal-controls .month-label { font-family: 'Archivo Black', sans-serif; font-size: 16px; text-transform: uppercase; letter-spacing: 1px; }
-.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; user-select: none; -webkit-user-select: none; }
 .cal-day-name { font-family: 'Space Mono', monospace; font-size: 10px; font-weight: 700; text-align: center; color: var(--concrete-dark); letter-spacing: 1px; padding: 8px 0; }
 .cal-day { aspect-ratio: 1; border: 1px solid var(--steel-light); display: flex; align-items: center; justify-content: center; font-family: 'Space Mono', monospace; font-weight: 700; font-size: 14px; cursor: pointer; transition: all 0.15s; position: relative; background: var(--steel-dark); }
 .cal-day.empty { border-color: transparent; cursor: default; background: transparent; }
 .cal-day.past { color: var(--steel-light); cursor: not-allowed; opacity: 0.4; }
 .cal-day.today { border-color: var(--safety-yellow); border-width: 2px; }
 .cal-day:hover:not(.empty):not(.past) { transform: scale(1.05); border-color: var(--safety-yellow); }
-.cal-day.selected { box-shadow: 0 0 0 3px var(--steel-dark), 0 0 0 5px var(--safety-yellow); }
+.cal-day.selected { box-shadow: 0 0 0 3px var(--steel-dark), 0 0 0 5px var(--safety-yellow); z-index: 1; }
 .cal-day .status-icon { position: absolute; top: 2px; right: 3px; font-size: 11px; pointer-events: none; }
 .cal-day.customer-booked { background: repeating-linear-gradient(-45deg, var(--warning-red) 0, var(--warning-red) 4px, var(--steel-dark) 4px, var(--steel-dark) 8px); color: var(--concrete-dark); }
 .cal-day.self-blocked { background: var(--steel-light); color: var(--warning-red); border-color: var(--warning-red); }
@@ -84,16 +89,22 @@ header .public-link:hover { color: var(--safety-yellow); border-color: var(--saf
 .cal-legend .swatch.booked { background: repeating-linear-gradient(-45deg, var(--warning-red) 0, var(--warning-red) 2px, var(--steel-dark) 2px, var(--steel-dark) 4px); }
 .cal-legend .swatch.blocked { background: var(--steel-light); border-color: var(--warning-red); }
 .cal-legend .swatch.override { background: var(--steel-dark); border-color: var(--override-cyan); border-width: 2px; }
+
 .action-panel { background: var(--steel-dark); border: 2px solid var(--safety-yellow); padding: 24px; }
 .action-panel.empty { border-color: var(--steel-light); }
+.action-panel.bulk { border-color: var(--override-cyan); }
 .action-panel .empty-msg { text-align: center; font-family: 'Space Mono', monospace; font-size: 13px; color: var(--concrete-dark); padding: 32px 0; }
 .action-panel .selected-date { background: var(--safety-yellow); color: var(--steel-dark); padding: 14px; margin-bottom: 16px; font-family: 'Space Mono', monospace; font-weight: 700; text-align: center; font-size: 13px; }
+.action-panel .selected-date.bulk { background: var(--override-cyan); }
 .action-panel .current-state { background: var(--steel); padding: 12px 14px; margin-bottom: 18px; font-family: 'Space Mono', monospace; font-size: 12px; border-left: 4px solid var(--concrete-dark); }
 .action-panel .current-state.booked { border-left-color: var(--warning-red); color: #ff8a91; }
 .action-panel .current-state.blocked { border-left-color: var(--warning-red); color: #ff8a91; }
 .action-panel .current-state.override { border-left-color: var(--override-cyan); color: var(--override-cyan); }
 .action-panel .current-state.normal { border-left-color: var(--confirmed-green); color: var(--concrete); }
+.action-panel .current-state.bulk { border-left-color: var(--override-cyan); color: var(--concrete); }
 .action-panel .current-state strong { display: block; margin-bottom: 4px; font-size: 14px; }
+.action-panel .current-state ul { margin: 8px 0 0 16px; padding: 0; font-size: 11px; color: var(--concrete-dark); }
+.action-panel .current-state ul li { margin-bottom: 2px; }
 .action-btn { width: 100%; border: 2px solid var(--steel-light); background: var(--steel); color: var(--white); padding: 14px; font-family: 'Archivo Black', sans-serif; font-size: 13px; letter-spacing: 0.5px; text-transform: uppercase; cursor: pointer; transition: all 0.15s; margin-bottom: 10px; text-align: left; display: flex; align-items: center; gap: 12px; }
 .action-btn .icon { font-size: 18px; flex-shrink: 0; }
 .action-btn .label-stack { display: flex; flex-direction: column; }
@@ -108,6 +119,9 @@ header .public-link:hover { color: var(--safety-yellow); border-color: var(--saf
 .action-btn.clear:hover { background: var(--confirmed-green); color: var(--white); }
 .action-btn.tcs { border-color: var(--safety-yellow); }
 .action-btn.tcs:hover { background: var(--safety-yellow); color: var(--steel-dark); }
+.action-btn.cancel { border-color: var(--concrete-dark); margin-top: 8px; }
+.action-btn.cancel:hover { background: var(--concrete-dark); color: var(--steel-dark); }
+
 .rates-table { width: 100%; border-collapse: collapse; margin-bottom: 8px; }
 .rates-table th { text-align: left; font-family: 'Space Mono', monospace; font-size: 11px; font-weight: 700; letter-spacing: 1px; color: var(--safety-yellow); padding: 8px 12px; border-bottom: 2px solid var(--steel-light); text-transform: uppercase; }
 .rates-table td { padding: 10px 12px; border-bottom: 1px solid var(--steel-light); font-family: 'Space Mono', monospace; font-size: 13px; vertical-align: middle; }
@@ -149,13 +163,21 @@ footer { text-align: center; padding: 24px; font-family: 'Space Mono', monospace
 
 <div class="admin-main" id="adminMain">
   <h1 class="admin-title">📅 Calendar Manager</h1>
-  <p class="admin-subtitle">Click any date below, then choose what to do with it.</p>
+  <p class="admin-subtitle">Click a date to manage it, or select multiple to apply rules in bulk.</p>
 
   <div class="admin-grid">
     <div class="panel">
       <div class="panel-label">Calendar</div>
       <h2>Your Schedule</h2>
       <p class="panel-sub">Tap a date to manage it. Past dates are locked.</p>
+
+      <div class="multi-hint">
+        <strong style="color:var(--safety-yellow);">MULTI-SELECT:</strong>
+        &nbsp;<kbd>Click</kbd> = pick one &nbsp;·&nbsp;
+        <kbd>Shift</kbd>+<kbd>Click</kbd> = range &nbsp;·&nbsp;
+        <kbd>Ctrl</kbd>/<kbd>⌘</kbd>+<kbd>Click</kbd> or <kbd>Double-click</kbd> = toggle add/remove
+      </div>
+
       <div class="cal-controls">
         <button id="prevMonth">&larr; PREV</button>
         <div class="month-label" id="monthLabel">—</div>
@@ -173,7 +195,7 @@ footer { text-align: center; padding: 24px; font-family: 'Space Mono', monospace
     <div class="panel">
       <div class="panel-label">Actions</div>
       <h2>Manage Date</h2>
-      <p class="panel-sub">Pick a date to see options.</p>
+      <p class="panel-sub">Pick a date (or several) to see options.</p>
       <div class="action-panel empty" id="actionPanel">
         <div class="empty-msg">⚠ Click a date on the calendar to manage it</div>
       </div>
@@ -216,7 +238,12 @@ let customerBookings = new Set();
 let selfBlocks = new Set();
 let dayOverrides = new Set();
 let tcsAvailableMap = {};
-let selectedDate = null;
+
+// -------------- MULTI-SELECT STATE --------------
+// selectedDates holds 1..N dates. anchorDate is the pivot used by Shift+Click for range select.
+let selectedDates = new Set();
+let anchorDate = null;
+// -------------------------------------------------
 
 const DEFAULT_RATES = {
   Day:              { base: 50,  label: "Mon–Fri 6am–6pm" },
@@ -342,7 +369,10 @@ function renderCalendar() {
     if (dateStr < todayStr) { el.classList.add('past'); }
     else {
       el.dataset.date = dateStr;
-      el.addEventListener('click', () => selectDate(dateStr));
+      // New click handler — dispatches single / range / toggle based on modifiers
+      el.addEventListener('click', (e) => handleDateClick(dateStr, e));
+      // Double-click = toggle add/remove (mobile-friendly multi-select fallback)
+      el.addEventListener('dblclick', (e) => { e.preventDefault(); toggleDateInSelection(dateStr); });
       if (customerBookings.has(dateStr)) {
         el.classList.add('customer-booked');
         const icon = document.createElement('span');
@@ -364,25 +394,99 @@ function renderCalendar() {
       }
     }
     if (dateStr === todayStr) el.classList.add('today');
-    if (dateStr === selectedDate) el.classList.add('selected');
+    if (selectedDates.has(dateStr)) el.classList.add('selected');
     grid.appendChild(el);
   }
 }
 
-function selectDate(dateStr) {
-  selectedDate = dateStr;
+// ---------------- CLICK DISPATCH ----------------
+function handleDateClick(dateStr, e) {
+  // Shift+click → range select between anchor and this date
+  if (e.shiftKey && anchorDate) {
+    selectDateRange(anchorDate, dateStr);
+    return;
+  }
+  // Ctrl/Cmd+click → toggle add/remove (desktop multi-select)
+  if (e.ctrlKey || e.metaKey) {
+    toggleDateInSelection(dateStr);
+    return;
+  }
+  // Plain click → single select (replaces selection, sets anchor)
+  selectedDates = new Set([dateStr]);
+  anchorDate = dateStr;
   renderCalendar();
   renderActionPanel();
 }
 
+function toggleDateInSelection(dateStr) {
+  if (selectedDates.has(dateStr)) {
+    selectedDates.delete(dateStr);
+    // If we removed the anchor, fall back to any remaining date
+    if (anchorDate === dateStr) {
+      anchorDate = selectedDates.size > 0 ? [...selectedDates][0] : null;
+    }
+  } else {
+    selectedDates.add(dateStr);
+    if (!anchorDate) anchorDate = dateStr;
+  }
+  renderCalendar();
+  renderActionPanel();
+}
+
+function selectDateRange(fromStr, toStr) {
+  // Build inclusive range — ascending or descending, doesn't matter
+  const start = fromStr < toStr ? fromStr : toStr;
+  const end   = fromStr < toStr ? toStr   : fromStr;
+  const startD = new Date(start + 'T00:00:00');
+  const endD   = new Date(end + 'T00:00:00');
+  const today = new Date();
+  const todayStr = today.toISOString().split('T')[0];
+  const newSel = new Set();
+  for (let d = new Date(startD); d <= endD; d.setDate(d.getDate() + 1)) {
+    const ds = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    if (ds < todayStr) continue; // skip past dates
+    newSel.add(ds);
+  }
+  selectedDates = newSel;
+  // Anchor stays as the original anchor so further Shift+Clicks extend from same pivot
+  renderCalendar();
+  renderActionPanel();
+}
+
+window.clearSelection = function() {
+  selectedDates = new Set();
+  anchorDate = null;
+  renderCalendar();
+  renderActionPanel();
+};
+// ------------------------------------------------
+
 function renderActionPanel() {
   const panel = document.getElementById('actionPanel');
-  if (!selectedDate) {
+
+  // Empty state
+  if (selectedDates.size === 0) {
     panel.classList.add('empty');
+    panel.classList.remove('bulk');
     panel.innerHTML = '<div class="empty-msg">⚠ Click a date on the calendar to manage it</div>';
     return;
   }
+
   panel.classList.remove('empty');
+
+  // Single select → existing behaviour
+  if (selectedDates.size === 1) {
+    panel.classList.remove('bulk');
+    renderSingleActionPanel(panel, [...selectedDates][0]);
+    return;
+  }
+
+  // Bulk select
+  panel.classList.add('bulk');
+  renderBulkActionPanel(panel);
+}
+
+function renderSingleActionPanel(panel, selectedDate) {
   const d = new Date(selectedDate + 'T00:00:00');
   const dayName = ['SUN','MON','TUE','WED','THU','FRI','SAT'][d.getDay()];
   const monthName = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'][d.getMonth()];
@@ -402,28 +506,77 @@ function renderActionPanel() {
   if (isCustomer) {
     html += `<p style="font-family:'Space Mono',monospace;font-size:11px;color:var(--concrete-dark);text-align:center;padding:16px 0;">No admin actions available — this is a real customer booking.</p>`;
   } else if (isBlocked) {
-    html += `<button class="action-btn clear" onclick="clearDate()"><span class="icon">✓</span><span class="label-stack">Unblock this date<span class="small">Make available again</span></span></button>`;
+    html += `<button class="action-btn clear" onclick="clearDate('${selectedDate}')"><span class="icon">✓</span><span class="label-stack">Unblock this date<span class="small">Make available again</span></span></button>`;
   } else if (isOverride) {
-    html += `<button class="action-btn clear" onclick="clearDate()"><span class="icon">✓</span><span class="label-stack">Remove override<span class="small">Back to night-only default</span></span></button>`;
-    html += `<button class="action-btn block" onclick="setDate('self_block')"><span class="icon">🚫</span><span class="label-stack">Block this date<span class="small">No one can book</span></span></button>`;
+    html += `<button class="action-btn clear" onclick="clearDate('${selectedDate}')"><span class="icon">✓</span><span class="label-stack">Remove override<span class="small">Back to night-only default</span></span></button>`;
+    html += `<button class="action-btn block" onclick="setDate('self_block','${selectedDate}')"><span class="icon">🚫</span><span class="label-stack">Block this date<span class="small">No one can book</span></span></button>`;
   } else {
-    html += `<button class="action-btn block" onclick="setDate('self_block')"><span class="icon">🚫</span><span class="label-stack">Block this date<span class="small">No one can book it</span></span></button>`;
+    html += `<button class="action-btn block" onclick="setDate('self_block','${selectedDate}')"><span class="icon">🚫</span><span class="label-stack">Block this date<span class="small">No one can book it</span></span></button>`;
     if (isWeekdayDate) {
-      html += `<button class="action-btn override" onclick="setDate('day_override')"><span class="icon">☀</span><span class="label-stack">Allow day shift<span class="small">Override the night-only default</span></span></button>`;
+      html += `<button class="action-btn override" onclick="setDate('day_override','${selectedDate}')"><span class="icon">☀</span><span class="label-stack">Allow day shift<span class="small">Override the night-only default</span></span></button>`;
     }
   }
   if (!isCustomer) {
     const currentTCs = getTCsAvailable(selectedDate);
-    html += `<button class="action-btn tcs" onclick="promptSetTCs()"><span class="icon">👷</span><span class="label-stack">TCs available: ${currentTCs}<span class="small">Tap to change how many TCs you have on this date</span></span></button>`;
+    html += `<button class="action-btn tcs" onclick="promptSetTCs('${selectedDate}')"><span class="icon">👷</span><span class="label-stack">TCs available: ${currentTCs}<span class="small">Tap to change how many TCs you have on this date</span></span></button>`;
   }
   panel.innerHTML = html;
 }
 
-window.setDate = async function(type) {
+function renderBulkActionPanel(panel) {
+  const dates = [...selectedDates].sort();
+  const total = dates.length;
+
+  // Categorise
+  const customer = dates.filter(d => customerBookings.has(d));
+  const editable = dates.filter(d => !customerBookings.has(d));
+  const blockedCount = editable.filter(d => selfBlocks.has(d)).length;
+  const overrideCount = editable.filter(d => dayOverrides.has(d)).length;
+  const weekdayEditable = editable.filter(d => isWeekday(d));
+  const firstDate = dates[0];
+  const lastDate = dates[dates.length - 1];
+
+  const fmtShort = (ds) => {
+    const d = new Date(ds + 'T00:00:00');
+    return `${d.getDate()}/${d.getMonth()+1}`;
+  };
+
+  let html = `<div class="selected-date bulk">📅 ${total} DATES SELECTED &nbsp;·&nbsp; ${fmtShort(firstDate)} → ${fmtShort(lastDate)}</div>`;
+
+  html += `<div class="current-state bulk"><strong>📊 SELECTION BREAKDOWN</strong>`;
+  html += `<ul>`;
+  html += `<li>${editable.length} editable date${editable.length === 1 ? '' : 's'}</li>`;
+  if (customer.length > 0) html += `<li style="color:#ff8a91;">${customer.length} customer booking${customer.length === 1 ? '' : 's'} (will be skipped)</li>`;
+  if (blockedCount > 0) html += `<li>${blockedCount} already self-blocked</li>`;
+  if (overrideCount > 0) html += `<li>${overrideCount} already have day override</li>`;
+  if (weekdayEditable.length > 0) html += `<li>${weekdayEditable.length} weekday${weekdayEditable.length === 1 ? '' : 's'} eligible for day override</li>`;
+  html += `</ul></div>`;
+
+  if (editable.length === 0) {
+    html += `<p style="font-family:'Space Mono',monospace;font-size:11px;color:var(--concrete-dark);text-align:center;padding:16px 0;">⚠ Nothing to do — all selected dates are customer bookings.</p>`;
+  } else {
+    html += `<button class="action-btn block" onclick="bulkBlock()"><span class="icon">🚫</span><span class="label-stack">Block all ${editable.length} date${editable.length === 1 ? '' : 's'}<span class="small">No one can book them</span></span></button>`;
+
+    if (weekdayEditable.length > 0) {
+      html += `<button class="action-btn override" onclick="bulkOverride()"><span class="icon">☀</span><span class="label-stack">Allow day shift on ${weekdayEditable.length} weekday${weekdayEditable.length === 1 ? '' : 's'}<span class="small">Weekends/PH already allow day work — skipped</span></span></button>`;
+    }
+
+    html += `<button class="action-btn clear" onclick="bulkClear()"><span class="icon">✓</span><span class="label-stack">Clear blocks/overrides<span class="small">Reset all selected to default</span></span></button>`;
+
+    html += `<button class="action-btn tcs" onclick="promptBulkSetTCs()"><span class="icon">👷</span><span class="label-stack">Set TCs available<span class="small">Apply same TC count to all selected</span></span></button>`;
+  }
+
+  html += `<button class="action-btn cancel" onclick="clearSelection()"><span class="icon">✕</span><span class="label-stack">Clear selection<span class="small">Deselect all dates</span></span></button>`;
+
+  panel.innerHTML = html;
+}
+
+// ---------------- SINGLE-DATE WRITES ----------------
+window.setDate = async function(type, dateStr) {
   showStatus('⏳ Saving...', 'loading');
   try {
-    await supabase.from('bookings').delete().eq('booking_date', selectedDate).eq('booking_type', type);
-    const { error } = await supabase.from('bookings').insert([{ booking_date: selectedDate, booking_type: type, status: 'Confirmed', tcs_required: 1 }]);
+    await supabase.from('bookings').delete().eq('booking_date', dateStr).eq('booking_type', type);
+    const { error } = await supabase.from('bookings').insert([{ booking_date: dateStr, booking_type: type, status: 'Confirmed', tcs_required: 1 }]);
     if (error) throw error;
     await loadCalendarData();
     renderActionPanel();
@@ -431,10 +584,10 @@ window.setDate = async function(type) {
   } catch (err) { console.error(err); showStatus('⚠ Save failed: ' + err.message, 'error'); }
 };
 
-window.clearDate = async function() {
+window.clearDate = async function(dateStr) {
   showStatus('⏳ Clearing...', 'loading');
   try {
-    const { error } = await supabase.from('bookings').delete().eq('booking_date', selectedDate).neq('booking_type', 'customer');
+    const { error } = await supabase.from('bookings').delete().eq('booking_date', dateStr).neq('booking_type', 'customer');
     if (error) throw error;
     await loadCalendarData();
     renderActionPanel();
@@ -442,21 +595,21 @@ window.clearDate = async function() {
   } catch (err) { console.error(err); showStatus('⚠ Clear failed: ' + err.message, 'error'); }
 };
 
-window.promptSetTCs = function() {
-  const current = getTCsAvailable(selectedDate);
-  const input = prompt(`How many TCs are available on ${selectedDate}?\n\n(Currently: ${current})`, current);
+window.promptSetTCs = function(dateStr) {
+  const current = getTCsAvailable(dateStr);
+  const input = prompt(`How many TCs are available on ${dateStr}?\n\n(Currently: ${current})`, current);
   if (input === null) return;
   const num = parseInt(input);
   if (isNaN(num) || num < 1 || num > 20) { showStatus('⚠ Enter a number between 1 and 20', 'error'); return; }
-  setTCsAvailable(num);
+  setTCsAvailable(dateStr, num);
 };
 
-async function setTCsAvailable(count) {
+async function setTCsAvailable(dateStr, count) {
   showStatus('⏳ Saving TCs availability...', 'loading');
   try {
-    await supabase.from('bookings').delete().eq('booking_date', selectedDate).eq('booking_type', 'availability');
+    await supabase.from('bookings').delete().eq('booking_date', dateStr).eq('booking_type', 'availability');
     if (count > 1) {
-      const { error } = await supabase.from('bookings').insert([{ booking_date: selectedDate, booking_type: 'availability', status: 'Confirmed', tcs_required: count }]);
+      const { error } = await supabase.from('bookings').insert([{ booking_date: dateStr, booking_type: 'availability', status: 'Confirmed', tcs_required: count }]);
       if (error) throw error;
     }
     await loadCalendarData();
@@ -464,6 +617,95 @@ async function setTCsAvailable(count) {
     showStatus(`✅ TCs available set to ${count}`, 'success');
   } catch (err) { console.error(err); showStatus('⚠ Save failed: ' + err.message, 'error'); }
 }
+
+// ---------------- BULK WRITES ----------------
+// All bulk ops:
+//  1) Compute the editable subset (skip customer bookings)
+//  2) Delete any conflicting rows in one query (.in() on dates)
+//  3) Insert new rows in one batch
+//  4) Reload + refresh UI
+
+function editableSelectedDates() {
+  return [...selectedDates].filter(d => !customerBookings.has(d));
+}
+
+window.bulkBlock = async function() {
+  const targets = editableSelectedDates();
+  if (targets.length === 0) return;
+  if (!confirm(`Block ${targets.length} date${targets.length === 1 ? '' : 's'}? Customer bookings are skipped automatically.`)) return;
+  showStatus(`⏳ Blocking ${targets.length} dates...`, 'loading');
+  try {
+    // Wipe any existing self_block / day_override rows for those dates so we don't double-up
+    await supabase.from('bookings').delete().in('booking_date', targets).in('booking_type', ['self_block','day_override']);
+    const rows = targets.map(d => ({ booking_date: d, booking_type: 'self_block', status: 'Confirmed', tcs_required: 1 }));
+    const { error } = await supabase.from('bookings').insert(rows);
+    if (error) throw error;
+    await loadCalendarData();
+    renderActionPanel();
+    showStatus(`✅ Blocked ${targets.length} date${targets.length === 1 ? '' : 's'}`, 'success');
+  } catch (err) { console.error(err); showStatus('⚠ Bulk block failed: ' + err.message, 'error'); }
+};
+
+window.bulkOverride = async function() {
+  // Only weekday editable dates get day_override
+  const targets = editableSelectedDates().filter(d => isWeekday(d));
+  if (targets.length === 0) {
+    showStatus('⚠ No eligible weekdays in selection.', 'error');
+    return;
+  }
+  if (!confirm(`Apply day-shift override to ${targets.length} weekday${targets.length === 1 ? '' : 's'}?`)) return;
+  showStatus(`⏳ Applying override to ${targets.length} dates...`, 'loading');
+  try {
+    await supabase.from('bookings').delete().in('booking_date', targets).in('booking_type', ['self_block','day_override']);
+    const rows = targets.map(d => ({ booking_date: d, booking_type: 'day_override', status: 'Confirmed', tcs_required: 1 }));
+    const { error } = await supabase.from('bookings').insert(rows);
+    if (error) throw error;
+    await loadCalendarData();
+    renderActionPanel();
+    showStatus(`✅ Day override applied to ${targets.length} date${targets.length === 1 ? '' : 's'}`, 'success');
+  } catch (err) { console.error(err); showStatus('⚠ Bulk override failed: ' + err.message, 'error'); }
+};
+
+window.bulkClear = async function() {
+  const targets = editableSelectedDates();
+  if (targets.length === 0) return;
+  if (!confirm(`Clear self-blocks and day overrides from ${targets.length} date${targets.length === 1 ? '' : 's'}? (TCs availability + customer bookings are untouched.)`)) return;
+  showStatus(`⏳ Clearing ${targets.length} dates...`, 'loading');
+  try {
+    const { error } = await supabase.from('bookings').delete().in('booking_date', targets).in('booking_type', ['self_block','day_override']);
+    if (error) throw error;
+    await loadCalendarData();
+    renderActionPanel();
+    showStatus(`✅ Cleared ${targets.length} date${targets.length === 1 ? '' : 's'}`, 'success');
+  } catch (err) { console.error(err); showStatus('⚠ Bulk clear failed: ' + err.message, 'error'); }
+};
+
+window.promptBulkSetTCs = function() {
+  const targets = editableSelectedDates();
+  if (targets.length === 0) return;
+  const input = prompt(`Set TCs available for ${targets.length} date${targets.length === 1 ? '' : 's'}?\n\nEnter a number 1–20.\n(1 = default, no special record kept)`, '2');
+  if (input === null) return;
+  const num = parseInt(input);
+  if (isNaN(num) || num < 1 || num > 20) { showStatus('⚠ Enter a number between 1 and 20', 'error'); return; }
+  bulkSetTCs(targets, num);
+};
+
+async function bulkSetTCs(targets, count) {
+  showStatus(`⏳ Setting TCs (${count}) on ${targets.length} dates...`, 'loading');
+  try {
+    // Wipe existing availability rows for those dates
+    await supabase.from('bookings').delete().in('booking_date', targets).eq('booking_type', 'availability');
+    if (count > 1) {
+      const rows = targets.map(d => ({ booking_date: d, booking_type: 'availability', status: 'Confirmed', tcs_required: count }));
+      const { error } = await supabase.from('bookings').insert(rows);
+      if (error) throw error;
+    }
+    await loadCalendarData();
+    renderActionPanel();
+    showStatus(`✅ TCs set to ${count} on ${targets.length} date${targets.length === 1 ? '' : 's'}`, 'success');
+  } catch (err) { console.error(err); showStatus('⚠ Bulk TCs save failed: ' + err.message, 'error'); }
+}
+// ------------------------------------------------
 
 function showStatus(msg, type) {
   const el = document.getElementById('statusMsg');

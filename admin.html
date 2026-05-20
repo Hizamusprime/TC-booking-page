@@ -4,20 +4,20 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Admin // Luke Heiser TC</title>
-
+ 
 <script>
   const CONFIG = {
     SUPABASE_URL: "https://ulmwldoyhapqtcuhzkcr.supabase.co",
     SUPABASE_KEY: "sb_publishable_RSReGSAfH8AYvVVwuZE9tA_2MrQ_C_q"
   };
 </script>
-
+ 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Space+Mono:wght@400;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-
+ 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-
+ 
 <style>
 :root {
   --safety-yellow: #FFD500;
@@ -61,18 +61,17 @@ header .public-link:hover { color: var(--safety-yellow); border-color: var(--saf
 .panel-label { position: absolute; top: -12px; left: 20px; background: var(--warning-red); color: var(--white); font-family: 'Space Mono', monospace; font-size: 10px; font-weight: 700; letter-spacing: 2px; padding: 4px 10px; text-transform: uppercase; }
 .panel h2 { font-family: 'Archivo Black', sans-serif; font-size: 22px; text-transform: uppercase; letter-spacing: -0.5px; margin-bottom: 8px; }
 .panel .panel-sub { font-family: 'Space Mono', monospace; font-size: 11px; color: var(--concrete-dark); margin-bottom: 20px; }
-
-/* Multi-select hint banner */
+ 
 .multi-hint { background: var(--steel-dark); border: 1px dashed var(--steel-light); padding: 10px 14px; margin-bottom: 14px; font-family: 'Space Mono', monospace; font-size: 11px; color: var(--concrete-dark); line-height: 1.6; }
 .multi-hint kbd { background: var(--steel-light); color: var(--safety-yellow); padding: 1px 6px; border-radius: 2px; font-size: 10px; font-weight: 700; }
-
+ 
 .cal-controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
 .cal-controls button { background: var(--steel-light); border: none; color: var(--white); font-family: 'Space Mono', monospace; font-weight: 700; padding: 8px 16px; cursor: pointer; }
 .cal-controls button:hover { background: var(--safety-yellow); color: var(--steel-dark); }
 .cal-controls .month-label { font-family: 'Archivo Black', sans-serif; font-size: 16px; text-transform: uppercase; letter-spacing: 1px; }
 .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; user-select: none; -webkit-user-select: none; }
 .cal-day-name { font-family: 'Space Mono', monospace; font-size: 10px; font-weight: 700; text-align: center; color: var(--concrete-dark); letter-spacing: 1px; padding: 8px 0; }
-.cal-day { aspect-ratio: 1; border: 1px solid var(--steel-light); display: flex; align-items: center; justify-content: center; font-family: 'Space Mono', monospace; font-weight: 700; font-size: 14px; cursor: pointer; transition: all 0.15s; position: relative; background: var(--steel-dark); }
+.cal-day { aspect-ratio: 1; border: 1px solid var(--steel-light); display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: 'Space Mono', monospace; font-weight: 700; font-size: 14px; cursor: pointer; transition: all 0.15s; position: relative; background: var(--steel-dark); padding: 2px; }
 .cal-day.empty { border-color: transparent; cursor: default; background: transparent; }
 .cal-day.past { color: var(--steel-light); cursor: not-allowed; opacity: 0.4; }
 .cal-day.today { border-color: var(--safety-yellow); border-width: 2px; }
@@ -82,6 +81,13 @@ header .public-link:hover { color: var(--safety-yellow); border-color: var(--saf
 .cal-day.customer-booked { background: repeating-linear-gradient(-45deg, var(--warning-red) 0, var(--warning-red) 4px, var(--steel-dark) 4px, var(--steel-dark) 8px); color: var(--concrete-dark); }
 .cal-day.self-blocked { background: var(--steel-light); color: var(--warning-red); border-color: var(--warning-red); }
 .cal-day.day-override { background: var(--steel-dark); color: var(--override-cyan); border-color: var(--override-cyan); border-width: 2px; }
+ 
+.crew-dots { display: flex; gap: 2px; margin-top: 2px; min-height: 7px; align-items: center; justify-content: center; flex-wrap: wrap; max-width: 100%; }
+.crew-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.crew-dot.driver { background: var(--stop-red); }
+.crew-dot.passenger { background: transparent; border: 1px solid var(--stop-red); }
+.crew-dot.stranded { background: transparent; border: 1px dashed var(--concrete-dark); opacity: 0.6; }
+ 
 .cal-legend { margin-top: 18px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-family: 'Space Mono', monospace; font-size: 11px; color: var(--concrete-dark); }
 .cal-legend > div { display: flex; align-items: center; gap: 6px; }
 .cal-legend .swatch { display: inline-block; width: 14px; height: 14px; flex-shrink: 0; border: 1px solid var(--steel-light); position: relative; }
@@ -89,7 +95,9 @@ header .public-link:hover { color: var(--safety-yellow); border-color: var(--saf
 .cal-legend .swatch.booked { background: repeating-linear-gradient(-45deg, var(--warning-red) 0, var(--warning-red) 2px, var(--steel-dark) 2px, var(--steel-dark) 4px); }
 .cal-legend .swatch.blocked { background: var(--steel-light); border-color: var(--warning-red); }
 .cal-legend .swatch.override { background: var(--steel-dark); border-color: var(--override-cyan); border-width: 2px; }
-
+.cal-legend .swatch.crew-d { background: var(--stop-red); border: none; border-radius: 50%; }
+.cal-legend .swatch.crew-p { background: transparent; border: 1px solid var(--stop-red); border-radius: 50%; }
+ 
 .action-panel { background: var(--steel-dark); border: 2px solid var(--safety-yellow); padding: 24px; }
 .action-panel.empty { border-color: var(--steel-light); }
 .action-panel.bulk { border-color: var(--override-cyan); }
@@ -121,7 +129,38 @@ header .public-link:hover { color: var(--safety-yellow); border-color: var(--saf
 .action-btn.tcs:hover { background: var(--safety-yellow); color: var(--steel-dark); }
 .action-btn.cancel { border-color: var(--concrete-dark); margin-top: 8px; }
 .action-btn.cancel:hover { background: var(--concrete-dark); color: var(--steel-dark); }
-
+ 
+.modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.75); display: none; align-items: center; justify-content: center; z-index: 100; padding: 20px; }
+.modal-backdrop.visible { display: flex; }
+.modal { background: var(--steel); border: 2px solid var(--safety-yellow); padding: 28px; max-width: 460px; width: 100%; }
+.modal h3 { font-family: 'Archivo Black', sans-serif; font-size: 22px; text-transform: uppercase; letter-spacing: -0.5px; margin-bottom: 6px; }
+.modal .modal-sub { font-family: 'Space Mono', monospace; font-size: 12px; color: var(--concrete-dark); margin-bottom: 20px; line-height: 1.5; }
+ 
+.crew-row { display: flex; align-items: center; justify-content: space-between; background: var(--steel-dark); border: 1px solid var(--steel-light); padding: 14px 16px; margin-bottom: 12px; }
+.crew-row .crew-label { display: flex; align-items: center; gap: 12px; }
+.crew-row .crew-label-text { font-family: 'Archivo Black', sans-serif; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px; }
+.crew-row .crew-label-sub { font-family: 'Space Mono', monospace; font-size: 10px; color: var(--concrete-dark); display: block; margin-top: 2px; text-transform: none; letter-spacing: 0; }
+.crew-stepper { display: flex; align-items: center; gap: 10px; }
+.crew-stepper button { background: var(--steel-light); color: var(--white); border: none; width: 36px; height: 36px; font-family: 'Archivo Black', sans-serif; font-size: 20px; cursor: pointer; transition: all 0.15s; }
+.crew-stepper button:hover:not(:disabled) { background: var(--safety-yellow); color: var(--steel-dark); }
+.crew-stepper button:disabled { opacity: 0.3; cursor: not-allowed; }
+.crew-stepper .crew-count { font-family: 'Archivo Black', sans-serif; font-size: 24px; min-width: 32px; text-align: center; color: var(--safety-yellow); }
+ 
+.stop-sign { width: 28px; height: 28px; display: inline-block; position: relative; }
+.stop-sign svg { width: 100%; height: 100%; display: block; }
+ 
+.modal-summary { background: var(--steel-dark); border-left: 4px solid var(--safety-yellow); padding: 12px 14px; margin: 16px 0; font-family: 'Space Mono', monospace; font-size: 12px; line-height: 1.6; }
+.modal-summary.warn { border-left-color: var(--warning-red); color: #ff8a91; }
+.modal-summary strong { color: var(--safety-yellow); }
+.modal-summary.warn strong { color: var(--warning-red); }
+ 
+.modal-actions { display: flex; gap: 10px; margin-top: 16px; }
+.modal-actions button { flex: 1; padding: 14px; font-family: 'Archivo Black', sans-serif; font-size: 13px; letter-spacing: 0.5px; text-transform: uppercase; cursor: pointer; border: 2px solid; transition: all 0.15s; }
+.modal-actions .btn-save { background: var(--safety-yellow); color: var(--steel-dark); border-color: var(--safety-yellow); }
+.modal-actions .btn-save:hover { transform: translate(-2px, -2px); box-shadow: 4px 4px 0 0 rgba(0,0,0,0.85); }
+.modal-actions .btn-cancel { background: transparent; color: var(--white); border-color: var(--concrete-dark); }
+.modal-actions .btn-cancel:hover { background: var(--concrete-dark); color: var(--steel-dark); }
+ 
 .rates-table { width: 100%; border-collapse: collapse; margin-bottom: 8px; }
 .rates-table th { text-align: left; font-family: 'Space Mono', monospace; font-size: 11px; font-weight: 700; letter-spacing: 1px; color: var(--safety-yellow); padding: 8px 12px; border-bottom: 2px solid var(--steel-light); text-transform: uppercase; }
 .rates-table td { padding: 10px 12px; border-bottom: 1px solid var(--steel-light); font-family: 'Space Mono', monospace; font-size: 13px; vertical-align: middle; }
@@ -139,9 +178,9 @@ footer { text-align: center; padding: 24px; font-family: 'Space Mono', monospace
 </style>
 </head>
 <body>
-
+ 
 <div class="hazard-stripe"></div>
-
+ 
 <header>
   <div class="logo">ADMIN<span class="accent"> // </span>LUKE HEISER TC</div>
   <div style="display:flex; gap:8px; align-items:center;">
@@ -149,7 +188,7 @@ footer { text-align: center; padding: 24px; font-family: 'Space Mono', monospace
     <a href="#" class="public-link" onclick="signOut(); return false;">Sign out</a>
   </div>
 </header>
-
+ 
 <div class="login-gate" id="loginGate">
   <div class="login-card">
     <h1>🔒 Admin Access</h1>
@@ -160,24 +199,24 @@ footer { text-align: center; padding: 24px; font-family: 'Space Mono', monospace
     <div class="login-error" id="loginError">⚠ Wrong email or password.</div>
   </div>
 </div>
-
+ 
 <div class="admin-main" id="adminMain">
   <h1 class="admin-title">📅 Calendar Manager</h1>
   <p class="admin-subtitle">Click a date to manage it, or select multiple to apply rules in bulk.</p>
-
+ 
   <div class="admin-grid">
     <div class="panel">
       <div class="panel-label">Calendar</div>
       <h2>Your Schedule</h2>
       <p class="panel-sub">Tap a date to manage it. Past dates are locked.</p>
-
+ 
       <div class="multi-hint">
         <strong style="color:var(--safety-yellow);">MULTI-SELECT:</strong>
         &nbsp;<kbd>Click</kbd> = pick one &nbsp;·&nbsp;
         <kbd>Shift</kbd>+<kbd>Click</kbd> = range &nbsp;·&nbsp;
         <kbd>Ctrl</kbd>/<kbd>⌘</kbd>+<kbd>Click</kbd> or <kbd>Double-click</kbd> = toggle add/remove
       </div>
-
+ 
       <div class="cal-controls">
         <button id="prevMonth">&larr; PREV</button>
         <div class="month-label" id="monthLabel">—</div>
@@ -189,9 +228,11 @@ footer { text-align: center; padding: 24px; font-family: 'Space Mono', monospace
         <div><span class="swatch booked"></span>Customer booking</div>
         <div><span class="swatch blocked"></span>🚫 Self-blocked</div>
         <div><span class="swatch override"></span>☀ Day override</div>
+        <div><span class="swatch crew-d"></span>Driver (●)</div>
+        <div><span class="swatch crew-p"></span>Passenger (○)</div>
       </div>
     </div>
-
+ 
     <div class="panel">
       <div class="panel-label">Actions</div>
       <h2>Manage Date</h2>
@@ -202,7 +243,7 @@ footer { text-align: center; padding: 24px; font-family: 'Space Mono', monospace
       <div class="status-msg" id="statusMsg"></div>
     </div>
   </div>
-
+ 
   <div class="panel" style="margin-top: 32px;">
     <div class="panel-label">Rate Card</div>
     <h2>💰 Hourly Rates</h2>
@@ -224,27 +265,74 @@ footer { text-align: center; padding: 24px; font-family: 'Space Mono', monospace
     <div class="status-msg" id="ratesStatusMsg"></div>
   </div>
 </div>
-
+ 
+<!-- CREW EDITOR MODAL -->
+<div class="modal-backdrop" id="crewModal">
+  <div class="modal">
+    <h3 id="crewModalTitle">👷 Set Crew</h3>
+    <p class="modal-sub" id="crewModalSub">A driver can work solo. A passenger needs a driver — 1 driver carries 1 passenger.</p>
+ 
+    <div class="crew-row">
+      <div class="crew-label">
+        <span class="stop-sign" id="stopSignDriver"></span>
+        <div>
+          <span class="crew-label-text">Drivers</span>
+          <span class="crew-label-sub">Can work solo</span>
+        </div>
+      </div>
+      <div class="crew-stepper">
+        <button id="drvMinus">−</button>
+        <span class="crew-count" id="drvCount">1</span>
+        <button id="drvPlus">+</button>
+      </div>
+    </div>
+ 
+    <div class="crew-row">
+      <div class="crew-label">
+        <span class="stop-sign" id="stopSignPassenger"></span>
+        <div>
+          <span class="crew-label-text">Passengers</span>
+          <span class="crew-label-sub">Need a driver to bring them</span>
+        </div>
+      </div>
+      <div class="crew-stepper">
+        <button id="pasMinus">−</button>
+        <span class="crew-count" id="pasCount">0</span>
+        <button id="pasPlus">+</button>
+      </div>
+    </div>
+ 
+    <div class="modal-summary" id="modalSummary"></div>
+ 
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeCrewModal()">Cancel</button>
+      <button class="btn-save" id="crewSaveBtn">Save</button>
+    </div>
+  </div>
+</div>
+ 
 <footer>LUKE HEISER TRAFFIC CONTROL // Admin Panel // ABN 89 740 423 914</footer>
-
+ 
 <script>
 window.addEventListener('load', () => {
-
+ 
 const supabase = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_KEY);
-
+ 
 let viewMonth = new Date().getMonth();
 let viewYear = new Date().getFullYear();
-let customerBookings = new Set();
+ 
+let customerBookings = new Map();
 let selfBlocks = new Set();
 let dayOverrides = new Set();
-let tcsAvailableMap = {};
-
-// -------------- MULTI-SELECT STATE --------------
-// selectedDates holds 1..N dates. anchorDate is the pivot used by Shift+Click for range select.
+let availabilityMap = new Map();
+ 
 let selectedDates = new Set();
 let anchorDate = null;
-// -------------------------------------------------
-
+ 
+let crewModalDrivers = 1;
+let crewModalPassengers = 0;
+let crewModalContext = null;
+ 
 const DEFAULT_RATES = {
   Day:              { base: 50,  label: "Mon–Fri 6am–6pm" },
   Afternoon:        { base: 60,  label: "Mon–Fri 6pm–10pm" },
@@ -254,19 +342,46 @@ const DEFAULT_RATES = {
   "Public Holiday": { base: 107, label: "All day (NSW PH)" }
 };
 let currentRates = JSON.parse(JSON.stringify(DEFAULT_RATES));
-
+ 
 const NSW_PUBLIC_HOLIDAYS = new Set([
   "2026-01-01","2026-01-26","2026-04-03","2026-04-04","2026-04-05","2026-04-06",
   "2026-04-25","2026-06-08","2026-10-05","2026-12-25","2026-12-26","2026-12-28","2027-01-01"
 ]);
-
+ 
 function isWeekday(dateStr) {
   if (NSW_PUBLIC_HOLIDAYS.has(dateStr)) return false;
   const d = new Date(dateStr + 'T00:00:00');
   const day = d.getDay();
   return day >= 1 && day <= 5;
 }
-
+ 
+// =================================================================
+// THE CORE MATH — single source of truth for crew availability
+// =================================================================
+function getRoster(dateStr) {
+  const a = availabilityMap.get(dateStr);
+  if (a) return { tcs: a.tcs, drivers: a.drivers, passengers: a.tcs - a.drivers };
+  return { tcs: 1, drivers: 1, passengers: 0 };
+}
+ 
+function getBooked(dateStr) {
+  const b = customerBookings.get(dateStr);
+  if (b) return { tcs: b.tcs, drivers: b.drivers, passengers: b.tcs - b.drivers };
+  return { tcs: 0, drivers: 0, passengers: 0 };
+}
+ 
+function effectiveRemaining(dateStr) {
+  const r = getRoster(dateStr);
+  const b = getBooked(dateStr);
+  const drv = Math.max(0, r.drivers - b.drivers);
+  const pas = Math.max(0, r.passengers - b.passengers);
+  const paired = Math.min(drv, pas);
+  const effective = drv + paired;
+  const stranded = pas - paired;
+  return { drivers: drv, passengers: pas, effective, stranded };
+}
+// =================================================================
+ 
 window.attemptLogin = async function() {
   const email = document.getElementById('emailInput').value.trim();
   const password = document.getElementById('passwordInput').value;
@@ -285,49 +400,52 @@ window.attemptLogin = async function() {
   }
   showAdmin();
 };
-
+ 
 window.signOut = async function() {
   await supabase.auth.signOut();
   location.reload();
 };
-
+ 
 document.getElementById('passwordInput').addEventListener('keypress', (e) => {
   if (e.key === 'Enter') attemptLogin();
 });
 document.getElementById('emailInput').addEventListener('keypress', (e) => {
   if (e.key === 'Enter') document.getElementById('passwordInput').focus();
 });
-
+ 
 function showAdmin() {
   document.getElementById('loginGate').style.display = 'none';
   document.getElementById('adminMain').classList.add('visible');
   loadCalendarData();
   loadRates();
 }
-
+ 
 (async () => {
   const { data: { session } } = await supabase.auth.getSession();
   if (session) showAdmin();
 })();
-
+ 
 async function loadCalendarData() {
   try {
     const { data, error } = await supabase
       .from('bookings')
-      .select('booking_date, booking_type, status, tcs_required');
+      .select('booking_date, booking_type, status, tcs_required, drivers_count');
     if (error) throw error;
-    customerBookings = new Set();
+    customerBookings = new Map();
     selfBlocks = new Set();
     dayOverrides = new Set();
-    tcsAvailableMap = {};
+    availabilityMap = new Map();
     (data || []).forEach(r => {
       const date = r.booking_date;
       const type = r.booking_type || 'customer';
       const status = r.status;
-      if (type === 'customer' && status !== 'Cancelled') customerBookings.add(date);
-      else if (type === 'self_block') selfBlocks.add(date);
+      const tcs = r.tcs_required || 1;
+      const drv = (r.drivers_count !== undefined && r.drivers_count !== null) ? r.drivers_count : tcs;
+      if (type === 'customer' && status !== 'Cancelled') {
+        customerBookings.set(date, { tcs, drivers: drv });
+      } else if (type === 'self_block') selfBlocks.add(date);
       else if (type === 'day_override') dayOverrides.add(date);
-      else if (type === 'availability') tcsAvailableMap[date] = r.tcs_required || 1;
+      else if (type === 'availability') availabilityMap.set(date, { tcs, drivers: drv });
     });
     renderCalendar();
   } catch (err) {
@@ -335,9 +453,32 @@ async function loadCalendarData() {
     showStatus('⚠ Could not load calendar: ' + err.message, 'error');
   }
 }
-
-function getTCsAvailable(dateStr) { return tcsAvailableMap[dateStr] || 1; }
-
+ 
+function renderCrewDots(roster, container) {
+  const total = roster.drivers + roster.passengers;
+  if (total <= 1) return;
+  const max = 6;
+  const visible = Math.min(total, max);
+  const dCount = Math.min(roster.drivers, visible);
+  const pCount = visible - dCount;
+  for (let i = 0; i < dCount; i++) {
+    const dot = document.createElement('span');
+    dot.className = 'crew-dot driver';
+    container.appendChild(dot);
+  }
+  for (let i = 0; i < pCount; i++) {
+    const dot = document.createElement('span');
+    dot.className = 'crew-dot passenger';
+    container.appendChild(dot);
+  }
+  if (total > max) {
+    const overflow = document.createElement('span');
+    overflow.style.cssText = 'font-size:8px; color:var(--concrete-dark); margin-left:2px;';
+    overflow.textContent = `+${total - max}`;
+    container.appendChild(overflow);
+  }
+}
+ 
 function renderCalendar() {
   const grid = document.getElementById('calGrid');
   const monthLabel = document.getElementById('monthLabel');
@@ -365,13 +506,14 @@ function renderCalendar() {
     const dateStr = `${viewYear}-${String(viewMonth+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
     const el = document.createElement('div');
     el.className = 'cal-day';
-    el.textContent = day;
+    const dayNum = document.createElement('span');
+    dayNum.textContent = day;
+    el.appendChild(dayNum);
+ 
     if (dateStr < todayStr) { el.classList.add('past'); }
     else {
       el.dataset.date = dateStr;
-      // New click handler — dispatches single / range / toggle based on modifiers
       el.addEventListener('click', (e) => handleDateClick(dateStr, e));
-      // Double-click = toggle add/remove (mobile-friendly multi-select fallback)
       el.addEventListener('dblclick', (e) => { e.preventDefault(); toggleDateInSelection(dateStr); });
       if (customerBookings.has(dateStr)) {
         el.classList.add('customer-booked');
@@ -392,36 +534,41 @@ function renderCalendar() {
         icon.textContent = '☀';
         el.appendChild(icon);
       }
+ 
+      // Crew dots showing effective remaining
+      const dotsRow = document.createElement('div');
+      dotsRow.className = 'crew-dots';
+      const eff = effectiveRemaining(dateStr);
+      const remRoster = { drivers: eff.drivers, passengers: eff.passengers - eff.stranded };
+      renderCrewDots(remRoster, dotsRow);
+      if (eff.stranded > 0) {
+        for (let i = 0; i < Math.min(eff.stranded, 3); i++) {
+          const dot = document.createElement('span');
+          dot.className = 'crew-dot stranded';
+          dot.title = 'Stranded passenger (no driver)';
+          dotsRow.appendChild(dot);
+        }
+      }
+      el.appendChild(dotsRow);
     }
     if (dateStr === todayStr) el.classList.add('today');
     if (selectedDates.has(dateStr)) el.classList.add('selected');
     grid.appendChild(el);
   }
 }
-
-// ---------------- CLICK DISPATCH ----------------
+ 
 function handleDateClick(dateStr, e) {
-  // Shift+click → range select between anchor and this date
-  if (e.shiftKey && anchorDate) {
-    selectDateRange(anchorDate, dateStr);
-    return;
-  }
-  // Ctrl/Cmd+click → toggle add/remove (desktop multi-select)
-  if (e.ctrlKey || e.metaKey) {
-    toggleDateInSelection(dateStr);
-    return;
-  }
-  // Plain click → single select (replaces selection, sets anchor)
+  if (e.shiftKey && anchorDate) { selectDateRange(anchorDate, dateStr); return; }
+  if (e.ctrlKey || e.metaKey) { toggleDateInSelection(dateStr); return; }
   selectedDates = new Set([dateStr]);
   anchorDate = dateStr;
   renderCalendar();
   renderActionPanel();
 }
-
+ 
 function toggleDateInSelection(dateStr) {
   if (selectedDates.has(dateStr)) {
     selectedDates.delete(dateStr);
-    // If we removed the anchor, fall back to any remaining date
     if (anchorDate === dateStr) {
       anchorDate = selectedDates.size > 0 ? [...selectedDates][0] : null;
     }
@@ -432,9 +579,8 @@ function toggleDateInSelection(dateStr) {
   renderCalendar();
   renderActionPanel();
 }
-
+ 
 function selectDateRange(fromStr, toStr) {
-  // Build inclusive range — ascending or descending, doesn't matter
   const start = fromStr < toStr ? fromStr : toStr;
   const end   = fromStr < toStr ? toStr   : fromStr;
   const startD = new Date(start + 'T00:00:00');
@@ -444,48 +590,39 @@ function selectDateRange(fromStr, toStr) {
   const newSel = new Set();
   for (let d = new Date(startD); d <= endD; d.setDate(d.getDate() + 1)) {
     const ds = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-    if (ds < todayStr) continue; // skip past dates
+    if (ds < todayStr) continue;
     newSel.add(ds);
   }
   selectedDates = newSel;
-  // Anchor stays as the original anchor so further Shift+Clicks extend from same pivot
   renderCalendar();
   renderActionPanel();
 }
-
+ 
 window.clearSelection = function() {
   selectedDates = new Set();
   anchorDate = null;
   renderCalendar();
   renderActionPanel();
 };
-// ------------------------------------------------
-
+ 
 function renderActionPanel() {
   const panel = document.getElementById('actionPanel');
-
-  // Empty state
   if (selectedDates.size === 0) {
     panel.classList.add('empty');
     panel.classList.remove('bulk');
     panel.innerHTML = '<div class="empty-msg">⚠ Click a date on the calendar to manage it</div>';
     return;
   }
-
   panel.classList.remove('empty');
-
-  // Single select → existing behaviour
   if (selectedDates.size === 1) {
     panel.classList.remove('bulk');
     renderSingleActionPanel(panel, [...selectedDates][0]);
     return;
   }
-
-  // Bulk select
   panel.classList.add('bulk');
   renderBulkActionPanel(panel);
 }
-
+ 
 function renderSingleActionPanel(panel, selectedDate) {
   const d = new Date(selectedDate + 'T00:00:00');
   const dayName = ['SUN','MON','TUE','WED','THU','FRI','SAT'][d.getDay()];
@@ -495,16 +632,40 @@ function renderSingleActionPanel(panel, selectedDate) {
   const isBlocked = selfBlocks.has(selectedDate);
   const isOverride = dayOverrides.has(selectedDate);
   const isWeekdayDate = isWeekday(selectedDate);
+ 
   let stateClass = 'normal';
   let stateText = '';
-  if (isCustomer) { stateClass = 'booked'; stateText = '<strong>📋 CUSTOMER BOOKING</strong>This date has a confirmed customer booking.'; }
+  if (isCustomer) {
+    const bk = customerBookings.get(selectedDate);
+    stateClass = 'booked';
+    stateText = `<strong>📋 CUSTOMER BOOKING</strong>Booked: ${bk.tcs} TC${bk.tcs===1?'':'s'} (${bk.drivers}D / ${bk.tcs-bk.drivers}P).`;
+  }
   else if (isBlocked) { stateClass = 'blocked'; stateText = '<strong>🚫 SELF-BLOCKED</strong>You\'ve blocked this date. No one can book it.'; }
   else if (isOverride) { stateClass = 'override'; stateText = '<strong>☀ DAY OVERRIDE</strong>Day shifts allowed on this Mon–Fri date.'; }
   else if (isWeekdayDate) { stateClass = 'normal'; stateText = '<strong>🌙 NIGHT-ONLY (default)</strong>Mon–Fri night shifts only (4PM+). Use override to allow day shifts.'; }
   else { stateClass = 'normal'; stateText = '<strong>✓ AVAILABLE</strong>Open for any shift on this weekend / public holiday.'; }
-  let html = `<div class="selected-date">📅 ${dateLabel}</div><div class="current-state ${stateClass}">${stateText}</div>`;
+ 
+  const roster = getRoster(selectedDate);
+  const eff = effectiveRemaining(selectedDate);
+  let crewHtml = `<div class="current-state ${eff.stranded > 0 ? 'blocked' : 'normal'}" style="margin-top:-10px;">`;
+  crewHtml += `<strong>👷 CREW STATUS</strong>`;
+  crewHtml += `<ul>`;
+  crewHtml += `<li>Roster: <strong style="color:var(--white);">${roster.tcs} TC${roster.tcs===1?'':'s'}</strong> — ${roster.drivers}D / ${roster.passengers}P</li>`;
   if (isCustomer) {
-    html += `<p style="font-family:'Space Mono',monospace;font-size:11px;color:var(--concrete-dark);text-align:center;padding:16px 0;">No admin actions available — this is a real customer booking.</p>`;
+    const bk = customerBookings.get(selectedDate);
+    crewHtml += `<li>Booked: ${bk.tcs} TC${bk.tcs===1?'':'s'} (${bk.drivers}D / ${bk.tcs-bk.drivers}P)</li>`;
+  }
+  crewHtml += `<li>Available to book: <strong style="color:var(--white);">${eff.effective} TC${eff.effective===1?'':'s'}</strong></li>`;
+  if (eff.stranded > 0) {
+    crewHtml += `<li style="color:#ff8a91;">⚠ ${eff.stranded} stranded passenger${eff.stranded===1?'':'s'} (no driver available)</li>`;
+  }
+  crewHtml += `</ul></div>`;
+ 
+  let html = `<div class="selected-date">📅 ${dateLabel}</div><div class="current-state ${stateClass}">${stateText}</div>`;
+  html += crewHtml;
+ 
+  if (isCustomer) {
+    html += `<p style="font-family:'Space Mono',monospace;font-size:11px;color:var(--concrete-dark);text-align:center;padding:16px 0;">No admin actions on the booking itself — but you can still adjust crew availability below.</p>`;
   } else if (isBlocked) {
     html += `<button class="action-btn clear" onclick="clearDate('${selectedDate}')"><span class="icon">✓</span><span class="label-stack">Unblock this date<span class="small">Make available again</span></span></button>`;
   } else if (isOverride) {
@@ -516,18 +677,16 @@ function renderSingleActionPanel(panel, selectedDate) {
       html += `<button class="action-btn override" onclick="setDate('day_override','${selectedDate}')"><span class="icon">☀</span><span class="label-stack">Allow day shift<span class="small">Override the night-only default</span></span></button>`;
     }
   }
-  if (!isCustomer) {
-    const currentTCs = getTCsAvailable(selectedDate);
-    html += `<button class="action-btn tcs" onclick="promptSetTCs('${selectedDate}')"><span class="icon">👷</span><span class="label-stack">TCs available: ${currentTCs}<span class="small">Tap to change how many TCs you have on this date</span></span></button>`;
-  }
+ 
+  html += `<button class="action-btn tcs" onclick='openCrewModal("single", ${JSON.stringify([selectedDate])})'><span class="icon">👷</span><span class="label-stack">Edit crew: ${roster.drivers}D + ${roster.passengers}P<span class="small">Set who's available on this date</span></span></button>`;
+ 
   panel.innerHTML = html;
 }
-
+ 
 function renderBulkActionPanel(panel) {
   const dates = [...selectedDates].sort();
   const total = dates.length;
-
-  // Categorise
+ 
   const customer = dates.filter(d => customerBookings.has(d));
   const editable = dates.filter(d => !customerBookings.has(d));
   const blockedCount = editable.filter(d => selfBlocks.has(d)).length;
@@ -535,109 +694,192 @@ function renderBulkActionPanel(panel) {
   const weekdayEditable = editable.filter(d => isWeekday(d));
   const firstDate = dates[0];
   const lastDate = dates[dates.length - 1];
-
+ 
   const fmtShort = (ds) => {
     const d = new Date(ds + 'T00:00:00');
     return `${d.getDate()}/${d.getMonth()+1}`;
   };
-
+ 
   let html = `<div class="selected-date bulk">📅 ${total} DATES SELECTED &nbsp;·&nbsp; ${fmtShort(firstDate)} → ${fmtShort(lastDate)}</div>`;
-
+ 
   html += `<div class="current-state bulk"><strong>📊 SELECTION BREAKDOWN</strong>`;
   html += `<ul>`;
   html += `<li>${editable.length} editable date${editable.length === 1 ? '' : 's'}</li>`;
-  if (customer.length > 0) html += `<li style="color:#ff8a91;">${customer.length} customer booking${customer.length === 1 ? '' : 's'} (will be skipped)</li>`;
+  if (customer.length > 0) html += `<li style="color:#ff8a91;">${customer.length} customer booking${customer.length === 1 ? '' : 's'} (skipped from block/override)</li>`;
   if (blockedCount > 0) html += `<li>${blockedCount} already self-blocked</li>`;
   if (overrideCount > 0) html += `<li>${overrideCount} already have day override</li>`;
   if (weekdayEditable.length > 0) html += `<li>${weekdayEditable.length} weekday${weekdayEditable.length === 1 ? '' : 's'} eligible for day override</li>`;
   html += `</ul></div>`;
-
-  if (editable.length === 0) {
-    html += `<p style="font-family:'Space Mono',monospace;font-size:11px;color:var(--concrete-dark);text-align:center;padding:16px 0;">⚠ Nothing to do — all selected dates are customer bookings.</p>`;
+ 
+  if (editable.length === 0 && customer.length === 0) {
+    html += `<p style="font-family:'Space Mono',monospace;font-size:11px;color:var(--concrete-dark);text-align:center;padding:16px 0;">⚠ Nothing to do.</p>`;
   } else {
-    html += `<button class="action-btn block" onclick="bulkBlock()"><span class="icon">🚫</span><span class="label-stack">Block all ${editable.length} date${editable.length === 1 ? '' : 's'}<span class="small">No one can book them</span></span></button>`;
-
-    if (weekdayEditable.length > 0) {
-      html += `<button class="action-btn override" onclick="bulkOverride()"><span class="icon">☀</span><span class="label-stack">Allow day shift on ${weekdayEditable.length} weekday${weekdayEditable.length === 1 ? '' : 's'}<span class="small">Weekends/PH already allow day work — skipped</span></span></button>`;
+    if (editable.length > 0) {
+      html += `<button class="action-btn block" onclick="bulkBlock()"><span class="icon">🚫</span><span class="label-stack">Block all ${editable.length} date${editable.length === 1 ? '' : 's'}<span class="small">No one can book them</span></span></button>`;
+      if (weekdayEditable.length > 0) {
+        html += `<button class="action-btn override" onclick="bulkOverride()"><span class="icon">☀</span><span class="label-stack">Allow day shift on ${weekdayEditable.length} weekday${weekdayEditable.length === 1 ? '' : 's'}<span class="small">Weekends/PH already allow day work — skipped</span></span></button>`;
+      }
+      html += `<button class="action-btn clear" onclick="bulkClear()"><span class="icon">✓</span><span class="label-stack">Clear blocks/overrides<span class="small">Reset selected to default</span></span></button>`;
     }
-
-    html += `<button class="action-btn clear" onclick="bulkClear()"><span class="icon">✓</span><span class="label-stack">Clear blocks/overrides<span class="small">Reset all selected to default</span></span></button>`;
-
-    html += `<button class="action-btn tcs" onclick="promptBulkSetTCs()"><span class="icon">👷</span><span class="label-stack">Set TCs available<span class="small">Apply same TC count to all selected</span></span></button>`;
+    html += `<button class="action-btn tcs" onclick='openCrewModal("bulk", ${JSON.stringify(dates)})'><span class="icon">👷</span><span class="label-stack">Set crew on all ${total} date${total === 1 ? '' : 's'}<span class="small">Apply same D + P count to all selected</span></span></button>`;
   }
-
+ 
   html += `<button class="action-btn cancel" onclick="clearSelection()"><span class="icon">✕</span><span class="label-stack">Clear selection<span class="small">Deselect all dates</span></span></button>`;
-
+ 
   panel.innerHTML = html;
 }
-
-// ---------------- SINGLE-DATE WRITES ----------------
+ 
+// =================================================================
+// CREW MODAL
+// =================================================================
+function buildStopSign(letter, container) {
+  container.innerHTML = `
+    <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+      <polygon points="30,5 70,5 95,30 95,70 70,95 30,95 5,70 5,30"
+               fill="#C8102E" stroke="#FAFAF7" stroke-width="4"/>
+      <text x="50" y="63" text-anchor="middle"
+            font-family="Archivo Black, sans-serif"
+            font-size="42" fill="#FAFAF7">${letter}</text>
+    </svg>`;
+}
+ 
+window.openCrewModal = function(mode, dates) {
+  crewModalContext = { mode, dates };
+  if (mode === 'single' && dates.length === 1) {
+    const r = getRoster(dates[0]);
+    crewModalDrivers = r.drivers;
+    crewModalPassengers = r.passengers;
+    document.getElementById('crewModalTitle').textContent = `👷 Crew for ${dates[0]}`;
+    document.getElementById('crewModalSub').textContent = 'A driver can work solo. A passenger needs a driver (1 driver carries 1 passenger).';
+  } else {
+    crewModalDrivers = 1;
+    crewModalPassengers = 0;
+    document.getElementById('crewModalTitle').textContent = `👷 Crew for ${dates.length} dates`;
+    document.getElementById('crewModalSub').textContent = `Apply the same crew composition to all ${dates.length} selected date${dates.length===1?'':'s'}.`;
+  }
+  buildStopSign('D', document.getElementById('stopSignDriver'));
+  buildStopSign('P', document.getElementById('stopSignPassenger'));
+  refreshCrewModalUI();
+  document.getElementById('crewModal').classList.add('visible');
+};
+ 
+window.closeCrewModal = function() {
+  document.getElementById('crewModal').classList.remove('visible');
+  crewModalContext = null;
+};
+ 
+function refreshCrewModalUI() {
+  document.getElementById('drvCount').textContent = crewModalDrivers;
+  document.getElementById('pasCount').textContent = crewModalPassengers;
+  document.getElementById('drvMinus').disabled = crewModalDrivers <= 0;
+  document.getElementById('drvPlus').disabled = (crewModalDrivers + crewModalPassengers) >= 20;
+  document.getElementById('pasMinus').disabled = crewModalPassengers <= 0;
+  document.getElementById('pasPlus').disabled = (crewModalDrivers + crewModalPassengers) >= 20;
+ 
+  const total = crewModalDrivers + crewModalPassengers;
+  const paired = Math.min(crewModalDrivers, crewModalPassengers);
+  const effective = crewModalDrivers + paired;
+  const stranded = crewModalPassengers - paired;
+ 
+  const summary = document.getElementById('modalSummary');
+  if (total === 0) {
+    summary.className = 'modal-summary warn';
+    summary.innerHTML = `⚠ <strong>No crew</strong> — date won't be bookable.`;
+  } else if (stranded > 0) {
+    summary.className = 'modal-summary warn';
+    summary.innerHTML = `⚠ <strong>${stranded} stranded passenger${stranded===1?'':'s'}</strong> — only ${effective} of ${total} can actually work (needs more drivers).`;
+  } else {
+    summary.className = 'modal-summary';
+    summary.innerHTML = `✓ <strong>${effective} TC${effective===1?'':'s'} bookable</strong> — ${crewModalDrivers}D + ${crewModalPassengers}P, all paired.`;
+  }
+}
+ 
+document.getElementById('drvPlus').addEventListener('click', () => {
+  if (crewModalDrivers + crewModalPassengers < 20) { crewModalDrivers++; refreshCrewModalUI(); }
+});
+document.getElementById('drvMinus').addEventListener('click', () => {
+  if (crewModalDrivers > 0) { crewModalDrivers--; refreshCrewModalUI(); }
+});
+document.getElementById('pasPlus').addEventListener('click', () => {
+  if (crewModalDrivers + crewModalPassengers < 20) { crewModalPassengers++; refreshCrewModalUI(); }
+});
+document.getElementById('pasMinus').addEventListener('click', () => {
+  if (crewModalPassengers > 0) { crewModalPassengers--; refreshCrewModalUI(); }
+});
+ 
+document.getElementById('crewSaveBtn').addEventListener('click', async () => {
+  if (!crewModalContext) return;
+  const { dates } = crewModalContext;
+  const total = crewModalDrivers + crewModalPassengers;
+  if (total < 1) { showStatus('⚠ At least 1 crew member needed', 'error'); return; }
+  closeCrewModal();
+  await saveCrewToDates(dates, crewModalDrivers, crewModalPassengers);
+});
+ 
+async function saveCrewToDates(dates, drivers, passengers) {
+  const total = drivers + passengers;
+  showStatus(`⏳ Saving crew (${drivers}D + ${passengers}P) on ${dates.length} date${dates.length===1?'':'s'}...`, 'loading');
+  try {
+    await supabase.from('bookings').delete().in('booking_date', dates).eq('booking_type', 'availability');
+    if (!(drivers === 1 && passengers === 0)) {
+      const rows = dates.map(d => ({
+        booking_date: d,
+        booking_type: 'availability',
+        status: 'Confirmed',
+        tcs_required: total,
+        drivers_count: drivers
+      }));
+      const { error } = await supabase.from('bookings').insert(rows);
+      if (error) throw error;
+    }
+    await loadCalendarData();
+    renderActionPanel();
+    showStatus(`✅ Crew set to ${drivers}D + ${passengers}P on ${dates.length} date${dates.length===1?'':'s'}`, 'success');
+  } catch (err) { console.error(err); showStatus('⚠ Save failed: ' + err.message, 'error'); }
+}
+// =================================================================
+ 
 window.setDate = async function(type, dateStr) {
   showStatus('⏳ Saving...', 'loading');
   try {
     await supabase.from('bookings').delete().eq('booking_date', dateStr).eq('booking_type', type);
-    const { error } = await supabase.from('bookings').insert([{ booking_date: dateStr, booking_type: type, status: 'Confirmed', tcs_required: 1 }]);
+    const { error } = await supabase.from('bookings').insert([{
+      booking_date: dateStr,
+      booking_type: type,
+      status: 'Confirmed',
+      tcs_required: 1,
+      drivers_count: 1
+    }]);
     if (error) throw error;
     await loadCalendarData();
     renderActionPanel();
     showStatus(`✅ ${type === 'self_block' ? 'Date blocked' : 'Day override applied'}`, 'success');
   } catch (err) { console.error(err); showStatus('⚠ Save failed: ' + err.message, 'error'); }
 };
-
+ 
 window.clearDate = async function(dateStr) {
   showStatus('⏳ Clearing...', 'loading');
   try {
-    const { error } = await supabase.from('bookings').delete().eq('booking_date', dateStr).neq('booking_type', 'customer');
+    const { error } = await supabase.from('bookings').delete().eq('booking_date', dateStr).in('booking_type', ['self_block','day_override']);
     if (error) throw error;
     await loadCalendarData();
     renderActionPanel();
     showStatus('✅ Cleared', 'success');
   } catch (err) { console.error(err); showStatus('⚠ Clear failed: ' + err.message, 'error'); }
 };
-
-window.promptSetTCs = function(dateStr) {
-  const current = getTCsAvailable(dateStr);
-  const input = prompt(`How many TCs are available on ${dateStr}?\n\n(Currently: ${current})`, current);
-  if (input === null) return;
-  const num = parseInt(input);
-  if (isNaN(num) || num < 1 || num > 20) { showStatus('⚠ Enter a number between 1 and 20', 'error'); return; }
-  setTCsAvailable(dateStr, num);
-};
-
-async function setTCsAvailable(dateStr, count) {
-  showStatus('⏳ Saving TCs availability...', 'loading');
-  try {
-    await supabase.from('bookings').delete().eq('booking_date', dateStr).eq('booking_type', 'availability');
-    if (count > 1) {
-      const { error } = await supabase.from('bookings').insert([{ booking_date: dateStr, booking_type: 'availability', status: 'Confirmed', tcs_required: count }]);
-      if (error) throw error;
-    }
-    await loadCalendarData();
-    renderActionPanel();
-    showStatus(`✅ TCs available set to ${count}`, 'success');
-  } catch (err) { console.error(err); showStatus('⚠ Save failed: ' + err.message, 'error'); }
-}
-
-// ---------------- BULK WRITES ----------------
-// All bulk ops:
-//  1) Compute the editable subset (skip customer bookings)
-//  2) Delete any conflicting rows in one query (.in() on dates)
-//  3) Insert new rows in one batch
-//  4) Reload + refresh UI
-
+ 
 function editableSelectedDates() {
   return [...selectedDates].filter(d => !customerBookings.has(d));
 }
-
+ 
 window.bulkBlock = async function() {
   const targets = editableSelectedDates();
   if (targets.length === 0) return;
   if (!confirm(`Block ${targets.length} date${targets.length === 1 ? '' : 's'}? Customer bookings are skipped automatically.`)) return;
   showStatus(`⏳ Blocking ${targets.length} dates...`, 'loading');
   try {
-    // Wipe any existing self_block / day_override rows for those dates so we don't double-up
     await supabase.from('bookings').delete().in('booking_date', targets).in('booking_type', ['self_block','day_override']);
-    const rows = targets.map(d => ({ booking_date: d, booking_type: 'self_block', status: 'Confirmed', tcs_required: 1 }));
+    const rows = targets.map(d => ({ booking_date: d, booking_type: 'self_block', status: 'Confirmed', tcs_required: 1, drivers_count: 1 }));
     const { error } = await supabase.from('bookings').insert(rows);
     if (error) throw error;
     await loadCalendarData();
@@ -645,19 +887,15 @@ window.bulkBlock = async function() {
     showStatus(`✅ Blocked ${targets.length} date${targets.length === 1 ? '' : 's'}`, 'success');
   } catch (err) { console.error(err); showStatus('⚠ Bulk block failed: ' + err.message, 'error'); }
 };
-
+ 
 window.bulkOverride = async function() {
-  // Only weekday editable dates get day_override
   const targets = editableSelectedDates().filter(d => isWeekday(d));
-  if (targets.length === 0) {
-    showStatus('⚠ No eligible weekdays in selection.', 'error');
-    return;
-  }
+  if (targets.length === 0) { showStatus('⚠ No eligible weekdays in selection.', 'error'); return; }
   if (!confirm(`Apply day-shift override to ${targets.length} weekday${targets.length === 1 ? '' : 's'}?`)) return;
   showStatus(`⏳ Applying override to ${targets.length} dates...`, 'loading');
   try {
     await supabase.from('bookings').delete().in('booking_date', targets).in('booking_type', ['self_block','day_override']);
-    const rows = targets.map(d => ({ booking_date: d, booking_type: 'day_override', status: 'Confirmed', tcs_required: 1 }));
+    const rows = targets.map(d => ({ booking_date: d, booking_type: 'day_override', status: 'Confirmed', tcs_required: 1, drivers_count: 1 }));
     const { error } = await supabase.from('bookings').insert(rows);
     if (error) throw error;
     await loadCalendarData();
@@ -665,11 +903,11 @@ window.bulkOverride = async function() {
     showStatus(`✅ Day override applied to ${targets.length} date${targets.length === 1 ? '' : 's'}`, 'success');
   } catch (err) { console.error(err); showStatus('⚠ Bulk override failed: ' + err.message, 'error'); }
 };
-
+ 
 window.bulkClear = async function() {
   const targets = editableSelectedDates();
   if (targets.length === 0) return;
-  if (!confirm(`Clear self-blocks and day overrides from ${targets.length} date${targets.length === 1 ? '' : 's'}? (TCs availability + customer bookings are untouched.)`)) return;
+  if (!confirm(`Clear self-blocks and day overrides from ${targets.length} date${targets.length === 1 ? '' : 's'}? (Crew availability + customer bookings are untouched.)`)) return;
   showStatus(`⏳ Clearing ${targets.length} dates...`, 'loading');
   try {
     const { error } = await supabase.from('bookings').delete().in('booking_date', targets).in('booking_type', ['self_block','day_override']);
@@ -679,41 +917,14 @@ window.bulkClear = async function() {
     showStatus(`✅ Cleared ${targets.length} date${targets.length === 1 ? '' : 's'}`, 'success');
   } catch (err) { console.error(err); showStatus('⚠ Bulk clear failed: ' + err.message, 'error'); }
 };
-
-window.promptBulkSetTCs = function() {
-  const targets = editableSelectedDates();
-  if (targets.length === 0) return;
-  const input = prompt(`Set TCs available for ${targets.length} date${targets.length === 1 ? '' : 's'}?\n\nEnter a number 1–20.\n(1 = default, no special record kept)`, '2');
-  if (input === null) return;
-  const num = parseInt(input);
-  if (isNaN(num) || num < 1 || num > 20) { showStatus('⚠ Enter a number between 1 and 20', 'error'); return; }
-  bulkSetTCs(targets, num);
-};
-
-async function bulkSetTCs(targets, count) {
-  showStatus(`⏳ Setting TCs (${count}) on ${targets.length} dates...`, 'loading');
-  try {
-    // Wipe existing availability rows for those dates
-    await supabase.from('bookings').delete().in('booking_date', targets).eq('booking_type', 'availability');
-    if (count > 1) {
-      const rows = targets.map(d => ({ booking_date: d, booking_type: 'availability', status: 'Confirmed', tcs_required: count }));
-      const { error } = await supabase.from('bookings').insert(rows);
-      if (error) throw error;
-    }
-    await loadCalendarData();
-    renderActionPanel();
-    showStatus(`✅ TCs set to ${count} on ${targets.length} date${targets.length === 1 ? '' : 's'}`, 'success');
-  } catch (err) { console.error(err); showStatus('⚠ Bulk TCs save failed: ' + err.message, 'error'); }
-}
-// ------------------------------------------------
-
+ 
 function showStatus(msg, type) {
   const el = document.getElementById('statusMsg');
   el.textContent = msg;
   el.className = 'status-msg ' + type;
   if (type === 'success') setTimeout(() => { el.className = 'status-msg'; }, 3000);
 }
-
+ 
 function renderRatesTable() {
   const body = document.getElementById('ratesBody');
   body.innerHTML = '';
@@ -724,7 +935,7 @@ function renderRatesTable() {
     body.appendChild(row);
   });
 }
-
+ 
 async function loadRates() {
   try {
     const { data, error } = await supabase.from('rate_card').select('rates').eq('id', 1).single();
@@ -732,7 +943,7 @@ async function loadRates() {
     renderRatesTable();
   } catch (err) { console.error(err); renderRatesTable(); }
 }
-
+ 
 window.saveRates = async function() {
   const inputs = document.querySelectorAll('#ratesBody input[type="number"]');
   inputs.forEach(inp => {
@@ -747,14 +958,14 @@ window.saveRates = async function() {
     showRatesStatus('✅ Rates saved', 'success');
   } catch (err) { console.error(err); showRatesStatus('⚠ Save failed: ' + err.message, 'error'); }
 };
-
+ 
 function showRatesStatus(msg, type) {
   const el = document.getElementById('ratesStatusMsg');
   el.textContent = msg;
   el.className = 'status-msg ' + type;
   if (type === 'success') setTimeout(() => { el.className = 'status-msg'; }, 3000);
 }
-
+ 
 document.getElementById('prevMonth').addEventListener('click', () => {
   viewMonth--; if (viewMonth < 0) { viewMonth = 11; viewYear--; }
   renderCalendar();
@@ -763,9 +974,9 @@ document.getElementById('nextMonth').addEventListener('click', () => {
   viewMonth++; if (viewMonth > 11) { viewMonth = 0; viewYear++; }
   renderCalendar();
 });
-
+ 
 }); // closes window.addEventListener('load')
 </script>
-
+ 
 </body>
 </html>

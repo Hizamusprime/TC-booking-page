@@ -1,0 +1,1413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#FF6B00">
+  <title>STC — Jobs Running</title>
+
+  <!-- =========================================================== -->
+  <!-- FONTS: Bebas Neue for industrial headers, Manrope for body,  -->
+  <!-- JetBrains Mono for job IDs and technical data                -->
+  <!-- =========================================================== -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <style>
+    /* ========================================================
+       CSS VARIABLES — change these to re-theme the whole site
+       ======================================================== */
+    :root {
+      --bg: #FAFAF7;
+      --bg-card: #FFFFFF;
+      --bg-subtle: #F0F0EB;
+      --text: #0A0A0A;
+      --text-muted: #6B6B68;
+      --border: #E5E5E0;
+      --border-strong: #2A2A28;
+      --accent: #FF6B00;       /* Hi-vis safety orange */
+      --accent-hover: #E55D00;
+      --success: #16803C;
+      --danger: #C72525;
+      --warning: #B45309;
+      --radius: 6px;
+      --radius-sm: 4px;
+      --shadow: 0 1px 2px rgba(0,0,0,0.04);
+      --shadow-strong: 0 4px 12px rgba(0,0,0,0.08);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      font-family: 'Manrope', -apple-system, sans-serif;
+      font-size: 16px;
+      line-height: 1.5;
+      color: var(--text);
+      background: var(--bg);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Industrial hi-vis stripe at top of page */
+    body::before {
+      content: "";
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: 6px;
+      background: repeating-linear-gradient(
+        45deg,
+        var(--accent) 0,
+        var(--accent) 12px,
+        var(--text) 12px,
+        var(--text) 24px
+      );
+      z-index: 100;
+    }
+
+    /* ========================================================
+       LAYOUT
+       ======================================================== */
+    .container {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 32px 20px 80px;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      padding-bottom: 24px;
+      border-bottom: 2px solid var(--border-strong);
+      margin-bottom: 32px;
+    }
+
+    .header-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 36px;
+      letter-spacing: 0.02em;
+      line-height: 1;
+    }
+
+    .header-subtitle {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-top: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .header-user {
+      text-align: right;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .header-user strong {
+      display: block;
+      color: var(--text);
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    /* ========================================================
+       AUTH SCREEN
+       ======================================================== */
+    .auth-screen {
+      max-width: 420px;
+      margin: 80px auto;
+      padding: 0 20px;
+    }
+
+    .auth-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 32px;
+      box-shadow: var(--shadow-strong);
+    }
+
+    .auth-tabs {
+      display: flex;
+      border-bottom: 2px solid var(--border);
+      margin-bottom: 24px;
+    }
+
+    .auth-tab {
+      flex: 1;
+      padding: 12px 0;
+      background: none;
+      border: none;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 18px;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      margin-bottom: -2px;
+      transition: all 0.15s;
+    }
+
+    .auth-tab.active {
+      color: var(--text);
+      border-bottom-color: var(--accent);
+    }
+
+    .auth-form { display: none; }
+    .auth-form.active { display: block; }
+
+    /* ========================================================
+       SECTIONS — numbered cards
+       ======================================================== */
+    .section {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      margin-bottom: 16px;
+      overflow: hidden;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg-subtle);
+    }
+
+    .section-number {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .section-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 20px;
+      letter-spacing: 0.03em;
+      flex: 1;
+    }
+
+    .section-status {
+      font-size: 11px;
+      padding: 4px 8px;
+      border-radius: var(--radius-sm);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-weight: 600;
+      background: var(--bg-subtle);
+      color: var(--text-muted);
+    }
+
+    .section-status.required {
+      background: #FEE5C7;
+      color: var(--warning);
+    }
+
+    .section-body {
+      padding: 20px;
+    }
+
+    /* ========================================================
+       FORM CONTROLS
+       ======================================================== */
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: var(--text);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    label .hint {
+      display: inline;
+      font-weight: 400;
+      text-transform: none;
+      letter-spacing: 0;
+      color: var(--text-muted);
+      font-size: 12px;
+      margin-left: 6px;
+    }
+
+    input[type="text"],
+    input[type="email"],
+    input[type="password"],
+    input[type="tel"],
+    input[type="number"],
+    input[type="time"],
+    input[type="date"],
+    input[type="datetime-local"],
+    select,
+    textarea {
+      width: 100%;
+      padding: 12px 14px;
+      font-family: inherit;
+      font-size: 16px;  /* 16px prevents iOS auto-zoom on focus */
+      color: var(--text);
+      background: var(--bg-card);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      transition: border-color 0.15s;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .field {
+      margin-bottom: 16px;
+    }
+
+    .field-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 80px;
+      font-family: inherit;
+    }
+
+    /* Custom checkboxes — large tap targets */
+    .checkbox-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 12px;
+      background: var(--bg);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      margin-bottom: 8px;
+      transition: all 0.15s;
+      min-height: 48px;
+    }
+
+    .checkbox-row:hover { border-color: var(--text-muted); }
+    .checkbox-row input[type="checkbox"] {
+      width: 22px;
+      height: 22px;
+      cursor: pointer;
+      accent-color: var(--accent);
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .checkbox-row span {
+      flex: 1;
+      font-size: 14px;
+      line-height: 1.4;
+    }
+
+    .checkbox-row.checked {
+      background: #FFF4EC;
+      border-color: var(--accent);
+    }
+
+    /* ========================================================
+       BUTTONS
+       ======================================================== */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px 20px;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 16px;
+      letter-spacing: 0.05em;
+      border: none;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: all 0.15s;
+      min-height: 44px;
+      text-decoration: none;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: white;
+    }
+
+    .btn-primary:hover { background: var(--accent-hover); }
+
+    .btn-secondary {
+      background: var(--bg-card);
+      color: var(--text);
+      border: 1.5px solid var(--border);
+    }
+
+    .btn-secondary:hover { border-color: var(--text-muted); }
+
+    .btn-ghost {
+      background: none;
+      color: var(--text-muted);
+      padding: 8px 12px;
+      font-size: 13px;
+    }
+
+    .btn-ghost:hover { color: var(--text); }
+
+    .btn-danger {
+      background: var(--danger);
+      color: white;
+    }
+
+    .btn-large {
+      width: 100%;
+      padding: 18px 24px;
+      font-size: 20px;
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    /* ========================================================
+       DYNAMIC ROW LISTS (crew, hazards, attendees)
+       ======================================================== */
+    .row-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .row-item {
+      display: flex;
+      gap: 8px;
+      align-items: stretch;
+    }
+
+    .row-item input {
+      flex: 1;
+    }
+
+    .row-item .btn-remove {
+      flex-shrink: 0;
+      padding: 0 14px;
+      background: var(--bg-subtle);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      color: var(--text-muted);
+      font-size: 18px;
+      line-height: 1;
+    }
+
+    .row-item .btn-remove:hover {
+      background: #FEE;
+      color: var(--danger);
+      border-color: var(--danger);
+    }
+
+    .btn-add {
+      background: var(--bg-subtle);
+      border: 1.5px dashed var(--border);
+      border-radius: var(--radius-sm);
+      padding: 10px 14px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      transition: all 0.15s;
+    }
+
+    .btn-add:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    /* ========================================================
+       PHOTO UPLOAD
+       ======================================================== */
+    .photo-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .photo-thumb {
+      position: relative;
+      aspect-ratio: 1;
+      background: var(--bg-subtle);
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+    }
+
+    .photo-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .photo-thumb .photo-remove {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      width: 24px;
+      height: 24px;
+      background: rgba(0,0,0,0.7);
+      color: white;
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 14px;
+      line-height: 1;
+    }
+
+    .photo-upload-zone {
+      border: 2px dashed var(--border);
+      border-radius: var(--radius);
+      padding: 32px;
+      text-align: center;
+      background: var(--bg-subtle);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .photo-upload-zone:hover {
+      border-color: var(--accent);
+      background: #FFF4EC;
+    }
+
+    .photo-upload-zone input[type="file"] { display: none; }
+
+    .photo-upload-zone .icon {
+      font-size: 32px;
+      margin-bottom: 8px;
+      color: var(--text-muted);
+    }
+
+    /* ========================================================
+       JOB SELECTOR
+       ======================================================== */
+    .job-selector {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--accent);
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-bottom: 24px;
+    }
+
+    .job-selector label {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 18px;
+      letter-spacing: 0.05em;
+      margin-bottom: 12px;
+    }
+
+    .job-card-info {
+      margin-top: 16px;
+      padding: 16px;
+      background: var(--bg-subtle);
+      border-radius: var(--radius-sm);
+      font-size: 14px;
+      display: none;
+    }
+
+    .job-card-info.shown { display: block; }
+
+    .job-card-info dl {
+      display: grid;
+      grid-template-columns: max-content 1fr;
+      gap: 6px 16px;
+    }
+
+    .job-card-info dt {
+      color: var(--text-muted);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .job-card-info dd {
+      font-weight: 500;
+    }
+
+    .job-card-info .job-id {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+    }
+
+    /* ========================================================
+       MESSAGES & STATES
+       ======================================================== */
+    .alert {
+      padding: 12px 16px;
+      border-radius: var(--radius-sm);
+      margin-bottom: 16px;
+      font-size: 14px;
+      border-left: 4px solid;
+    }
+
+    .alert-error {
+      background: #FEF2F2;
+      color: var(--danger);
+      border-left-color: var(--danger);
+    }
+
+    .alert-success {
+      background: #F0FDF4;
+      color: var(--success);
+      border-left-color: var(--success);
+    }
+
+    .alert-info {
+      background: #FFF7ED;
+      color: var(--warning);
+      border-left-color: var(--warning);
+    }
+
+    .hidden { display: none !important; }
+
+    .loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 80px 20px;
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+
+    .spinner {
+      width: 24px;
+      height: 24px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin-right: 12px;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ========================================================
+       SUCCESS SCREEN
+       ======================================================== */
+    .success-screen {
+      text-align: center;
+      padding: 80px 20px;
+    }
+
+    .success-screen .icon {
+      font-size: 64px;
+      color: var(--success);
+      margin-bottom: 20px;
+    }
+
+    .success-screen h2 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 32px;
+      letter-spacing: 0.03em;
+      margin-bottom: 8px;
+    }
+
+    .success-screen p {
+      color: var(--text-muted);
+      margin-bottom: 24px;
+    }
+
+    /* ========================================================
+       INCIDENT TOGGLE — conditional section
+       ======================================================== */
+    .incident-form {
+      margin-top: 16px;
+      padding: 16px;
+      background: #FEF2F2;
+      border: 1px solid #FECACA;
+      border-radius: var(--radius-sm);
+    }
+
+    /* ========================================================
+       RESPONSIVE
+       ======================================================== */
+    @media (max-width: 480px) {
+      .container { padding: 24px 16px 60px; }
+      .header-title { font-size: 28px; }
+      .section-body { padding: 16px; }
+      .field-row { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- ============================================================
+       AUTH SCREEN — shown until user is logged in
+       ============================================================ -->
+  <div id="authScreen" class="auth-screen">
+    <div class="auth-card">
+      <div style="text-align: center; margin-bottom: 24px;">
+        <div style="font-family: 'Bebas Neue', sans-serif; font-size: 28px; letter-spacing: 0.04em;">STC</div>
+        <div style="font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em;">Jobs Running</div>
+      </div>
+
+      <div class="auth-tabs">
+        <button class="auth-tab active" data-tab="signin">Sign In</button>
+        <button class="auth-tab" data-tab="signup">Sign Up</button>
+      </div>
+
+      <div id="authError" class="alert alert-error hidden"></div>
+
+      <!-- SIGN IN -->
+      <form id="signinForm" class="auth-form active" autocomplete="on">
+        <div class="field">
+          <label for="signinEmail">Email</label>
+          <input type="email" id="signinEmail" required autocomplete="email">
+        </div>
+        <div class="field">
+          <label for="signinPassword">Password</label>
+          <input type="password" id="signinPassword" required autocomplete="current-password">
+        </div>
+        <button type="submit" class="btn btn-primary btn-large">Sign In</button>
+      </form>
+
+      <!-- SIGN UP -->
+      <form id="signupForm" class="auth-form" autocomplete="on">
+        <div class="field">
+          <label for="signupName">Full Name</label>
+          <input type="text" id="signupName" required autocomplete="name">
+        </div>
+        <div class="field">
+          <label for="signupEmail">Email</label>
+          <input type="email" id="signupEmail" required autocomplete="email">
+        </div>
+        <div class="field">
+          <label for="signupPhone">Phone <span class="hint">(optional)</span></label>
+          <input type="tel" id="signupPhone" autocomplete="tel">
+        </div>
+        <div class="field">
+          <label for="signupPassword">Password <span class="hint">min 8 characters</span></label>
+          <input type="password" id="signupPassword" required minlength="8" autocomplete="new-password">
+        </div>
+        <button type="submit" class="btn btn-primary btn-large">Create Account</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       LOADING SCREEN
+       ============================================================ -->
+  <div id="loadingScreen" class="loading hidden">
+    <div class="spinner"></div>
+    <span>Loading...</span>
+  </div>
+
+  <!-- ============================================================
+       MAIN APP — shown when authenticated
+       ============================================================ -->
+  <div id="appScreen" class="container hidden">
+    <header class="header">
+      <div>
+        <h1 class="header-title">JOBS RUNNING</h1>
+        <div class="header-subtitle">End-of-job submission</div>
+      </div>
+      <div class="header-user">
+        <strong id="userName">—</strong>
+        <span id="userEmail" style="font-size: 11px;">—</span>
+        <br>
+        <button class="btn-ghost" id="logoutBtn">Log out</button>
+      </div>
+    </header>
+
+    <!-- Job selector -->
+    <div class="job-selector">
+      <label for="jobSelect">Current Job</label>
+      <select id="jobSelect">
+        <option value="">Loading jobs...</option>
+      </select>
+      <div id="jobInfo" class="job-card-info">
+        <dl>
+          <dt>Job ID</dt><dd class="job-id" id="jobInfoId">—</dd>
+          <dt>Client</dt><dd id="jobInfoClient">—</dd>
+          <dt>Site</dt><dd id="jobInfoSite">—</dd>
+          <dt>Date</dt><dd id="jobInfoDate">—</dd>
+          <dt>Shift</dt><dd id="jobInfoShift">—</dd>
+        </dl>
+      </div>
+      <div id="resubmitWarning" class="alert alert-info hidden" style="margin-top: 12px;">
+        ⚠ This job already has a submission. Submitting again creates a new version — the previous one is kept for audit trail.
+      </div>
+    </div>
+
+    <!-- Form sections (hidden until a job is selected) -->
+    <form id="submissionForm" class="hidden">
+
+      <!-- 01: Actual times -->
+      <section class="section">
+        <div class="section-header">
+          <span class="section-number">01</span>
+          <span class="section-title">Actual Times</span>
+        </div>
+        <div class="section-body">
+          <div class="field-row">
+            <div class="field">
+              <label for="actualStart">Start time</label>
+              <input type="time" id="actualStart">
+            </div>
+            <div class="field">
+              <label for="actualFinish">Finish time</label>
+              <input type="time" id="actualFinish">
+            </div>
+          </div>
+          <div class="field">
+            <label for="actualHours">Total hours <span class="hint">auto-calculated, edit if needed</span></label>
+            <input type="number" id="actualHours" step="0.25" min="0">
+          </div>
+        </div>
+      </section>
+
+      <!-- 02: Crew on site -->
+      <section class="section">
+        <div class="section-header">
+          <span class="section-number">02</span>
+          <span class="section-title">Crew on Site</span>
+        </div>
+        <div class="section-body">
+          <div class="row-list" id="crewList"></div>
+          <button type="button" class="btn-add" data-add="crew">+ Add crew member</button>
+        </div>
+      </section>
+
+      <!-- 03: Pre-start checklist -->
+      <section class="section">
+        <div class="section-header">
+          <span class="section-number">03</span>
+          <span class="section-title">Pre-Start Checklist</span>
+          <span class="section-status required">Required</span>
+        </div>
+        <div class="section-body">
+          <label class="checkbox-row"><input type="checkbox" id="ps_ppe"><span>PPE worn — hi-vis, hard hats, boots, gloves</span></label>
+          <label class="checkbox-row"><input type="checkbox" id="ps_tpwd"><span>All crew TPWD cards verified & in date</span></label>
+          <label class="checkbox-row"><input type="checkbox" id="ps_signage"><span>Signage set out per TMP</span></label>
+          <label class="checkbox-row"><input type="checkbox" id="ps_comms"><span>Communications check completed (radios)</span></label>
+          <label class="checkbox-row"><input type="checkbox" id="ps_firstaid"><span>First aid kit on site</span></label>
+          <label class="checkbox-row"><input type="checkbox" id="ps_induction"><span>Site induction briefed to crew</span></label>
+          <label class="checkbox-row"><input type="checkbox" id="ps_weather"><span>Weather / heat stress check (if applicable)</span></label>
+        </div>
+      </section>
+
+      <!-- 04: SWMS -->
+      <section class="section">
+        <div class="section-header">
+          <span class="section-number">04</span>
+          <span class="section-title">SWMS</span>
+          <span class="section-status required">Required</span>
+        </div>
+        <div class="section-body">
+          <label class="checkbox-row"><input type="checkbox" id="swmsAck"><span>SWMS reviewed and followed for this job</span></label>
+          <div class="field">
+            <label for="swmsNotes">SWMS notes <span class="hint">(optional)</span></label>
+            <textarea id="swmsNotes" placeholder="Any deviations, additional controls, or notes about the SWMS"></textarea>
+          </div>
+        </div>
+      </section>
+
+      <!-- 05: Toolbox talk -->
+      <section class="section">
+        <div class="section-header">
+          <span class="section-number">05</span>
+          <span class="section-title">Toolbox Talk</span>
+        </div>
+        <div class="section-body">
+          <div class="field">
+            <label for="toolboxTopics">Topics covered</label>
+            <textarea id="toolboxTopics" placeholder="What was discussed at toolbox talk"></textarea>
+          </div>
+          <div class="field">
+            <label for="toolboxDeliveredBy">Delivered by</label>
+            <input type="text" id="toolboxDeliveredBy" placeholder="Name of person who ran the talk">
+          </div>
+          <div class="field">
+            <label>Attendees</label>
+            <div class="row-list" id="attendeesList"></div>
+            <button type="button" class="btn-add" data-add="attendee">+ Add attendee</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- 06: Hazards -->
+      <section class="section">
+        <div class="section-header">
+          <span class="section-number">06</span>
+          <span class="section-title">Hazards Encountered</span>
+        </div>
+        <div class="section-body">
+          <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 12px;">Hazards you spotted and managed — different from incidents. Skip if none.</p>
+          <div class="row-list" id="hazardsList"></div>
+          <button type="button" class="btn-add" data-add="hazard">+ Add hazard</button>
+        </div>
+      </section>
+
+      <!-- 07: Incident report (conditional) -->
+      <section class="section">
+        <div class="section-header">
+          <span class="section-number">07</span>
+          <span class="section-title">Incident</span>
+        </div>
+        <div class="section-body">
+          <label class="checkbox-row"><input type="checkbox" id="incidentOccurred"><span>An incident occurred during this job</span></label>
+
+          <div id="incidentForm" class="incident-form hidden">
+            <div class="field">
+              <label for="incidentTime">Time of incident</label>
+              <input type="datetime-local" id="incidentTime">
+            </div>
+            <div class="field">
+              <label for="incidentType">Type</label>
+              <select id="incidentType">
+                <option value="">Select...</option>
+                <option value="near_miss">Near miss</option>
+                <option value="injury">Injury</option>
+                <option value="property_damage">Property damage</option>
+                <option value="traffic">Traffic / vehicle</option>
+                <option value="equipment">Equipment failure</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="incidentDescription">Description</label>
+              <textarea id="incidentDescription" placeholder="What happened, where, who was involved"></textarea>
+            </div>
+            <div class="field">
+              <label for="incidentActions">Actions taken</label>
+              <textarea id="incidentActions" placeholder="What was done to control the situation"></textarea>
+            </div>
+            <label class="checkbox-row"><input type="checkbox" id="safeworkRequired"><span>SafeWork NSW notification required</span></label>
+          </div>
+        </div>
+      </section>
+
+      <!-- 08: Photos -->
+      <section class="section">
+        <div class="section-header">
+          <span class="section-number">08</span>
+          <span class="section-title">Photos</span>
+        </div>
+        <div class="section-body">
+          <div class="photo-grid" id="photoGrid"></div>
+          <label class="photo-upload-zone">
+            <input type="file" id="photoInput" accept="image/*" multiple capture="environment">
+            <div class="icon">📷</div>
+            <div style="font-weight: 600; margin-bottom: 4px;">Tap to add photos</div>
+            <div style="font-size: 12px; color: var(--text-muted);">Camera or gallery · JPEG/PNG/HEIC</div>
+          </label>
+        </div>
+      </section>
+
+      <!-- 09: Notes -->
+      <section class="section">
+        <div class="section-header">
+          <span class="section-number">09</span>
+          <span class="section-title">Notes</span>
+        </div>
+        <div class="section-body">
+          <textarea id="notes" placeholder="Anything else worth capturing"></textarea>
+        </div>
+      </section>
+
+      <!-- 10: Sign-off -->
+      <section class="section">
+        <div class="section-header">
+          <span class="section-number">10</span>
+          <span class="section-title">Sign-Off</span>
+          <span class="section-status required">Required</span>
+        </div>
+        <div class="section-body">
+          <div class="field">
+            <label for="signoffName">Your name <span class="hint">type to confirm — this becomes the legal record</span></label>
+            <input type="text" id="signoffName" required>
+          </div>
+          <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 16px;">
+            By submitting, you confirm the information above is true and complete to the best of your knowledge. Submission timestamped at server.
+          </div>
+        </div>
+      </section>
+
+      <div id="submitError" class="alert alert-error hidden"></div>
+
+      <button type="submit" class="btn btn-primary btn-large" id="submitBtn">Submit Job Report</button>
+
+    </form>
+  </div>
+
+  <!-- ============================================================
+       SUCCESS SCREEN
+       ============================================================ -->
+  <div id="successScreen" class="success-screen hidden">
+    <div class="icon">✓</div>
+    <h2>Submission received</h2>
+    <p id="successDetails">—</p>
+    <button class="btn btn-secondary" id="newSubmissionBtn">Submit another</button>
+  </div>
+
+
+  <!-- ============================================================
+       SUPABASE SDK (loaded from CDN)
+       ============================================================ -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <script>
+  /* =================================================================
+     CONFIG — your Supabase project
+     ================================================================= */
+  const SUPABASE_URL = 'https://ulmwldoyhapqtcuhzkcr.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_RSReGSAfH8AYvVVwuZE9tA_2MrQ_C_q';
+
+  /* =================================================================
+     WAIT FOR SDK TO FULLY LOAD before initializing — fixes the race
+     condition you hit before
+     ================================================================= */
+  window.addEventListener('load', () => {
+
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    /* ===============================================================
+       STATE — kept simple, no framework
+       =============================================================== */
+    const state = {
+      user: null,
+      profile: null,
+      jobs: [],
+      selectedJob: null,
+      photoFiles: [],       // File objects awaiting upload
+      photoPreviewUrls: [], // Object URLs for preview thumbs
+      existingSubmission: null,
+    };
+
+    /* ===============================================================
+       DOM SHORTCUTS
+       =============================================================== */
+    const $ = (id) => document.getElementById(id);
+    const show = (el) => el.classList.remove('hidden');
+    const hide = (el) => el.classList.add('hidden');
+
+    /* ===============================================================
+       AUTH — login, signup, logout
+       =============================================================== */
+
+    // Tab switching
+    document.querySelectorAll('.auth-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        const target = tab.dataset.tab;
+        document.querySelectorAll('.auth-tab').forEach(t => t.classList.toggle('active', t === tab));
+        document.querySelectorAll('.auth-form').forEach(f => f.classList.toggle('active', f.id === target + 'Form'));
+        hide($('authError'));
+      });
+    });
+
+    function showAuthError(msg) {
+      const el = $('authError');
+      el.textContent = msg;
+      show(el);
+    }
+
+    // Sign in
+    $('signinForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      hide($('authError'));
+      const { error } = await supabase.auth.signInWithPassword({
+        email: $('signinEmail').value,
+        password: $('signinPassword').value,
+      });
+      if (error) showAuthError(error.message);
+    });
+
+    // Sign up
+    $('signupForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      hide($('authError'));
+
+      const email = $('signupEmail').value;
+      const password = $('signupPassword').value;
+      const fullName = $('signupName').value;
+      const phone = $('signupPhone').value;
+
+      // Step 1: create auth user
+      const { data, error } = await supabase.auth.signUp({ email, password });
+      if (error) { showAuthError(error.message); return; }
+
+      // Step 2: insert tc_profile row (RLS allows because auth.uid() === data.user.id)
+      if (data.user) {
+        const { error: profileError } = await supabase.from('tc_profiles').insert({
+          id: data.user.id,
+          full_name: fullName,
+          phone: phone || null,
+          is_active: true,
+        });
+        if (profileError) showAuthError('Account created but profile failed: ' + profileError.message);
+      }
+
+      // If email confirmation is on, Supabase won't auto-log-in. Tell the user.
+      if (!data.session) {
+        showAuthError('Account created. Check your email to confirm, then sign in.');
+      }
+    });
+
+    // Logout
+    $('logoutBtn').addEventListener('click', async () => {
+      await supabase.auth.signOut();
+      window.location.reload();
+    });
+
+    /* ===============================================================
+       AUTH STATE — what to show based on logged-in/out
+       =============================================================== */
+    supabase.auth.onAuthStateChange(async (event, session) => {
+      if (session?.user) {
+        state.user = session.user;
+        await loadProfile();
+        hide($('authScreen'));
+        show($('appScreen'));
+        await loadJobs();
+      } else {
+        state.user = null;
+        state.profile = null;
+        hide($('appScreen'));
+        show($('authScreen'));
+      }
+    });
+
+    async function loadProfile() {
+      const { data } = await supabase.from('tc_profiles').select('*').eq('id', state.user.id).single();
+      state.profile = data;
+      if (data) {
+        $('userName').textContent = data.full_name;
+        $('signoffName').value = data.full_name; // pre-fill sign-off
+      }
+      $('userEmail').textContent = state.user.email;
+    }
+
+    /* ===============================================================
+       LOAD JOBS — smart dropdown query
+       =============================================================== */
+    async function loadJobs() {
+      // Show bookings that are:
+      //  - status NOT in ('Complete', 'Cancelled')
+      //  - AND booking_date within ±1 day of today
+      // Plus any with status = 'In Progress' regardless of date (multi-day jobs)
+      const today = new Date();
+      const yesterday = new Date(today); yesterday.setDate(today.getDate() - 1);
+      const tomorrow = new Date(today); tomorrow.setDate(today.getDate() + 1);
+
+      const fmt = (d) => d.toISOString().split('T')[0];
+
+      const { data, error } = await supabase
+        .from('bookings')
+        .select('id, job_id, booking_date, company_name, site_address, shift_type, status, start_time, finish_time')
+        .or(`and(booking_date.gte.${fmt(yesterday)},booking_date.lte.${fmt(tomorrow)}),status.eq.In Progress`)
+        .not('status', 'in', '("Complete","Cancelled")')
+        .order('booking_date', { ascending: true });
+
+      if (error) { console.error(error); return; }
+
+      state.jobs = data;
+      const sel = $('jobSelect');
+      sel.innerHTML = '<option value="">— Select a job —</option>';
+      data.forEach(j => {
+        const opt = document.createElement('option');
+        opt.value = j.id;
+        opt.textContent = `${j.job_id} · ${j.company_name || 'No client name'} · ${j.site_address || 'No address'}`;
+        sel.appendChild(opt);
+      });
+
+      if (data.length === 0) {
+        sel.innerHTML = '<option value="">No current jobs found</option>';
+      }
+    }
+
+    /* ===============================================================
+       JOB SELECTION — show details + check for existing submission
+       =============================================================== */
+    $('jobSelect').addEventListener('change', async (e) => {
+      const jobId = e.target.value;
+      if (!jobId) {
+        hide($('jobInfo'));
+        hide($('submissionForm'));
+        hide($('resubmitWarning'));
+        return;
+      }
+
+      const job = state.jobs.find(j => j.id === jobId);
+      state.selectedJob = job;
+
+      // Populate info card
+      $('jobInfoId').textContent = job.job_id;
+      $('jobInfoClient').textContent = job.company_name || '—';
+      $('jobInfoSite').textContent = job.site_address || '—';
+      $('jobInfoDate').textContent = job.booking_date;
+      $('jobInfoShift').textContent = job.shift_type || '—';
+      show($('jobInfo'));
+
+      // Pre-fill actual times from booking
+      if (job.start_time) $('actualStart').value = job.start_time;
+      if (job.finish_time) $('actualFinish').value = job.finish_time;
+
+      // Check for existing submission (we can only see our own per RLS)
+      const { data: existing } = await supabase
+        .from('job_submissions')
+        .select('id, version, submitted_at')
+        .eq('booking_id', jobId)
+        .eq('is_current', true)
+        .maybeSingle();
+      state.existingSubmission = existing;
+      if (existing) show($('resubmitWarning')); else hide($('resubmitWarning'));
+
+      show($('submissionForm'));
+    });
+
+    /* ===============================================================
+       DYNAMIC ROW LISTS — crew, attendees, hazards
+       =============================================================== */
+    const rowTemplates = {
+      crew: () => `
+        <input type="text" placeholder="Name" data-field="name">
+        <input type="time" data-field="start">
+        <input type="time" data-field="finish">
+        <button type="button" class="btn-remove">×</button>`,
+      attendee: () => `
+        <input type="text" placeholder="Attendee name" data-field="name">
+        <button type="button" class="btn-remove">×</button>`,
+      hazard: () => `
+        <input type="text" placeholder="Hazard" data-field="hazard">
+        <input type="text" placeholder="Control measure" data-field="control">
+        <button type="button" class="btn-remove">×</button>`,
+    };
+
+    function addRow(type) {
+      const listMap = { crew: 'crewList', attendee: 'attendeesList', hazard: 'hazardsList' };
+      const list = $(listMap[type]);
+      const row = document.createElement('div');
+      row.className = 'row-item';
+      row.dataset.type = type;
+      row.innerHTML = rowTemplates[type]();
+      row.querySelector('.btn-remove').addEventListener('click', () => row.remove());
+      list.appendChild(row);
+    }
+
+    document.querySelectorAll('[data-add]').forEach(btn => {
+      btn.addEventListener('click', () => addRow(btn.dataset.add));
+    });
+
+    function readRows(listId) {
+      const rows = $(listId).querySelectorAll('.row-item');
+      return Array.from(rows).map(row => {
+        const obj = {};
+        row.querySelectorAll('[data-field]').forEach(input => {
+          obj[input.dataset.field] = input.value;
+        });
+        return obj;
+      }).filter(r => Object.values(r).some(v => v && v.trim()));
+    }
+
+    /* ===============================================================
+       AUTO-CALCULATE HOURS from start/finish
+       =============================================================== */
+    function recalcHours() {
+      const start = $('actualStart').value;
+      const finish = $('actualFinish').value;
+      if (!start || !finish) return;
+      const [sh, sm] = start.split(':').map(Number);
+      const [fh, fm] = finish.split(':').map(Number);
+      let mins = (fh * 60 + fm) - (sh * 60 + sm);
+      if (mins < 0) mins += 24 * 60; // crosses midnight
+      $('actualHours').value = (mins / 60).toFixed(2);
+    }
+    $('actualStart').addEventListener('change', recalcHours);
+    $('actualFinish').addEventListener('change', recalcHours);
+
+    /* ===============================================================
+       CHECKBOX VISUAL STATE — highlight when checked
+       =============================================================== */
+    document.querySelectorAll('.checkbox-row input[type="checkbox"]').forEach(cb => {
+      cb.addEventListener('change', () => {
+        cb.closest('.checkbox-row').classList.toggle('checked', cb.checked);
+      });
+    });
+
+    /* ===============================================================
+       INCIDENT TOGGLE
+       =============================================================== */
+    $('incidentOccurred').addEventListener('change', (e) => {
+      $('incidentForm').classList.toggle('hidden', !e.target.checked);
+    });
+
+    /* ===============================================================
+       PHOTO PICKER — store files in memory, show previews
+       =============================================================== */
+    $('photoInput').addEventListener('change', (e) => {
+      Array.from(e.target.files).forEach(file => {
+        const url = URL.createObjectURL(file);
+        state.photoFiles.push(file);
+        state.photoPreviewUrls.push(url);
+      });
+      renderPhotoGrid();
+      e.target.value = ''; // reset so same file can be picked again
+    });
+
+    function renderPhotoGrid() {
+      const grid = $('photoGrid');
+      grid.innerHTML = '';
+      state.photoPreviewUrls.forEach((url, i) => {
+        const thumb = document.createElement('div');
+        thumb.className = 'photo-thumb';
+        thumb.innerHTML = `
+          <img src="${url}" alt="Photo ${i+1}">
+          <button type="button" class="photo-remove" data-index="${i}">×</button>`;
+        thumb.querySelector('.photo-remove').addEventListener('click', () => {
+          URL.revokeObjectURL(state.photoPreviewUrls[i]);
+          state.photoFiles.splice(i, 1);
+          state.photoPreviewUrls.splice(i, 1);
+          renderPhotoGrid();
+        });
+        grid.appendChild(thumb);
+      });
+    }
+
+    /* ===============================================================
+       SUBMIT — the big one
+       =============================================================== */
+    $('submissionForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      hide($('submitError'));
+      const btn = $('submitBtn');
+      btn.disabled = true;
+
+      try {
+        // Validate required
+        if (!$('swmsAck').checked) throw new Error('SWMS acknowledgment is required.');
+        if (!$('signoffName').value.trim()) throw new Error('Sign-off name is required.');
+
+        // 1. Insert job_submission (trigger handles version + is_current)
+        btn.textContent = 'Submitting...';
+        const submission = {
+          booking_id: state.selectedJob.id,
+          submitted_by: state.user.id,
+          actual_start_time: $('actualStart').value || null,
+          actual_finish_time: $('actualFinish').value || null,
+          actual_hours: parseFloat($('actualHours').value) || null,
+          crew_on_site: readRows('crewList'),
+          prestart_ppe: $('ps_ppe').checked,
+          prestart_tpwd_verified: $('ps_tpwd').checked,
+          prestart_signage: $('ps_signage').checked,
+          prestart_comms: $('ps_comms').checked,
+          prestart_first_aid: $('ps_firstaid').checked,
+          prestart_induction: $('ps_induction').checked,
+          prestart_weather: $('ps_weather').checked,
+          swms_acknowledged: $('swmsAck').checked,
+          swms_notes: $('swmsNotes').value || null,
+          toolbox_topics: $('toolboxTopics').value || null,
+          toolbox_delivered_by: $('toolboxDeliveredBy').value || null,
+          toolbox_attendees: readRows('attendeesList'),
+          hazards_encountered: readRows('hazardsList'),
+          incident_occurred: $('incidentOccurred').checked,
+          notes: $('notes').value || null,
+          signed_off_name: $('signoffName').value.trim(),
+        };
+
+        const { data: subData, error: subError } = await supabase
+          .from('job_submissions')
+          .insert(submission)
+          .select('id, version')
+          .single();
+        if (subError) throw subError;
+
+        // 2. If incident occurred, insert incident record
+        let incidentId = null;
+        if (submission.incident_occurred) {
+          const { data: incData, error: incError } = await supabase
+            .from('incidents')
+            .insert({
+              booking_id: state.selectedJob.id,
+              submission_id: subData.id,
+              reported_by: state.user.id,
+              incident_time: $('incidentTime').value || new Date().toISOString(),
+              incident_type: $('incidentType').value,
+              description: $('incidentDescription').value,
+              actions_taken: $('incidentActions').value,
+              safework_notification_required: $('safeworkRequired').checked,
+            })
+            .select('id')
+            .single();
+          if (incError) throw incError;
+          incidentId = incData.id;
+        }
+
+        // 3. Upload photos and insert photos rows
+        for (let i = 0; i < state.photoFiles.length; i++) {
+          const file = state.photoFiles[i];
+          btn.textContent = `Uploading photo ${i+1} of ${state.photoFiles.length}...`;
+
+          // Generate path: {user.id}/{random}.{ext}
+          const ext = file.name.split('.').pop().toLowerCase();
+          const path = `${state.user.id}/${crypto.randomUUID()}.${ext}`;
+
+          const { error: upError } = await supabase.storage
+            .from('job-photos')
+            .upload(path, file, { contentType: file.type });
+          if (upError) throw upError;
+
+          const { error: phError } = await supabase.from('photos').insert({
+            booking_id: state.selectedJob.id,
+            submission_id: subData.id,
+            incident_id: incidentId, // null if no incident
+            storage_path: path,
+            uploaded_by: state.user.id,
+            photo_type: incidentId ? 'incident' : 'completion',
+          });
+          if (phError) throw phError;
+        }
+
+        // 4. Update booking status to Complete
+        await supabase.from('bookings')
+          .update({ status: 'Complete' })
+          .eq('id', state.selectedJob.id);
+
+        // Success!
+        $('successDetails').textContent =
+          `${state.selectedJob.job_id} — version ${subData.version} recorded`;
+        hide($('appScreen'));
+        show($('successScreen'));
+
+      } catch (err) {
+        console.error(err);
+        $('submitError').textContent = 'Submission failed: ' + (err.message || err);
+        show($('submitError'));
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Submit Job Report';
+      }
+    });
+
+    /* ===============================================================
+       "SUBMIT ANOTHER" — reset and reload
+       =============================================================== */
+    $('newSubmissionBtn').addEventListener('click', () => {
+      window.location.reload();
+    });
+
+    /* ===============================================================
+       INITIAL STATE
+       =============================================================== */
+    // Show auth screen by default; onAuthStateChange will flip to app if logged in
+    hide($('appScreen'));
+    show($('authScreen'));
+
+  }); // end window load
+  </script>
+
+</body>
+</html>

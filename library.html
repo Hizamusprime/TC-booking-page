@@ -1,0 +1,2403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#FF6B00">
+  <title>STC Library — SWMS, Toolbox Talks, Quick Reference</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg: #FAFAF7;
+      --bg-card: #FFFFFF;
+      --bg-subtle: #F0F0EB;
+      --text: #0A0A0A;
+      --text-muted: #6B6B68;
+      --border: #E5E5E0;
+      --border-strong: #2A2A28;
+      --accent: #FF6B00;
+      --accent-hover: #E55D00;
+      --success: #16803C;
+      --danger: #C72525;
+      --warning: #B45309;
+      --radius: 6px;
+      --radius-sm: 4px;
+      --shadow: 0 1px 2px rgba(0,0,0,0.04);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      font-family: 'Manrope', -apple-system, sans-serif;
+      font-size: 16px;
+      line-height: 1.55;
+      color: var(--text);
+      background: var(--bg);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Hi-vis stripe */
+    body::before {
+      content: "";
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: 6px;
+      background: repeating-linear-gradient(
+        45deg,
+        var(--accent) 0, var(--accent) 12px,
+        var(--text) 12px, var(--text) 24px
+      );
+      z-index: 100;
+    }
+
+    /* ========== HEADER ========== */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 24px 28px 16px;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .brand {
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+    }
+
+    .brand-name {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 32px;
+      letter-spacing: 0.04em;
+      line-height: 1;
+    }
+
+    .brand-tag {
+      font-size: 13px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 600;
+    }
+
+    .back-link {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+    }
+    .back-link:hover { color: var(--accent); }
+
+    /* ========== TAB NAVIGATION ========== */
+    .tabs {
+      display: flex;
+      gap: 0;
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 0 28px;
+      border-bottom: 2px solid var(--border-strong);
+      position: sticky;
+      top: 6px;
+      background: var(--bg);
+      z-index: 50;
+    }
+
+    .tab {
+      background: none;
+      border: none;
+      padding: 14px 24px;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 22px;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      cursor: pointer;
+      border-bottom: 4px solid transparent;
+      margin-bottom: -2px;
+      transition: all 0.15s;
+    }
+
+    .tab:hover { color: var(--text); }
+    .tab.active {
+      color: var(--text);
+      border-bottom-color: var(--accent);
+    }
+
+    /* ========== LAYOUT ========== */
+    .layout {
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      gap: 0;
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 24px 28px 80px;
+    }
+
+    .sidebar {
+      border-right: 1px solid var(--border);
+      padding-right: 24px;
+    }
+
+    .sidebar-title {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+      padding-left: 12px;
+    }
+
+    .category-list {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .category-btn {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      width: 100%;
+      padding: 12px;
+      background: none;
+      border: none;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      text-align: left;
+      font-family: inherit;
+      font-size: 14px;
+      color: var(--text);
+      transition: all 0.15s;
+    }
+
+    .category-btn:hover {
+      background: var(--bg-subtle);
+    }
+
+    .category-btn.active {
+      background: var(--text);
+      color: white;
+    }
+
+    .category-btn .icon {
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    .category-btn .label {
+      flex: 1;
+      font-weight: 500;
+    }
+
+    /* ========== CONTENT ========== */
+    .content {
+      padding-left: 32px;
+      min-width: 0;
+    }
+
+    .content-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 2px solid var(--border-strong);
+    }
+
+    .content-title-block {
+      flex: 1;
+    }
+
+    .content-eyebrow {
+      font-size: 11px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .content-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 36px;
+      letter-spacing: 0.02em;
+      line-height: 1;
+    }
+
+    .copy-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 18px;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 14px;
+      letter-spacing: 0.05em;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: all 0.15s;
+    }
+
+    .copy-btn:hover { background: var(--accent-hover); }
+    .copy-btn.copied {
+      background: var(--success);
+    }
+
+    /* ========== DOCUMENT CONTENT STYLING ========== */
+    .doc-meta {
+      background: var(--bg-subtle);
+      border-radius: var(--radius-sm);
+      padding: 16px 20px;
+      margin-bottom: 24px;
+      display: grid;
+      grid-template-columns: max-content 1fr;
+      gap: 6px 18px;
+      font-size: 13px;
+    }
+
+    .doc-meta strong {
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .content-body h3 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 22px;
+      letter-spacing: 0.03em;
+      margin: 28px 0 12px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+    }
+
+    .content-body h3:first-child { border-top: none; padding-top: 0; margin-top: 0; }
+
+    .content-body h4 {
+      font-size: 15px;
+      font-weight: 700;
+      margin: 16px 0 8px;
+      color: var(--text);
+    }
+
+    .content-body p { margin-bottom: 12px; }
+
+    .content-body ul, .content-body ol {
+      margin: 8px 0 16px 24px;
+    }
+
+    .content-body li { margin-bottom: 6px; }
+
+    .content-body table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 12px 0 20px;
+      font-size: 14px;
+    }
+
+    .content-body th {
+      background: var(--bg-subtle);
+      text-align: left;
+      padding: 10px 12px;
+      font-weight: 700;
+      border-bottom: 2px solid var(--border-strong);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .content-body td {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .content-body tr:hover td { background: var(--bg-subtle); }
+
+    .risk-high { color: var(--danger); font-weight: 700; }
+    .risk-medium { color: var(--warning); font-weight: 600; }
+    .risk-low { color: var(--success); font-weight: 500; }
+
+    .callout {
+      background: #FEF7ED;
+      border-left: 4px solid var(--warning);
+      padding: 12px 16px;
+      margin: 16px 0;
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+      font-size: 14px;
+    }
+
+    .callout.danger {
+      background: #FEF2F2;
+      border-left-color: var(--danger);
+    }
+
+    .callout strong { display: block; margin-bottom: 4px; }
+
+    /* ========== RESPONSIVE ========== */
+    @media (max-width: 880px) {
+      .layout {
+        grid-template-columns: 1fr;
+        padding: 16px 16px 60px;
+      }
+
+      .sidebar {
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+        padding-right: 0;
+        padding-bottom: 16px;
+        margin-bottom: 24px;
+      }
+
+      .category-list {
+        flex-direction: row;
+        overflow-x: auto;
+        gap: 6px;
+        padding-bottom: 4px;
+      }
+
+      .category-btn {
+        white-space: nowrap;
+        flex-shrink: 0;
+      }
+
+      .content { padding-left: 0; }
+      .content-title { font-size: 28px; }
+      .header { padding: 20px 16px 12px; }
+      .tabs { padding: 0 16px; }
+      .tab { padding: 12px 16px; font-size: 18px; }
+    }
+
+    @media print {
+      body::before, .header, .tabs, .sidebar, .copy-btn, .back-link { display: none !important; }
+      .layout { grid-template-columns: 1fr; padding: 0; }
+      .content { padding: 0; }
+      .content-body { font-size: 12px; }
+    }
+
+    /* Toast notification for copy */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--text);
+      color: white;
+      padding: 12px 20px;
+      border-radius: var(--radius);
+      font-size: 14px;
+      font-weight: 500;
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.2s ease;
+      z-index: 200;
+    }
+
+    .toast.shown {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+  </style>
+</head>
+<body>
+
+  <header class="header">
+    <div class="brand">
+      <div class="brand-name">STC</div>
+      <div class="brand-tag">Library</div>
+    </div>
+    <a href="/" class="back-link">← STC home</a>
+  </header>
+
+  <nav class="tabs">
+    <button class="tab active" data-tab="swms">SWMS</button>
+    <button class="tab" data-tab="toolbox">Toolbox Talks</button>
+    <button class="tab" data-tab="reference">Quick Reference</button>
+  </nav>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="sidebar-title" id="sidebarTitle">Documents</div>
+      <div class="category-list" id="categoryList"></div>
+    </aside>
+
+    <main class="content">
+      <div class="content-header">
+        <div class="content-title-block">
+          <div class="content-eyebrow" id="contentEyebrow">—</div>
+          <h1 class="content-title" id="contentTitle">—</h1>
+        </div>
+        <button class="copy-btn" id="copyBtn">📋 Copy Text</button>
+      </div>
+      <article class="content-body" id="contentBody"></article>
+    </main>
+  </div>
+
+  <div class="toast" id="toast">Copied to clipboard</div>
+
+  <script>
+  /* ========================================================
+     LIBRARY DATA — all SWMS, toolbox talks, and reference
+     Edit this object to change content. No backend needed.
+     ======================================================== */
+  const library = {
+
+    /* ====================================================
+       TOOLBOX TALKS — read out at start of shift, 3-4 mins
+       ==================================================== */
+    toolbox: [
+      {
+        id: 'night',
+        icon: '🌙',
+        title: 'Night Works',
+        content: `
+          <div class="callout"><strong>When to use this</strong>Any shift starting after sunset or finishing before sunrise. Read out before shift starts. 3–4 minutes.</div>
+
+          <h3>What we're doing tonight</h3>
+          <ul>
+            <li>Traffic control for [contractor] roadworks on [road / site]</li>
+            <li>Stop/slow control, signage management, lane closure</li>
+            <li>Start [time] → finish [time]</li>
+          </ul>
+
+          <h3>Hazards specific to night</h3>
+          <ul>
+            <li><strong>Reduced visibility</strong> — drivers physically can't see us as well, regardless of how much hi-vis we're wearing</li>
+            <li><strong>Driver fatigue</strong> — late-night drivers are more inattentive, slower to react</li>
+            <li><strong>Drink and drug drivers</strong> — significantly more common after 10pm</li>
+            <li><strong>Glare</strong> — oncoming headlights can blind us at the wrong moment</li>
+            <li><strong>Cold + our own fatigue</strong> — slower reactions, judgment errors, easier to make mistakes</li>
+            <li><strong>Sudden weather</strong> — fog, dew on signs, dropping temps</li>
+          </ul>
+
+          <h3>How we manage it</h3>
+          <ul>
+            <li>Hi-vis Class D/N minimum (reflective top AND pants), buttoned up</li>
+            <li>Headtorches on, red mode if available — preserves night vision</li>
+            <li>Position behind the buffer / TMA wherever possible</li>
+            <li>Never stand on the painted line — always behind the protective taper</li>
+            <li><strong>Don't turn your back to traffic. Ever.</strong></li>
+            <li>Keep moving — don't go static for long, both for warmth and for visibility</li>
+            <li>Watch each other — buddy system, especially anyone new to nights</li>
+          </ul>
+
+          <h3>If a vehicle doesn't slow down</h3>
+          <ul>
+            <li><strong>Get off the road.</strong> Don't try to wave them down or block them.</li>
+            <li>Move sideways AWAY from the direction of traffic flow, not parallel to it</li>
+            <li>Radio call: <em>"Vehicle not stopping, [direction]"</em></li>
+            <li>We'd rather lose a lane closure than lose a person. No exceptions.</li>
+          </ul>
+
+          <h3>Reminders</h3>
+          <ul>
+            <li>Proper feed before shift — not just energy drinks</li>
+            <li>Hydrate even though it's cold (cold weather still dehydrates)</li>
+            <li>30-min break every 4 hours, mandatory</li>
+            <li>If you feel fatigued, <strong>you call it.</strong> Nobody gets in trouble for standing down.</li>
+          </ul>
+
+          <h3>Before we start — quick check</h3>
+          <ul>
+            <li>Everyone got a working headtorch?</li>
+            <li>Radio comms tested?</li>
+            <li>Anyone on medication affecting alertness?</li>
+            <li>First-time night worker? Buddy them up.</li>
+          </ul>
+        `
+      },
+
+      {
+        id: 'urban',
+        icon: '🚗',
+        title: 'Urban / Suburban Roadworks',
+        content: `
+          <div class="callout"><strong>When to use this</strong>Street works in residential or commercial areas, school streets, suburban arterials (50–60 km/h zones).</div>
+
+          <h3>What we're doing today</h3>
+          <ul>
+            <li>Traffic control on [road / site] for [contractor / job type]</li>
+            <li>Stop/slow control, lane closure, driveway management</li>
+            <li>Start [time] → finish [time]</li>
+          </ul>
+
+          <h3>Hazards specific to urban work</h3>
+          <ul>
+            <li><strong>Pedestrians appearing without warning</strong> — kids, dogs, people on phones, elderly</li>
+            <li><strong>Drivers accessing driveways</strong> through the worksite</li>
+            <li><strong>Parked cars</strong> blocking sight lines</li>
+            <li><strong>Cyclists and scooters</strong> weaving through traffic</li>
+            <li><strong>Distracted drivers</strong> — locals know the road, switch off mentally</li>
+            <li><strong>Verbal abuse from impatient drivers / residents</strong></li>
+            <li><strong>Tradies in utes</strong> doing dumb shit to get through</li>
+          </ul>
+
+          <h3>How we manage it</h3>
+          <ul>
+            <li>Position to see driveways AND traffic flow at the same time</li>
+            <li>Eye contact with every driver before signalling — assume they haven't seen you</li>
+            <li>Hand signals slow, clear, unambiguous</li>
+            <li>Watch parked cars for kids hidden behind them</li>
+            <li>Never stand between two parked cars</li>
+            <li>If a driveway exits inside the worksite, station someone there</li>
+          </ul>
+
+          <h3>If someone gets aggressive</h3>
+          <ul>
+            <li><strong>Do not engage.</strong> Don't argue back.</li>
+            <li>Step back, radio for the site supervisor</li>
+            <li>"Sorry mate, I just do what I'm told" works every time</li>
+            <li>Take a rego if they're abusive — admin/legal problem, not yours</li>
+            <li>Aggressive driver = stop traffic immediately, let them through, get them off site</li>
+          </ul>
+
+          <h3>Before we start — quick check</h3>
+          <ul>
+            <li>Everyone know where the driveways are?</li>
+            <li>Anyone got pedestrians in their sector they need to watch for?</li>
+            <li>Radios working?</li>
+            <li>Anyone first time on urban work?</li>
+          </ul>
+        `
+      },
+
+      {
+        id: 'footpath',
+        icon: '🚶',
+        title: 'Footpath / Pedestrian Works',
+        content: `
+          <div class="callout"><strong>When to use this</strong>Any job where the public is walking through or around your worksite.</div>
+
+          <h3>What we're doing today</h3>
+          <ul>
+            <li>Footpath or kerb works on [location]</li>
+            <li>Maintaining safe pedestrian passage past the worksite</li>
+            <li>Start [time] → finish [time]</li>
+          </ul>
+
+          <h3>Hazards specific to pedestrian work</h3>
+          <ul>
+            <li><strong>Pedestrians are the protected ones here</strong>, not vehicles — flip your mindset</li>
+            <li><strong>Wheelchairs, prams, walkers</strong> need flat continuous path (no cables, no spoil)</li>
+            <li><strong>Vision-impaired people</strong> rely on tactile cues — guide them if needed</li>
+            <li><strong>Kids</strong> treating barriers as obstacle course</li>
+            <li><strong>People on phones</strong> walking straight into stuff</li>
+            <li><strong>Pedestrians ignoring detour signage</strong> and pushing through anyway</li>
+          </ul>
+
+          <h3>How we manage it</h3>
+          <ul>
+            <li><strong>Continuous barriers</strong> — not just spaced cones — so blind pedestrians can follow</li>
+            <li>Detour signage at eye level, not knee level</li>
+            <li>Clear, smooth alternative path — no trip hazards, no steps if avoidable</li>
+            <li>Detour shouldn't add more than 50m unless unavoidable</li>
+            <li>If kids hanging around the site, ask the spotter to politely move them on</li>
+            <li>If someone's vision-impaired and confused, <strong>offer to guide them</strong> — ask first, don't grab</li>
+          </ul>
+
+          <h3>Legal stuff worth knowing</h3>
+          <ul>
+            <li>DDA (Disability Discrimination Act) means our path has to work for everyone</li>
+            <li>Failure to provide accessible detour = legal exposure for the principal contractor</li>
+            <li>If you genuinely can't make it accessible, escalate to supervisor — don't just hope</li>
+          </ul>
+
+          <h3>Before we start — quick check</h3>
+          <ul>
+            <li>Have we walked the detour ourselves to test it?</li>
+            <li>Any narrow points where wheelchair won't fit?</li>
+            <li>Sight lines OK for visually impaired (no overhead hazards at head height)?</li>
+            <li>Anyone with rapport already with the local shops/residents?</li>
+          </ul>
+        `
+      },
+
+      {
+        id: 'driveway',
+        icon: '🏠',
+        title: 'Driveway / Property Access',
+        content: `
+          <div class="callout"><strong>When to use this</strong>Works in front of homes, businesses, or anywhere vehicles need to enter/exit the worksite zone.</div>
+
+          <h3>What we're doing today</h3>
+          <ul>
+            <li>Roadworks where multiple driveways enter the worksite</li>
+            <li>Managing resident and business vehicle access through the closure</li>
+            <li>Start [time] → finish [time]</li>
+          </ul>
+
+          <h3>Hazards specific to driveway work</h3>
+          <ul>
+            <li><strong>Vehicles reversing blind</strong> out of driveways — they can't see the worksite</li>
+            <li><strong>Residents expecting access at all times</strong> — frustration builds fast</li>
+            <li><strong>Elderly drivers flustered</strong> by changed conditions, may make sudden moves</li>
+            <li><strong>Kids and pets</strong> in driveways</li>
+            <li><strong>Delivery trucks</strong> needing access (couriers, garbage, removalists)</li>
+            <li><strong>Limited turning space</strong> — vehicles forced to reverse in or out</li>
+          </ul>
+
+          <h3>How we manage it</h3>
+          <ul>
+            <li><strong>Walk the worksite first</strong> — identify every driveway before crew starts</li>
+            <li>Door-knock or note-drop residents the morning of, if possible</li>
+            <li>Spotter at each driveway when vehicles approach</li>
+            <li><strong>Walk every vehicle in and out</strong> — never let them self-navigate through the site</li>
+            <li>Stop traffic flow temporarily for residents — it's a 10-second job</li>
+            <li>Clear hand signal: "Stop... clear... go." No ambiguity.</li>
+          </ul>
+
+          <h3>If a resident is frustrated</h3>
+          <ul>
+            <li>Acknowledge first: "Yeah I get it, won't be long, I'll get you out in a sec"</li>
+            <li>Don't promise what you can't deliver</li>
+            <li>Never argue about whose fault the works are — that's not your job</li>
+            <li>Escalate to supervisor if persistent</li>
+          </ul>
+
+          <h3>Before we start — quick check</h3>
+          <ul>
+            <li>Have we mapped every driveway?</li>
+            <li>Anyone got mobility-impaired resident in their sector?</li>
+            <li>Garbage / delivery day clash today?</li>
+            <li>Are radios reaching all driveway spotters?</li>
+          </ul>
+        `
+      },
+
+      {
+        id: 'school',
+        icon: '🎒',
+        title: 'School Zone Works',
+        content: `
+          <div class="callout"><strong>When to use this</strong>Any work within a marked school zone, especially around peak drop-off / pick-up times.</div>
+
+          <h3>What we're doing today</h3>
+          <ul>
+            <li>Traffic control near [school name] during [school zone hours]</li>
+            <li>40 km/h zone enforced, kids and parents in the area</li>
+            <li>Start [time] → finish [time]</li>
+          </ul>
+
+          <h3>Hazards specific to school zones</h3>
+          <ul>
+            <li><strong>Kids — small, unpredictable, fast</strong> — can dart out from anywhere</li>
+            <li><strong>Parent drop-off / pick-up chaos</strong> at 8:30am and 3:00pm</li>
+            <li><strong>Bus zones</strong> — strict rules, do NOT block them</li>
+            <li><strong>Crossing supervisors</strong> working their crossings — coordinate with them</li>
+            <li><strong>Distracted parents</strong> on phones, late, stressed</li>
+            <li><strong>Kids crossing at non-designated points</strong> if barriers funnel them wrong</li>
+            <li><strong>Higher legal and media exposure</strong> if anything goes wrong near kids</li>
+          </ul>
+
+          <h3>How we manage it</h3>
+          <ul>
+            <li><strong>Check the school zone times</strong> before starting — they vary</li>
+            <li><strong>Avoid the peak windows</strong> if at all possible — schedule around 8–9am and 2:45–3:30pm</li>
+            <li><strong>Liaise with school admin first</strong> — give them notice, they may help</li>
+            <li>Stay at MAXIMUM visibility during peak — every TC fully kitted, not slacking</li>
+            <li><strong>Never block</strong> the school gate, crossing, or bus zone — ever</li>
+            <li>Be polite to parents — they're stressed and time-pressured</li>
+            <li>Watch for kids cutting through gaps in barriers</li>
+            <li>Report unsafe kid behaviour to the school, not the kid</li>
+          </ul>
+
+          <h3>If anything goes wrong involving a child</h3>
+          <ul>
+            <li>Stop traffic immediately, no questions</li>
+            <li>Get the kid to safety</li>
+            <li>Notify supervisor, school, and (if injury) 000</li>
+            <li>Don't engage with the kid's medical condition — that's paramedics' job</li>
+            <li>Witness statements taken before anyone leaves</li>
+          </ul>
+
+          <h3>Before we start — quick check</h3>
+          <ul>
+            <li>What are the school zone times today?</li>
+            <li>Have we coordinated with the school?</li>
+            <li>Anyone uncomfortable working around kids? (Swap with them — no shame.)</li>
+            <li>Are barriers funnelling kids to safe crossing points only?</li>
+          </ul>
+        `
+      },
+
+      {
+        id: 'wet',
+        icon: '🌧',
+        title: 'Wet Weather Operations',
+        content: `
+          <div class="callout"><strong>When to use this</strong>Any shift where rain is forecast, occurring, or the site is wet from prior weather.</div>
+
+          <h3>What we're doing today</h3>
+          <ul>
+            <li>Traffic control in wet conditions on [road / site]</li>
+            <li>Adjusting standard procedures for reduced grip, visibility, and signage stability</li>
+            <li>Start [time] → finish [time]</li>
+          </ul>
+
+          <h3>Hazards specific to wet weather</h3>
+          <ul>
+            <li><strong>Stopping distance 2–3x longer</strong> on wet roads — even careful drivers undershoot</li>
+            <li><strong>Aquaplaning at speed</strong> — vehicles can lose control suddenly with no warning</li>
+            <li><strong>Driver visibility reduced</strong> — wipers, foggy windscreens, glare off wet surface</li>
+            <li><strong>Painted line markings become slippery</strong> — like walking on ice</li>
+            <li><strong>Signage blown or knocked over</strong> by wind or passing vehicles</li>
+            <li><strong>Lightning risk</strong> if storms forecast</li>
+            <li><strong>Crew fatigue from cold</strong> — judgment slips faster than you realise</li>
+            <li><strong>Standing water</strong> can undermine cones, signage, even barriers</li>
+          </ul>
+
+          <h3>How we manage it</h3>
+          <ul>
+            <li><strong>Extend the taper length</strong> — give drivers more warning and stopping distance</li>
+            <li><strong>Weight every sign and cone</strong> — sandbags or weighted bases, no exceptions</li>
+            <li><strong>Step back from the traffic line</strong> — give yourself more buffer</li>
+            <li>Watch your footing on painted lines and shoulders</li>
+            <li><strong>Proper wet weather gear</strong> — waterproof outer over hi-vis, not plastic ponchos that flap</li>
+            <li>Battery backup for radios, headtorches, GPS</li>
+            <li>Coats on UNDER hi-vis if cold, hi-vis stays outermost layer always</li>
+          </ul>
+
+          <h3>If conditions deteriorate</h3>
+          <ul>
+            <li><strong>Heavy rain reducing visibility below safe distance</strong> — stop work, call supervisor</li>
+            <li><strong>Lightning 30-30 rule</strong> — if flash-to-thunder is under 30 seconds, stop work and shelter. Wait 30 minutes after last strike before resuming.</li>
+            <li><strong>Standing water in worksite</strong> — re-set signage on higher ground</li>
+            <li>Get crew rotated to vehicles every 30–45 min in cold, not just lunch</li>
+          </ul>
+
+          <h3>Before we start — quick check</h3>
+          <ul>
+            <li>Everyone got proper wet weather gear?</li>
+            <li>Sandbags / weighted bases on hand?</li>
+            <li>Lightning in the forecast?</li>
+            <li>Anyone with cold/flu symptoms? (Send them home — cold weather makes it worse.)</li>
+          </ul>
+        `
+      },
+
+      {
+        id: 'hot',
+        icon: '☀️',
+        title: 'Hot Weather / Heat Stress',
+        content: `
+          <div class="callout"><strong>When to use this</strong>Any shift forecast over 30°C, or working on dark surfaces (bitumen radiates heat — feels hotter).</div>
+
+          <h3>What we're doing today</h3>
+          <ul>
+            <li>Traffic control in hot conditions on [road / site]</li>
+            <li>Managing heat exposure, hydration, and crew rotation</li>
+            <li>Start [time] → finish [time]</li>
+          </ul>
+
+          <h3>Hazards specific to hot weather</h3>
+          <ul>
+            <li><strong>Australian summer kills people</strong> — 40°C+ is genuinely dangerous, not just uncomfortable</li>
+            <li><strong>Hi-vis traps heat</strong> — we're hotter than the public around us</li>
+            <li><strong>Bitumen radiates heat</strong> — standing on a road can be 10°C hotter than air temp</li>
+            <li><strong>UV exposure compounds</strong> over a shift — sunburn now, skin cancer later</li>
+            <li><strong>Dehydration sneaks up</strong> — by the time you're thirsty, you're already behind</li>
+            <li><strong>Heat cognition</strong> drops gradually — you make mistakes without knowing it</li>
+            <li><strong>Heat stroke is a medical emergency</strong> — can kill in under an hour</li>
+          </ul>
+
+          <h3>How we manage it</h3>
+          <ul>
+            <li><strong>Drink BEFORE thirst</strong> — 1 litre per hour minimum in extreme heat</li>
+            <li><strong>Electrolytes, not just water</strong> — Hydralyte, Powerade, salt tablets</li>
+            <li><strong>Rotate to shade every 15 mins</strong> in extreme heat — no exceptions</li>
+            <li><strong>Sunscreen every 2 hours</strong>, even under hat brim</li>
+            <li><strong>Wet rag around neck</strong> or cooling vest if available</li>
+            <li><strong>Cold drinks in esky</strong>, not water bottles cooking in the sun</li>
+            <li><strong>Eat regularly</strong> — heat suppresses appetite, but you need fuel</li>
+            <li><strong>Watch each other</strong> — heat affects judgment, you may not realise you're cooked</li>
+          </ul>
+
+          <h3>Warning signs to watch for</h3>
+          <div class="callout"><strong>Heat exhaustion (manageable)</strong>Pale, sweaty, dizzy, headache, nauseous. Get them to shade, cool drinks, wet rag on neck. 20 mins minimum.</div>
+          <div class="callout danger"><strong>Heat stroke (medical emergency)</strong>Red dry skin (stopped sweating), confused, slurring, hot to touch. <strong>Call 000 immediately.</strong> Cool them aggressively — wet cloth, fanning, AC if available. Do not give water if confused or vomiting.</div>
+
+          <h3>Stop work thresholds</h3>
+          <ul>
+            <li><strong>35°C + humidity</strong> — caution, increase break frequency</li>
+            <li><strong>40°C</strong> — site supervisor considers pulling the crew</li>
+            <li><strong>42°C+</strong> — work suspended unless critical</li>
+            <li><strong>No negotiation</strong> — supervisor's call, crew comfort doesn't override</li>
+          </ul>
+
+          <h3>Before we start — quick check</h3>
+          <ul>
+            <li>Everyone got 4L+ of water minimum for the shift?</li>
+            <li>Anyone on medication that affects heat tolerance? (Some BP meds, antihistamines do.)</li>
+            <li>Shade available — vehicle AC, awning, building?</li>
+            <li>Esky stocked with electrolytes?</li>
+            <li>Anyone showing signs already? (Skin colour, energy level, attitude.)</li>
+          </ul>
+        `
+      }
+    ],
+
+    /* ====================================================
+       SWMS — formal compliance documents
+       ==================================================== */
+    swms: [
+      {
+        id: 'night',
+        icon: '🌙',
+        title: 'Night Works Traffic Control',
+        docNum: 'STC-SWMS-001',
+        content: getSwmsContent('001')
+      },
+      {
+        id: 'urban',
+        icon: '🚗',
+        title: 'Urban / Suburban Roadworks',
+        docNum: 'STC-SWMS-002',
+        content: getSwmsContent('002')
+      },
+      {
+        id: 'footpath',
+        icon: '🚶',
+        title: 'Footpath / Pedestrian Works',
+        docNum: 'STC-SWMS-003',
+        content: getSwmsContent('003')
+      },
+      {
+        id: 'driveway',
+        icon: '🏠',
+        title: 'Driveway / Property Access',
+        docNum: 'STC-SWMS-004',
+        content: getSwmsContent('004')
+      },
+      {
+        id: 'school',
+        icon: '🎒',
+        title: 'School Zone Works',
+        docNum: 'STC-SWMS-005',
+        content: getSwmsContent('005')
+      },
+      {
+        id: 'wet',
+        icon: '🌧',
+        title: 'Wet Weather Operations',
+        docNum: 'STC-SWMS-006',
+        content: getSwmsContent('006')
+      },
+      {
+        id: 'hot',
+        icon: '☀️',
+        title: 'Hot Weather / Heat Stress',
+        docNum: 'STC-SWMS-007',
+        content: getSwmsContent('007')
+      }
+    ],
+
+    /* ====================================================
+       QUICK REFERENCE — at-a-glance compliance info
+       ==================================================== */
+    reference: [
+      {
+        id: 'whs-act',
+        icon: '⚖️',
+        title: 'WHS Act NSW — Key Sections',
+        content: `
+          <div class="callout"><strong>The big three</strong>Section 19, Section 28, and Section 29 cover everyone on a worksite. Know them.</div>
+
+          <h3>Section 19 — Primary duty (PCBU)</h3>
+          <p>A Person Conducting a Business or Undertaking (PCBU — i.e. your business) must ensure, so far as is reasonably practicable, the health and safety of workers and other persons. This includes:</p>
+          <ul>
+            <li>Safe systems of work</li>
+            <li>Safe plant, structures, and substances</li>
+            <li>Adequate facilities (water, toilets, shade)</li>
+            <li>Information, training, instruction, supervision</li>
+            <li>Monitoring health of workers and worksite conditions</li>
+          </ul>
+          <p><strong>Penalty:</strong> Category 1 offence (reckless conduct) — up to $3M for body corporate, $600K + 5 years jail for individual.</p>
+
+          <h3>Section 28 — Duties of workers</h3>
+          <p>Every worker (including you, your subbies, anyone you engage) must:</p>
+          <ul>
+            <li>Take reasonable care of own safety</li>
+            <li>Take reasonable care that their acts/omissions don't affect others' safety</li>
+            <li>Comply with reasonable instructions from PCBU</li>
+            <li>Cooperate with safety policies/procedures notified to them</li>
+          </ul>
+          <p><strong>Penalty:</strong> up to $300K + 5 years jail for serious breaches.</p>
+
+          <h3>Section 29 — Duties of other persons</h3>
+          <p>Visitors, contractors, and members of public at the worksite must take reasonable care for their own safety and others'. Useful when a member of public ignores your detour and gets hurt — they bear some responsibility.</p>
+
+          <h3>Notifiable incidents (Section 35–39)</h3>
+          <p>You <strong>must notify SafeWork NSW immediately</strong> if any of these occur on your worksite:</p>
+          <ul>
+            <li>Death</li>
+            <li>Serious injury / illness requiring immediate treatment as in-patient, immediate amputation, serious head/eye injury, spinal injury, serious burns, etc.</li>
+            <li>Dangerous incident (e.g. uncontrolled escape of substance, electrical incident, collapse, fall from height)</li>
+          </ul>
+          <p><strong>Notification line:</strong> 13 10 50 (SafeWork NSW)</p>
+        `
+      },
+
+      {
+        id: 'sign-distances',
+        icon: '📏',
+        title: 'AS 1742.3 — Sign Distances by Speed Zone',
+        content: `
+          <div class="callout"><strong>Quick reference for setup distances</strong>From AS 1742.3 (Manual of Uniform Traffic Control Devices, Part 3). Always check the latest revision of the standard for your specific TMP requirements.</div>
+
+          <h3>Standard sign placement distances</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>Speed (km/h)</th>
+                <th>Advance warning</th>
+                <th>Taper length (single lane)</th>
+                <th>Buffer zone</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>40</td><td>50 m</td><td>10 m</td><td>30 m</td></tr>
+              <tr><td>50</td><td>75 m</td><td>15 m</td><td>40 m</td></tr>
+              <tr><td>60</td><td>100 m</td><td>20 m</td><td>50 m</td></tr>
+              <tr><td>70</td><td>125 m</td><td>30 m</td><td>60 m</td></tr>
+              <tr><td>80</td><td>150 m</td><td>50 m</td><td>80 m</td></tr>
+              <tr><td>90</td><td>200 m</td><td>65 m</td><td>100 m</td></tr>
+              <tr><td>100</td><td>250 m</td><td>80 m</td><td>120 m</td></tr>
+              <tr><td>110</td><td>300 m</td><td>100 m</td><td>140 m</td></tr>
+            </tbody>
+          </table>
+
+          <h3>Sign sequence (approach to worksite)</h3>
+          <ol>
+            <li><strong>ROADWORK AHEAD</strong> — first sign</li>
+            <li><strong>Speed advisory</strong> (e.g. 40km/h SPEED LIMIT)</li>
+            <li><strong>Lane / shoulder closure indication</strong></li>
+            <li><strong>WORKMAN AHEAD</strong> or <strong>FLAGMAN AHEAD</strong></li>
+            <li><strong>Taper</strong> — cones angled into the closure</li>
+            <li><strong>Worksite</strong></li>
+            <li><strong>END ROADWORK</strong> — after the site</li>
+          </ol>
+
+          <h3>Wet weather adjustments</h3>
+          <p>Multiply taper lengths by <strong>1.5×</strong> in wet conditions. Multiply by <strong>2×</strong> at night in wet conditions.</p>
+
+          <div class="callout"><strong>Always check the TMP</strong>The TMP for your specific job overrides these generic distances. Different road classifications, sight distances, and traffic volumes change the requirements.</div>
+        `
+      },
+
+      {
+        id: 'hi-vis',
+        icon: '🦺',
+        title: 'Hi-Vis Requirements — AS/NZS 4602.1',
+        content: `
+          <div class="callout"><strong>Class D, Class N, Class D/N</strong>Day, Night, and Day+Night. TC work near traffic requires Class D/N minimum.</div>
+
+          <h3>Class D — Day use</h3>
+          <ul>
+            <li>Fluorescent fabric — yellow/green or orange</li>
+            <li>Minimum 0.2 m² of fluorescent material visible</li>
+            <li>Suitable for daylight only</li>
+            <li><strong>Not suitable</strong> for night, dawn, dusk, or low-light conditions</li>
+          </ul>
+
+          <h3>Class N — Night use</h3>
+          <ul>
+            <li>Retroreflective tape only (no fluorescent fabric requirement)</li>
+            <li>Minimum 0.13 m² of retroreflective material</li>
+            <li>Visible in vehicle headlights at distance</li>
+            <li><strong>Not suitable</strong> for daylight use alone</li>
+          </ul>
+
+          <h3>Class D/N — Day AND Night</h3>
+          <ul>
+            <li><strong>Standard requirement for TC work near traffic</strong></li>
+            <li>Combines fluorescent fabric + retroreflective tape</li>
+            <li>Worn 24/7 on TC sites</li>
+            <li>Top AND pants — not just shirt</li>
+          </ul>
+
+          <h3>Common compliance failures</h3>
+          <ul>
+            <li><strong>Faded fluorescent fabric</strong> — needs replacement when colour fades (UV degrades it)</li>
+            <li><strong>Damaged retroreflective tape</strong> — cracks, peeling, washed-out reflectivity</li>
+            <li><strong>Hi-vis worn under jacket</strong> — must be outermost layer</li>
+            <li><strong>Pants without hi-vis</strong> — increasingly required on regulated TC sites</li>
+            <li><strong>Class D worn at night</strong> — not compliant, dangerous</li>
+          </ul>
+
+          <h3>Replacement triggers</h3>
+          <ul>
+            <li>Visible fading of fluorescent fabric</li>
+            <li>Damage to retroreflective tape</li>
+            <li>Rips, tears, oil/paint contamination</li>
+            <li>After ~12 months heavy use, regardless of visible wear</li>
+          </ul>
+        `
+      },
+
+      {
+        id: 'emergency',
+        icon: '📞',
+        title: 'Emergency Contacts & Numbers',
+        content: `
+          <div class="callout danger"><strong>For immediate threat to life — call 000.</strong>Always. No exceptions.</div>
+
+          <h3>Emergency services</h3>
+          <table>
+            <thead><tr><th>Service</th><th>Number</th><th>When</th></tr></thead>
+            <tbody>
+              <tr><td>Police / Fire / Ambulance</td><td><strong>000</strong></td><td>Immediate threat to life or property</td></tr>
+              <tr><td>Police (non-emergency)</td><td>131 444</td><td>Aggressive driver report, theft, non-injury crash</td></tr>
+              <tr><td>SES (storms, flood)</td><td>132 500</td><td>Severe weather damage at worksite</td></tr>
+              <tr><td>Crime Stoppers</td><td>1800 333 000</td><td>Suspicious activity, theft of equipment</td></tr>
+            </tbody>
+          </table>
+
+          <h3>Regulators & authorities</h3>
+          <table>
+            <thead><tr><th>Service</th><th>Number</th><th>When</th></tr></thead>
+            <tbody>
+              <tr><td>SafeWork NSW (notifiable incident)</td><td><strong>13 10 50</strong></td><td>Death, serious injury, dangerous incident</td></tr>
+              <tr><td>Live Traffic NSW</td><td>132 213</td><td>Report incident or check road conditions</td></tr>
+              <tr><td>TfNSW Incident reporting</td><td>132 213</td><td>Damage to road infrastructure</td></tr>
+              <tr><td>EPA NSW (environmental)</td><td>131 555</td><td>Fuel spill, chemical release</td></tr>
+            </tbody>
+          </table>
+
+          <h3>Utilities (damage to or contact with)</h3>
+          <table>
+            <thead><tr><th>Service</th><th>Number</th><th>When</th></tr></thead>
+            <tbody>
+              <tr><td>Dial Before You Dig</td><td>1100</td><td>Before any excavation — free service</td></tr>
+              <tr><td>Endeavour Energy (faults)</td><td>131 003</td><td>Overhead line damage, electrical incident</td></tr>
+              <tr><td>Ausgrid (faults)</td><td>131 388</td><td>Overhead line damage in Ausgrid area</td></tr>
+              <tr><td>Sydney Water (faults)</td><td>132 090</td><td>Water main damage</td></tr>
+              <tr><td>Jemena Gas (emergency)</td><td>131 909</td><td>Gas leak or main damage</td></tr>
+            </tbody>
+          </table>
+
+          <h3>STC internal</h3>
+          <table>
+            <thead><tr><th>Contact</th><th>Number</th><th>When</th></tr></thead>
+            <tbody>
+              <tr><td>Luke Heiser (principal)</td><td>[your number]</td><td>Anything serious, incidents, decisions</td></tr>
+              <tr><td>STC office</td><td>[office number]</td><td>Admin, invoicing, scheduling</td></tr>
+            </tbody>
+          </table>
+        `
+      },
+
+      {
+        id: 'tc-card',
+        icon: '🪪',
+        title: 'TC Card Check Process',
+        content: `
+          <div class="callout"><strong>Every shift, every worker, every time</strong>Even if you've worked with them before. Compliance auditors check the records, not your memory.</div>
+
+          <h3>What to check</h3>
+          <ul>
+            <li><strong>Photo</strong> matches the person standing in front of you</li>
+            <li><strong>Full name</strong> matches what they've told you</li>
+            <li><strong>Card type</strong> — RIIWHS205D (Control traffic with stop-slow bat) or higher</li>
+            <li><strong>Expiry date</strong> — must be in date, no exceptions</li>
+            <li><strong>Card number</strong> — record this in your pre-start / submission</li>
+          </ul>
+
+          <h3>Standard NSW traffic control qualifications</h3>
+          <ul>
+            <li><strong>RIIWHS205D</strong> — Control traffic with stop-slow bat (the basic TC ticket)</li>
+            <li><strong>RIIWHS302D</strong> — Implement traffic management plans (supervisor-level)</li>
+            <li><strong>RIIWHS303D</strong> — Position, set up and program a traffic management plan</li>
+          </ul>
+
+          <h3>Verification options</h3>
+          <ul>
+            <li><strong>Visual check</strong> — minimum requirement, every shift</li>
+            <li><strong>Online verification</strong> — through the issuing RTO or TfNSW Service NSW portal</li>
+            <li><strong>Phone the RTO</strong> if anything seems off about the card</li>
+          </ul>
+
+          <h3>If something's wrong</h3>
+          <ul>
+            <li><strong>Card expired</strong> — worker cannot start until valid card produced. No grace period.</li>
+            <li><strong>Photo doesn't match</strong> — worker stood down, report to principal contractor</li>
+            <li><strong>Card looks tampered/fake</strong> — stand worker down, contact the RTO, do not return card</li>
+            <li><strong>Card not produced</strong> — same as expired. No card, no work.</li>
+          </ul>
+
+          <h3>Record-keeping</h3>
+          <ul>
+            <li>Card number recorded in Jobs Running submission</li>
+            <li>Photo of card optional but recommended (Supabase Storage, linked to that worker's profile)</li>
+            <li>Keep records minimum 5 years per WHS Regulation requirements</li>
+          </ul>
+        `
+      },
+
+      {
+        id: 'incident-flow',
+        icon: '🚨',
+        title: 'Incident Reporting Flow',
+        content: `
+          <div class="callout danger"><strong>Step 1 is always the same</strong>People before paperwork. Treat the casualty, secure the scene, then start the reporting flow.</div>
+
+          <h3>Immediate response (first 5 minutes)</h3>
+          <ol>
+            <li><strong>Make the scene safe</strong> — stop traffic, isolate hazards, remove additional risk</li>
+            <li><strong>First aid</strong> by qualified worker — call 000 if injury beyond minor</li>
+            <li><strong>Do NOT move casualty</strong> unless they're in immediate further danger</li>
+            <li><strong>Radio supervisor</strong> immediately</li>
+            <li><strong>Preserve scene</strong> for investigation — don't clean up or move things unless required for safety</li>
+          </ol>
+
+          <h3>Short-term (first hour)</h3>
+          <ol>
+            <li>STC supervisor (Luke) on the way or contacted</li>
+            <li>Principal contractor notified</li>
+            <li><strong>Photos</strong> — scene, vehicle positions, signage, injuries (with consent)</li>
+            <li><strong>Witness details</strong> collected — name, phone, what they saw</li>
+            <li><strong>Driver details</strong> if vehicle involved — licence, rego, insurance</li>
+          </ol>
+
+          <h3>Notifiable incidents — call SafeWork NSW IMMEDIATELY</h3>
+          <p>Per WHS Act s.35–39, you must notify <strong>13 10 50</strong> immediately for:</p>
+          <ul>
+            <li><strong>Death</strong></li>
+            <li><strong>Serious injury / illness</strong> requiring immediate in-patient treatment, immediate amputation, serious head injury, serious eye injury, spinal injury, scalping, serious burns, serious lacerations, electrical shock, loss of bodily function</li>
+            <li><strong>Dangerous incident</strong> — uncontrolled escape of substance, fire/explosion, collapse, fall from height, electrical contact, etc., even if no injury</li>
+          </ul>
+          <p><strong>You also must preserve the scene</strong> until SafeWork inspector attends or releases the scene.</p>
+
+          <h3>Within 24 hours</h3>
+          <ul>
+            <li><strong>Written incident report</strong> via STC Jobs Running form (incident section)</li>
+            <li><strong>Photos uploaded</strong> via the form to Supabase Storage</li>
+            <li><strong>Insurance notification</strong> — your public liability and workers' comp insurer if applicable</li>
+            <li><strong>SafeWork written notification</strong> if notifiable (form on SafeWork NSW website)</li>
+          </ul>
+
+          <h3>Within 7 days</h3>
+          <ul>
+            <li><strong>Investigation</strong> — root cause analysis, what went wrong, what controls failed</li>
+            <li><strong>Corrective actions</strong> identified and implemented</li>
+            <li><strong>SWMS review</strong> — does the SWMS need updating?</li>
+            <li><strong>Toolbox talk</strong> to crew about lessons learned</li>
+          </ul>
+
+          <h3>Records to keep (5+ years)</h3>
+          <ul>
+            <li>Incident report (Supabase)</li>
+            <li>Photos (Supabase Storage)</li>
+            <li>Witness statements</li>
+            <li>SafeWork correspondence</li>
+            <li>Insurance correspondence</li>
+            <li>Investigation findings and corrective actions</li>
+          </ul>
+        `
+      },
+
+      {
+        id: 'prestart',
+        icon: '✅',
+        title: 'Pre-Start Risk Assessment Checklist',
+        content: `
+          <div class="callout"><strong>Use this every shift, every site</strong>The form on the Jobs Running page captures it digitally, but use this list to walk the site before starting.</div>
+
+          <h3>Documentation</h3>
+          <ul>
+            <li>Traffic Management Plan (TMP) reviewed and current</li>
+            <li>Site-specific SWMS reviewed and signed</li>
+            <li>Site induction completed for all crew</li>
+            <li>All TPWD/TC cards verified and recorded</li>
+          </ul>
+
+          <h3>Crew & PPE</h3>
+          <ul>
+            <li>All workers in correct hi-vis (Class D/N — top and pants)</li>
+            <li>Safety footwear, hard hats, gloves on every worker</li>
+            <li>First aid kit on site and accessible</li>
+            <li>First aid certified worker confirmed on shift</li>
+            <li>Sun/wet weather PPE available for conditions</li>
+            <li>All workers fit for work (no fatigue, medication concerns, illness)</li>
+          </ul>
+
+          <h3>Equipment</h3>
+          <ul>
+            <li>Signage in good condition, retroreflective tape intact</li>
+            <li>Cones / bollards / barriers per TMP</li>
+            <li>Stop/slow bats in working order</li>
+            <li>Radios charged and tested</li>
+            <li>Vehicle(s) fuelled, registered, roadworthy</li>
+            <li>TMA / buffer vehicle in position (high-speed sites)</li>
+            <li>Sandbags / weighted bases (wet/windy conditions)</li>
+          </ul>
+
+          <h3>Site conditions</h3>
+          <ul>
+            <li>Weather check — current conditions and forecast</li>
+            <li>Light conditions — daylight, dusk, dawn, night</li>
+            <li>Visibility — clear, fog, rain</li>
+            <li>Surface — dry, wet, oil/diesel, ice</li>
+            <li>Driveways and access points mapped</li>
+            <li>Pedestrian routes identified and accessible</li>
+            <li>Bus zones, school zones, emergency access identified</li>
+          </ul>
+
+          <h3>Traffic setup</h3>
+          <ul>
+            <li>Signage placed per TMP, at correct distances for speed zone</li>
+            <li>Taper set up correctly (length and angle)</li>
+            <li>Buffer zone clear</li>
+            <li>Workers positioned with line-of-sight to oncoming traffic</li>
+            <li>Hand signal coordination briefed</li>
+            <li>Communications channels confirmed</li>
+          </ul>
+
+          <h3>Hazards specific to today</h3>
+          <ul>
+            <li>Anything unusual about this site? (Steep grade, blind corner, narrow shoulder?)</li>
+            <li>Any community sensitivities? (School zone, hospital, retirement village?)</li>
+            <li>Any contractor-side risks? (Concurrent works, large machinery, deliveries?)</li>
+            <li>Any worker concerns raised during toolbox talk?</li>
+          </ul>
+
+          <h3>Sign off — you don't start until</h3>
+          <ul>
+            <li>All boxes above checked</li>
+            <li>All workers briefed on toolbox talk for the scenario</li>
+            <li>SWMS signed by every worker</li>
+            <li>Site supervisor or principal contractor representative confirms ready to commence</li>
+          </ul>
+        `
+      }
+    ]
+  };
+
+  /* ====================================================
+     SWMS content lookup — keeps top of file readable
+     ==================================================== */
+  function getSwmsContent(num) {
+    return SWMS_DOCS[num] || '<p>Document not found.</p>';
+  }
+
+  const SWMS_DOCS = {
+    '001': `
+      <div class="doc-meta">
+        <strong>Document number</strong><span>STC-SWMS-001</span>
+        <strong>Version</strong><span>1.0</span>
+        <strong>Date prepared</strong><span>24 May 2026</span>
+        <strong>Prepared by</strong><span>Luke Heiser, Safety Traffic Control (sole trader)</span>
+        <strong>Review date</strong><span>24 May 2027 (or sooner if conditions change or incident occurs)</span>
+      </div>
+
+      <h3>1. Activity description</h3>
+      <p>Provision of traffic control services during night shifts (after sunset / before sunrise) including stop/slow operation, lane closures, signage management, and pedestrian/driver management at roadworks, utility works, and construction sites.</p>
+
+      <h3>2. Workers covered</h3>
+      <p>All Safety Traffic Control personnel and subcontractors engaged by STC for night shift traffic control duties.</p>
+
+      <h3>3. Legislation, codes & standards</h3>
+      <ul>
+        <li><strong>Work Health and Safety Act 2011 (NSW)</strong> — duty of care</li>
+        <li><strong>Work Health and Safety Regulation 2017 (NSW)</strong> — Part 3.1 (Risk management), Part 4.5 (Hazardous manual tasks)</li>
+        <li><strong>AS 1742.3</strong> — Manual of Uniform Traffic Control Devices, Part 3: Traffic control for works on roads</li>
+        <li><strong>TfNSW Traffic Control at Work Sites Manual</strong> — Version 6.0</li>
+        <li><strong>AS/NZS 4602.1:2011</strong> — High visibility safety garments</li>
+        <li><strong>TfNSW G10 Specification</strong> — Quality requirements for traffic control plans</li>
+      </ul>
+
+      <h3>4. Competency required</h3>
+      <p>Every worker on this job must hold:</p>
+      <ul>
+        <li><strong>TPWD</strong> (Traffic Controller licence — NSW), in date</li>
+        <li><strong>RIICCM201E</strong> (Construction Induction — White Card)</li>
+        <li><strong>STC night works induction</strong> (delivered by Luke Heiser or nominated supervisor)</li>
+        <li><strong>First aid</strong> — at least one person on site (HLTAID011 minimum)</li>
+      </ul>
+
+      <h3>5. Hazards & risk assessment</h3>
+      <p>Risk matrix used: Likelihood (1–5) × Consequence (1–5) = Risk Score<br><strong>1–4 Low · 5–9 Medium · 10–15 High · 16–25 Critical</strong></p>
+      <table>
+        <thead><tr><th>#</th><th>Hazard</th><th>L</th><th>C</th><th>Initial Risk</th><th>After Controls</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td>Struck by vehicle</td><td>3</td><td>5</td><td class="risk-high">15 High</td><td class="risk-medium">6 Medium</td></tr>
+          <tr><td>2</td><td>Reduced visibility (driver cannot see worker)</td><td>4</td><td>5</td><td class="risk-high">20 Critical</td><td class="risk-medium">6 Medium</td></tr>
+          <tr><td>3</td><td>Impaired drivers (fatigue, alcohol, drugs)</td><td>4</td><td>5</td><td class="risk-high">20 Critical</td><td class="risk-medium">8 Medium</td></tr>
+          <tr><td>4</td><td>Worker fatigue affecting judgment</td><td>4</td><td>4</td><td class="risk-high">16 Critical</td><td class="risk-medium">6 Medium</td></tr>
+          <tr><td>5</td><td>Cold exposure / hypothermia</td><td>3</td><td>3</td><td class="risk-medium">9 Medium</td><td class="risk-low">3 Low</td></tr>
+          <tr><td>6</td><td>Headlight glare causing temporary blindness</td><td>4</td><td>3</td><td class="risk-high">12 High</td><td class="risk-low">4 Low</td></tr>
+          <tr><td>7</td><td>Trip/slip on uneven or wet surface (low light)</td><td>3</td><td>3</td><td class="risk-medium">9 Medium</td><td class="risk-low">3 Low</td></tr>
+          <tr><td>8</td><td>Sudden weather change (fog, rain, storm)</td><td>2</td><td>4</td><td class="risk-medium">8 Medium</td><td class="risk-low">4 Low</td></tr>
+        </tbody>
+      </table>
+
+      <h3>6. Control measures — applied in hierarchy order</h3>
+
+      <h4>6.1 Elimination</h4>
+      <ul><li>Where practicable, avoid night works entirely by scheduling day shifts. (Where night works are mandated by the principal contractor, proceed with controls below.)</li></ul>
+
+      <h4>6.2 Substitution</h4>
+      <ul><li>Where possible, use static signage and automated systems (portable VMS boards) instead of manual stop/slow operations.</li></ul>
+
+      <h4>6.3 Engineering controls</h4>
+      <ul>
+        <li><strong>Traffic Management Plan (TMP)</strong> drawn for night conditions specifically — extended taper lengths, lower posted speed limits, advance warning signage with reflective sheeting Class 1W.</li>
+        <li><strong>Truck-mounted attenuators (TMAs)</strong> positioned upstream of any worker on foot in the traffic stream.</li>
+        <li><strong>Portable lighting towers</strong> at all work zones — minimum 100 lux at the working face.</li>
+        <li><strong>Variable Message Signs (VMS)</strong> at approach zones to give drivers advance notice.</li>
+        <li><strong>Buffer zone</strong> of minimum 60m between work area and live traffic where speed is 80km/h+.</li>
+      </ul>
+
+      <h4>6.4 Administrative controls</h4>
+      <ul>
+        <li>All workers briefed via toolbox talk (STC-TBT-001 Night Works) at start of every shift.</li>
+        <li><strong>Buddy system</strong> — no worker positioned alone, line-of-sight maintained at all times.</li>
+        <li><strong>Maximum 4-hour rotation</strong> between forward TC positions, then mandatory 15-minute break.</li>
+        <li><strong>No-go period</strong> — work suspended 0200–0400 for high-risk locations (where principal contractor agrees).</li>
+        <li><strong>Two-way radio comms</strong> verified working at start of shift; backup channel agreed.</li>
+        <li><strong>Pre-shift fitness check</strong> — Luke (or supervisor) confirms each worker is fit to commence; no worker on shift if affected by alcohol, drugs, or extreme fatigue.</li>
+        <li><strong>Drug and alcohol policy</strong> — random testing per principal contractor requirements; zero tolerance.</li>
+        <li><strong>Incident reporting</strong> — any near-miss or vehicle non-compliance logged immediately via the STC Jobs Running form.</li>
+      </ul>
+
+      <h4>6.5 PPE</h4>
+      <ul>
+        <li><strong>High-visibility clothing</strong> — Class D/N garment per AS/NZS 4602.1, top AND pants, reflective stripes intact.</li>
+        <li><strong>Safety footwear</strong> — steel cap, ankle support, non-slip sole, AS/NZS 2210.3 compliant.</li>
+        <li><strong>Hard hat</strong> — AS/NZS 1801, white or yellow.</li>
+        <li><strong>Head torch</strong> — minimum 200 lumens, red filter mode for night vision preservation.</li>
+        <li><strong>Gloves</strong> — abrasion-resistant.</li>
+        <li><strong>Thermal layer</strong> under hi-vis if temperature below 10°C.</li>
+        <li><strong>Eye protection</strong> — anti-glare if working in oncoming headlight zones.</li>
+      </ul>
+
+      <h3>7. Emergency procedures</h3>
+
+      <h4>Vehicle not slowing / breaching the worksite</h4>
+      <ol>
+        <li>Immediate radio call: <em>"Vehicle not stopping, [direction]"</em></li>
+        <li><strong>Workers move AWAY from traffic flow</strong> — sideways, not parallel to traffic</li>
+        <li>Sound air horn if available</li>
+        <li>Note registration if safe to do so</li>
+        <li>Site supervisor reports to principal contractor; police if dangerous driving</li>
+      </ol>
+
+      <h4>Worker struck by vehicle</h4>
+      <ol>
+        <li>Stop all traffic in both directions immediately</li>
+        <li><strong>Call 000</strong> — Ambulance, Police, Fire if fuel/vehicle damage</li>
+        <li>First aid by qualified worker; do not move casualty unless in immediate further danger</li>
+        <li>Preserve scene for investigation; photograph if possible</li>
+        <li>Notify SafeWork NSW within 24 hours if notifiable incident (death, serious injury)</li>
+        <li>STC supervisor notifies principal contractor immediately</li>
+      </ol>
+
+      <h4>Worker showing signs of severe fatigue</h4>
+      <ol>
+        <li>Remove from active TC position immediately</li>
+        <li>Provide warm drink, food, rest area</li>
+        <li><strong>If symptoms severe (slurred speech, confusion, unable to stand) — call 000</strong></li>
+        <li>Do not allow drive home if compromised; arrange taxi or supervised transport</li>
+      </ol>
+
+      <h4>Lightning / severe weather</h4>
+      <ol>
+        <li><strong>30-30 rule</strong> — if flash-to-thunder &lt; 30 seconds, suspend work</li>
+        <li>Crew shelter in enclosed vehicle (not under trees, not on elevated ground)</li>
+        <li>Resume 30 minutes after last strike</li>
+      </ol>
+
+      <h3>8. Responsibilities</h3>
+      <ul>
+        <li><strong>Luke Heiser (Principal / Supervisor)</strong> — ensures SWMS is current, briefed, and signed by all workers before shift commences; provides all required PPE; coordinates with principal contractor's safety officer.</li>
+        <li><strong>Each worker</strong> — must read, understand, sign this SWMS; must wear all required PPE; must report any condition affecting their fitness for work; must follow control measures without exception.</li>
+        <li><strong>Principal contractor</strong> — provides site-specific TMP, lighting, and TMA positioning; provides emergency contact and site induction.</li>
+      </ul>
+
+      <h3>9. Sign-on register</h3>
+      <table>
+        <thead><tr><th>Date</th><th>Worker name</th><th>Signature</th><th>TPWD #</th><th>Acknowledgment</th></tr></thead>
+        <tbody>
+          <tr><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>I have read and understood this SWMS and agree to follow all controls</td></tr>
+          <tr><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>I have read and understood this SWMS and agree to follow all controls</td></tr>
+          <tr><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>I have read and understood this SWMS and agree to follow all controls</td></tr>
+        </tbody>
+      </table>
+
+      <h3>10. Review trigger</h3>
+      <p>This SWMS must be reviewed and re-issued if any of the following occur:</p>
+      <ul>
+        <li>Incident or near-miss involving any control measure</li>
+        <li>Change in legislation, standards, or TfNSW manual</li>
+        <li>Change in TC equipment or methodology</li>
+        <li>12 months from preparation date (mandatory review)</li>
+        <li>Request from principal contractor or regulator</li>
+      </ul>
+    `,
+
+    '002': `
+      <div class="doc-meta">
+        <strong>Document number</strong><span>STC-SWMS-002</span>
+        <strong>Version</strong><span>1.0</span>
+        <strong>Date prepared</strong><span>24 May 2026</span>
+        <strong>Prepared by</strong><span>Luke Heiser, Safety Traffic Control</span>
+        <strong>Review date</strong><span>24 May 2027</span>
+      </div>
+
+      <h3>1. Activity description</h3>
+      <p>Traffic control services for roadworks in urban or suburban environments with posted speeds of 50–60km/h. Includes stop/slow control, lane closures, driveway management, and pedestrian interface management at residential streets, suburban arterials, and commercial precincts.</p>
+
+      <h3>2. Workers covered</h3>
+      <p>All Safety Traffic Control personnel and subcontractors engaged for urban/suburban traffic control duties.</p>
+
+      <h3>3. Legislation, codes & standards</h3>
+      <ul>
+        <li>Work Health and Safety Act 2011 (NSW)</li>
+        <li>Work Health and Safety Regulation 2017 (NSW)</li>
+        <li>AS 1742.3 — Manual of Uniform Traffic Control Devices, Part 3</li>
+        <li>TfNSW Traffic Control at Work Sites Manual — Version 6.0</li>
+        <li>AS/NZS 4602.1:2011 — High visibility safety garments</li>
+        <li>NSW Road Rules 2014 — pedestrian and driveway provisions</li>
+      </ul>
+
+      <h3>4. Competency required</h3>
+      <ul>
+        <li>TPWD (NSW Traffic Controller licence), in date</li>
+        <li>RIICCM201E (White Card)</li>
+        <li>STC urban works induction</li>
+        <li>First aid certified (HLTAID011) — at least one on site</li>
+      </ul>
+
+      <h3>5. Hazards & risk assessment</h3>
+      <table>
+        <thead><tr><th>#</th><th>Hazard</th><th>L</th><th>C</th><th>Initial</th><th>After Controls</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td>Struck by vehicle</td><td>3</td><td>5</td><td class="risk-high">15 High</td><td class="risk-low">5 Low</td></tr>
+          <tr><td>2</td><td>Pedestrian struck within or near worksite</td><td>3</td><td>5</td><td class="risk-high">15 High</td><td class="risk-low">5 Low</td></tr>
+          <tr><td>3</td><td>Driver accessing driveway through worksite</td><td>4</td><td>4</td><td class="risk-high">16 Critical</td><td class="risk-medium">6 Medium</td></tr>
+          <tr><td>4</td><td>Cyclist/scooter collision with worker</td><td>3</td><td>4</td><td class="risk-high">12 High</td><td class="risk-low">4 Low</td></tr>
+          <tr><td>5</td><td>Aggressive driver / verbal abuse</td><td>4</td><td>2</td><td class="risk-medium">8 Medium</td><td class="risk-low">4 Low</td></tr>
+          <tr><td>6</td><td>Distracted driver (phone, local familiarity)</td><td>4</td><td>4</td><td class="risk-high">16 Critical</td><td class="risk-medium">6 Medium</td></tr>
+          <tr><td>7</td><td>Child appearing from behind parked car</td><td>3</td><td>5</td><td class="risk-high">15 High</td><td class="risk-low">5 Low</td></tr>
+          <tr><td>8</td><td>Manual handling (cones, signs)</td><td>3</td><td>2</td><td class="risk-medium">6 Medium</td><td class="risk-low">3 Low</td></tr>
+        </tbody>
+      </table>
+
+      <h3>6. Control measures</h3>
+
+      <h4>6.1 Elimination</h4>
+      <ul><li>Avoid worksite layout that requires workers to stand between parked vehicles or in pedestrian thoroughfares.</li></ul>
+
+      <h4>6.2 Substitution</h4>
+      <ul><li>Static signage and witches hats in place of manual stop/slow where traffic volume permits.</li></ul>
+
+      <h4>6.3 Engineering controls</h4>
+      <ul>
+        <li>Traffic Management Plan (TMP) compliant with AS 1742.3 — taper length minimum 30m for 60km/h.</li>
+        <li>Advance warning signage 100m before worksite (per AS 1742.3 Table 4.1).</li>
+        <li>Continuous physical barriers (water-filled or plastic) between worksite and traffic where reasonably practicable.</li>
+        <li>Designated pedestrian detour path with clear signage at eye level.</li>
+        <li>Driveway spotters positioned with line-of-sight to both traffic and driveway.</li>
+      </ul>
+
+      <h4>6.4 Administrative controls</h4>
+      <ul>
+        <li>Worksite walked and mapped pre-shift — every driveway, business access, pedestrian crossing identified.</li>
+        <li>Door-knock or notice-drop to affected residents on the morning of works where practicable.</li>
+        <li>Buddy system — no isolated workers.</li>
+        <li>4-hour rotation maximum between forward TC positions; mandatory 15-min break.</li>
+        <li><strong>No engagement policy</strong> for aggressive members of public — disengage, radio supervisor, document only.</li>
+        <li>Pre-shift toolbox talk (STC-TBT-002) delivered and signed.</li>
+        <li>Two-way radio comms verified across all positions.</li>
+      </ul>
+
+      <h4>6.5 PPE</h4>
+      <ul>
+        <li>High-visibility Class D/N garment, top and pants</li>
+        <li>Safety footwear (steel cap, ankle support)</li>
+        <li>Hard hat (AS/NZS 1801)</li>
+        <li>Gloves (abrasion-resistant)</li>
+        <li>Eye protection</li>
+        <li>Wet weather gear available on site</li>
+        <li>Sun protection (broad-brim attachment, sunscreen) in daylight hours</li>
+      </ul>
+
+      <h3>7. Emergency procedures</h3>
+
+      <h4>Pedestrian incident</h4>
+      <ol>
+        <li>Stop all traffic immediately</li>
+        <li>First aid by qualified worker; call 000 if injury</li>
+        <li>Preserve scene; collect witness details</li>
+        <li>Notify principal contractor and SafeWork NSW if notifiable</li>
+      </ol>
+
+      <h4>Vehicle access incident (driver/resident)</h4>
+      <ol>
+        <li>Halt traffic flow; secure scene</li>
+        <li>Exchange details per insurance requirements; STC supervisor attends</li>
+        <li>Document via STC Jobs Running incident report</li>
+      </ol>
+
+      <h4>Aggressive member of public</h4>
+      <ol>
+        <li>Disengage — do not argue, do not match aggression</li>
+        <li>Step back from line of confrontation</li>
+        <li>Radio supervisor; record registration and description</li>
+        <li>Police call if threats made or contact occurs</li>
+      </ol>
+
+      <h3>8. Responsibilities</h3>
+      <ul>
+        <li><strong>Luke Heiser</strong> — SWMS currency, PPE provision, briefing, coordination with principal contractor.</li>
+        <li><strong>Each worker</strong> — SWMS compliance, PPE wear, fitness for work, reporting incidents and near-misses.</li>
+        <li><strong>Principal contractor</strong> — site-specific TMP, barriers, induction.</li>
+      </ul>
+
+      <h3>9. Sign-on register</h3>
+      <table>
+        <thead><tr><th>Date</th><th>Worker name</th><th>Signature</th><th>TPWD #</th><th>Acknowledgment</th></tr></thead>
+        <tbody>
+          <tr><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>I have read and understood this SWMS and agree to follow all controls</td></tr>
+        </tbody>
+      </table>
+
+      <h3>10. Review trigger</h3>
+      <p>Reviewed if: incident occurs, legislation changes, equipment/method changes, 12 months elapsed, regulator request.</p>
+    `,
+
+    '003': `
+      <div class="doc-meta">
+        <strong>Document number</strong><span>STC-SWMS-003</span>
+        <strong>Version</strong><span>1.0</span>
+        <strong>Date prepared</strong><span>24 May 2026</span>
+        <strong>Prepared by</strong><span>Luke Heiser, Safety Traffic Control</span>
+        <strong>Review date</strong><span>24 May 2027</span>
+      </div>
+
+      <h3>1. Activity description</h3>
+      <p>Traffic control and pedestrian management services for works on footpaths, kerbs, and shared pedestrian zones. Includes maintenance of accessible alternative pedestrian routes around the worksite.</p>
+
+      <h3>2. Workers covered</h3>
+      <p>All STC personnel and subcontractors engaged for footpath / pedestrian-interface duties.</p>
+
+      <h3>3. Legislation, codes & standards</h3>
+      <ul>
+        <li>Work Health and Safety Act 2011 (NSW)</li>
+        <li>Work Health and Safety Regulation 2017 (NSW)</li>
+        <li>AS 1742.3 — Section 8 (Pedestrian management)</li>
+        <li><strong>Disability Discrimination Act 1992 (Cth)</strong> — accessibility obligations</li>
+        <li><strong>AS 1428.1:2009</strong> — Design for access and mobility</li>
+        <li>TfNSW Traffic Control at Work Sites Manual — Version 6.0</li>
+      </ul>
+
+      <h3>4. Competency required</h3>
+      <ul>
+        <li>TPWD (NSW Traffic Controller licence), in date</li>
+        <li>RIICCM201E (White Card)</li>
+        <li>STC pedestrian management induction</li>
+        <li>First aid certified (HLTAID011) — at least one on site</li>
+      </ul>
+
+      <h3>5. Hazards & risk assessment</h3>
+      <table>
+        <thead><tr><th>#</th><th>Hazard</th><th>L</th><th>C</th><th>Initial</th><th>After Controls</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td>Pedestrian falling into excavation</td><td>3</td><td>5</td><td class="risk-high">15 High</td><td class="risk-low">4 Low</td></tr>
+          <tr><td>2</td><td>Wheelchair / pram cannot navigate detour</td><td>4</td><td>3</td><td class="risk-high">12 High</td><td class="risk-low">4 Low</td></tr>
+          <tr><td>3</td><td>Vision-impaired person enters worksite</td><td>3</td><td>5</td><td class="risk-high">15 High</td><td class="risk-low">4 Low</td></tr>
+          <tr><td>4</td><td>Child climbing or playing on barriers</td><td>4</td><td>3</td><td class="risk-high">12 High</td><td class="risk-low">4 Low</td></tr>
+          <tr><td>5</td><td>Trip/fall on detour path</td><td>3</td><td>3</td><td class="risk-medium">9 Medium</td><td class="risk-low">3 Low</td></tr>
+          <tr><td>6</td><td>Worker struck by errant vehicle near footpath</td><td>2</td><td>5</td><td class="risk-high">10 High</td><td class="risk-low">4 Low</td></tr>
+          <tr><td>7</td><td>Conflict with cyclists using footpath illegally</td><td>3</td><td>3</td><td class="risk-medium">9 Medium</td><td class="risk-low">3 Low</td></tr>
+          <tr><td>8</td><td>Inadequate signage at eye level for users</td><td>4</td><td>3</td><td class="risk-high">12 High</td><td class="risk-low">4 Low</td></tr>
+        </tbody>
+      </table>
+
+      <h3>6. Control measures</h3>
+
+      <h4>6.1 Elimination</h4>
+      <ul><li>Avoid pedestrian route closures during peak walking hours (school start/finish, commute, lunchtime) where principal contractor agrees.</li></ul>
+
+      <h4>6.2 Substitution</h4>
+      <ul><li>Where excavation is required, use covered walkway boards across the gap rather than full closure.</li></ul>
+
+      <h4>6.3 Engineering controls</h4>
+      <ul>
+        <li><strong>Continuous physical barriers</strong> — not spaced cones — providing tactile guidance for vision-impaired persons.</li>
+        <li><strong>Smooth, continuous detour surface</strong> — no steps, no cables, no spoil; suitable for wheelchairs and prams.</li>
+        <li><strong>Detour width minimum 1.2m</strong> per AS 1428.1.</li>
+        <li><strong>Signage at eye level</strong> — minimum 1.4m height; high-contrast text.</li>
+        <li><strong>Tactile ground surface indicators (TGSI)</strong> at detour transitions where reasonably practicable.</li>
+        <li><strong>Lighting</strong> of detour path if works extend past dusk.</li>
+      </ul>
+
+      <h4>6.4 Administrative controls</h4>
+      <ul>
+        <li>Detour route walked and tested by STC supervisor before shift commences.</li>
+        <li>Maximum detour length 50m unless unavoidable; escalate to principal contractor if longer.</li>
+        <li>Spotter posted near vulnerable users (school zones, aged care, medical practices) during peak times.</li>
+        <li>Toolbox talk (STC-TBT-003) delivered and signed.</li>
+        <li>Two-way radio comms verified.</li>
+      </ul>
+
+      <h4>6.5 PPE</h4>
+      <ul>
+        <li>High-visibility Class D/N garment, top and pants</li>
+        <li>Safety footwear (steel cap, ankle support)</li>
+        <li>Hard hat (AS/NZS 1801)</li>
+        <li>Gloves</li>
+        <li>Sun protection in daylight hours</li>
+        <li>Wet weather gear available</li>
+      </ul>
+
+      <h3>7. Emergency procedures</h3>
+
+      <h4>Pedestrian injured at worksite</h4>
+      <ol>
+        <li>First aid by qualified worker; call 000 for serious injury</li>
+        <li>Stop work in vicinity; secure scene</li>
+        <li>Notify supervisor, principal contractor; SafeWork NSW if notifiable</li>
+      </ol>
+
+      <h4>Vulnerable person disoriented in worksite zone</h4>
+      <ol>
+        <li>Approach calmly; offer assistance verbally before physical contact</li>
+        <li>Guide via verbal cues for vision-impaired persons</li>
+        <li>Contact next-of-kin or local services if person is confused or distressed</li>
+        <li>Document via incident report</li>
+      </ol>
+
+      <h4>Wheelchair/pram user unable to use detour</h4>
+      <ol>
+        <li>Stop traffic temporarily to allow user through controlled passage</li>
+        <li>Escalate to principal contractor — detour is non-compliant</li>
+        <li>Do not allow continued non-compliant condition</li>
+      </ol>
+
+      <h3>8. Responsibilities</h3>
+      <ul>
+        <li><strong>Luke Heiser</strong> — SWMS currency, detour walked and verified pre-shift, PPE provision.</li>
+        <li><strong>Each worker</strong> — SWMS compliance, courteous engagement with all pedestrians, immediate reporting of detour issues.</li>
+        <li><strong>Principal contractor</strong> — provision of compliant detour materials, barriers, accessible matting.</li>
+      </ul>
+
+      <h3>9. Sign-on register</h3>
+      <table>
+        <thead><tr><th>Date</th><th>Worker name</th><th>Signature</th><th>TPWD #</th><th>Acknowledgment</th></tr></thead>
+        <tbody>
+          <tr><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>I have read and understood this SWMS and agree to follow all controls</td></tr>
+        </tbody>
+      </table>
+
+      <h3>10. Review trigger</h3>
+      <p>Reviewed if: incident occurs, accessibility complaint received, legislation changes, 12 months elapsed.</p>
+    `,
+
+    '004': `
+      <div class="doc-meta">
+        <strong>Document number</strong><span>STC-SWMS-004</span>
+        <strong>Version</strong><span>1.0</span>
+        <strong>Date prepared</strong><span>24 May 2026</span>
+        <strong>Prepared by</strong><span>Luke Heiser, Safety Traffic Control</span>
+        <strong>Review date</strong><span>24 May 2027</span>
+      </div>
+
+      <h3>1. Activity description</h3>
+      <p>Traffic control services for worksites where residential, commercial, or industrial driveways enter the work zone. Includes spotting, escorting, and managing vehicle access through the closure for residents, businesses, deliveries, and emergency services.</p>
+
+      <h3>2. Workers covered</h3>
+      <p>All STC personnel and subcontractors engaged for driveway management duties.</p>
+
+      <h3>3. Legislation, codes & standards</h3>
+      <ul>
+        <li>Work Health and Safety Act 2011 (NSW)</li>
+        <li>Work Health and Safety Regulation 2017 (NSW)</li>
+        <li>AS 1742.3 — Manual of Uniform Traffic Control Devices</li>
+        <li>TfNSW Traffic Control at Work Sites Manual — Version 6.0</li>
+        <li>NSW Road Rules 2014 — driveway and property access</li>
+      </ul>
+
+      <h3>4. Competency required</h3>
+      <ul>
+        <li>TPWD (NSW Traffic Controller licence), in date</li>
+        <li>RIICCM201E (White Card)</li>
+        <li>STC driveway management induction</li>
+        <li>First aid certified (HLTAID011) — at least one on site</li>
+      </ul>
+
+      <h3>5. Hazards & risk assessment</h3>
+      <table>
+        <thead><tr><th>#</th><th>Hazard</th><th>L</th><th>C</th><th>Initial</th><th>After Controls</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td>Vehicle reversing blind from driveway</td><td>4</td><td>5</td><td class="risk-high">20 Critical</td><td class="risk-medium">6 Medium</td></tr>
+          <tr><td>2</td><td>Spotter struck by reversing vehicle</td><td>3</td><td>5</td><td class="risk-high">15 High</td><td class="risk-low">5 Low</td></tr>
+          <tr><td>3</td><td>Child or pet in driveway path</td><td>3</td><td>5</td><td class="risk-high">15 High</td><td class="risk-low">5 Low</td></tr>
+          <tr><td>4</td><td>Elderly driver making sudden movements</td><td>3</td><td>4</td><td class="risk-high">12 High</td><td class="risk-low">4 Low</td></tr>
+          <tr><td>5</td><td>Delivery vehicle (truck) requiring access</td><td>3</td><td>4</td><td class="risk-high">12 High</td><td class="risk-low">4 Low</td></tr>
+          <tr><td>6</td><td>Aggressive / impatient resident</td><td>4</td><td>2</td><td class="risk-medium">8 Medium</td><td class="risk-low">4 Low</td></tr>
+          <tr><td>7</td><td>Worker error in signal coordination</td><td>2</td><td>5</td><td class="risk-high">10 High</td><td class="risk-low">3 Low</td></tr>
+          <tr><td>8</td><td>Manual handling repositioning barriers</td><td>3</td><td>2</td><td class="risk-medium">6 Medium</td><td class="risk-low">3 Low</td></tr>
+        </tbody>
+      </table>
+
+      <h3>6. Control measures</h3>
+
+      <h4>6.1 Elimination</h4>
+      <ul><li>Where practicable, avoid scheduling work that fully blocks driveways during peak access times (school run, garbage collection, weekday morning).</li></ul>
+
+      <h4>6.2 Substitution</h4>
+      <ul><li>Use temporary ramps over kerbs and trenches to maintain driveway access without manual escort.</li></ul>
+
+      <h4>6.3 Engineering controls</h4>
+      <ul>
+        <li>Pre-shift driveway mapping — every driveway identified, photographed, and noted in shift brief.</li>
+        <li>Dedicated driveway spotter where multiple driveways within 20m of each other.</li>
+        <li>Two-way radio comms between driveway spotter and forward TC.</li>
+        <li>Hand signals standardised: <strong>STOP — CLEAR — GO</strong> with no ambiguity.</li>
+        <li>Temporary ramps and matting on hand for kerb crossings.</li>
+      </ul>
+
+      <h4>6.4 Administrative controls</h4>
+      <ul>
+        <li><strong>Door-knock or notice-drop affected residents</strong> the morning of works.</li>
+        <li>Garbage/recycling day check — coordinate with local council collection schedule.</li>
+        <li>Spotter walks every vehicle in and every vehicle out — no self-navigation through worksite.</li>
+        <li>Vehicles stopped on the main road during driveway egress (brief halt).</li>
+        <li>Toolbox talk (STC-TBT-004) delivered and signed.</li>
+        <li>Polite-but-firm de-escalation script briefed.</li>
+        <li>Emergency services priority — no delay for ambulance, fire, police.</li>
+      </ul>
+
+      <h4>6.5 PPE</h4>
+      <ul>
+        <li>High-visibility Class D/N garment, top and pants</li>
+        <li>Safety footwear (steel cap, ankle support)</li>
+        <li>Hard hat (AS/NZS 1801)</li>
+        <li>Gloves</li>
+        <li>Sun and wet weather gear as conditions require</li>
+      </ul>
+
+      <h3>7. Emergency procedures</h3>
+
+      <h4>Vehicle/pedestrian incident in driveway</h4>
+      <ol>
+        <li>Stop all movement immediately</li>
+        <li>First aid by qualified worker; call 000 if injury</li>
+        <li>Secure scene; collect details and witness statements</li>
+        <li>Notify principal contractor and SafeWork NSW if notifiable</li>
+      </ol>
+
+      <h4>Emergency services requesting access</h4>
+      <ol>
+        <li>Halt all work immediately</li>
+        <li>Clear path through worksite — move barriers if necessary</li>
+        <li>Spotter directs emergency vehicle through; do not delay</li>
+      </ol>
+
+      <h4>Aggressive resident encounter</h4>
+      <ol>
+        <li>Disengage; do not argue</li>
+        <li>Acknowledge frustration without committing to outcomes you can't deliver</li>
+        <li>Radio supervisor; document via incident report</li>
+      </ol>
+
+      <h3>8. Responsibilities</h3>
+      <ul>
+        <li><strong>Luke Heiser</strong> — SWMS currency, driveway mapping confirmed, resident notification confirmed.</li>
+        <li><strong>Each worker</strong> — vigilance at driveway interfaces, standardised signals, courteous resident engagement.</li>
+        <li><strong>Principal contractor</strong> — community notifications, escalation pathway for unresolved resident disputes.</li>
+      </ul>
+
+      <h3>9. Sign-on register</h3>
+      <table>
+        <thead><tr><th>Date</th><th>Worker name</th><th>Signature</th><th>TPWD #</th><th>Acknowledgment</th></tr></thead>
+        <tbody>
+          <tr><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>I have read and understood this SWMS and agree to follow all controls</td></tr>
+        </tbody>
+      </table>
+
+      <h3>10. Review trigger</h3>
+      <p>Reviewed if: incident occurs, resident complaint escalated, legislation changes, 12 months elapsed.</p>
+    `,
+
+    '005': `
+      <div class="doc-meta">
+        <strong>Document number</strong><span>STC-SWMS-005</span>
+        <strong>Version</strong><span>1.0</span>
+        <strong>Date prepared</strong><span>24 May 2026</span>
+        <strong>Prepared by</strong><span>Luke Heiser, Safety Traffic Control</span>
+        <strong>Review date</strong><span>24 May 2027</span>
+      </div>
+
+      <h3>1. Activity description</h3>
+      <p>Traffic control services for works conducted within a marked school zone or in the immediate vicinity of a school during operational hours. Includes coordination with school staff, crossing supervisors, and management of parent/child traffic patterns.</p>
+
+      <h3>2. Workers covered</h3>
+      <p>All STC personnel and subcontractors engaged for school-zone traffic control duties.</p>
+
+      <h3>3. Legislation, codes & standards</h3>
+      <ul>
+        <li>Work Health and Safety Act 2011 (NSW)</li>
+        <li>Work Health and Safety Regulation 2017 (NSW)</li>
+        <li>AS 1742.3 — Manual of Uniform Traffic Control Devices</li>
+        <li>TfNSW Traffic Control at Work Sites Manual — Version 6.0</li>
+        <li>NSW Road Rules 2014 — school zone provisions (40km/h)</li>
+        <li><strong>Working with Children Check Act 2012 (NSW)</strong></li>
+        <li>TfNSW <em>School Zone Safety</em> guidelines</li>
+      </ul>
+
+      <h3>4. Competency required</h3>
+      <ul>
+        <li>TPWD (NSW Traffic Controller licence), in date</li>
+        <li>RIICCM201E (White Card)</li>
+        <li>STC school-zone induction</li>
+        <li>First aid certified (HLTAID011) — at least one on site</li>
+        <li><strong>Working with Children Check (WWCC)</strong> — required where worker may have direct interaction with students; STC policy is all school-zone workers hold a current WWCC</li>
+      </ul>
+
+      <h3>5. Hazards & risk assessment</h3>
+      <table>
+        <thead><tr><th>#</th><th>Hazard</th><th>L</th><th>C</th><th>Initial</th><th>After Controls</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td>Child struck by vehicle</td><td>3</td><td>5</td><td class="risk-high">15 High</td><td class="risk-low">4 Low</td></tr>
+          <tr><td>2</td><td>Child entering worksite unsupervised</td><td>4</td><td>4</td><td class="risk-high">16 Critical</td><td class="risk-low">5 Low</td></tr>
+          <tr><td>3</td><td>Parent vehicle conflict (drop-off chaos)</td><td>4</td><td>4</td><td class="risk-high">16 Critical</td><td class="risk-medium">6 Medium</td></tr>
+          <tr><td>4</td><td>Worker struck by parent vehicle</td><td>3</td><td>5</td><td class="risk-high">15 High</td><td class="risk-low">5 Low</td></tr>
+          <tr><td>5</td><td>Bus zone obstruction</td><td>3</td><td>4</td><td class="risk-high">12 High</td><td class="risk-low">3 Low</td></tr>
+          <tr><td>6</td><td>Conflict with crossing supervisor area</td><td>3</td><td>3</td><td class="risk-medium">9 Medium</td><td class="risk-low">3 Low</td></tr>
+          <tr><td>7</td><td>Allegation of inappropriate conduct (worker–child)</td><td>1</td><td>5</td><td class="risk-low">5 Low</td><td class="risk-low">2 Low</td></tr>
+          <tr><td>8</td><td>Media / reputational incident</td><td>2</td><td>4</td><td class="risk-medium">8 Medium</td><td class="risk-low">3 Low</td></tr>
+        </tbody>
+      </table>
+
+      <h3>6. Control measures</h3>
+
+      <h4>6.1 Elimination</h4>
+      <ul><li><strong>Avoid working during school zone peak hours</strong> (typically 0800–0930 and 1430–1600) wherever practicable. Negotiate this with principal contractor before accepting the job.</li></ul>
+
+      <h4>6.2 Substitution</h4>
+      <ul><li>Conduct works during school holidays, weekends, or non-school hours where possible.</li></ul>
+
+      <h4>6.3 Engineering controls</h4>
+      <ul>
+        <li>Continuous physical barriers between worksite and pedestrian / vehicle traffic.</li>
+        <li>Signage at child eye level (1.0–1.2m) in addition to standard adult-height signage.</li>
+        <li>Dedicated drop-off / pick-up corridor maintained unobstructed if works are within school zone during peak.</li>
+        <li>Lighting at all times if any visibility compromise.</li>
+      </ul>
+
+      <h4>6.4 Administrative controls</h4>
+      <ul>
+        <li><strong>School administration contacted minimum 48 hours before works</strong> — provide site map, hours, supervisor contact.</li>
+        <li>Coordination meeting with crossing supervisor at start of shift.</li>
+        <li>Bus zone clearance verified — never block, even briefly.</li>
+        <li>Spotter dedicated to monitoring child pedestrian movement during peak.</li>
+        <li><strong>No worker engages directly with a child unless absolutely necessary</strong> — guide to safety, then defer to school staff or parent.</li>
+        <li>Two-way radio comms verified.</li>
+        <li>Toolbox talk (STC-TBT-005) delivered and signed.</li>
+        <li>Photography on site prohibited unless documenting an incident.</li>
+      </ul>
+
+      <h4>6.5 PPE</h4>
+      <ul>
+        <li>High-visibility Class D/N garment, top and pants — fully zipped and presentable</li>
+        <li>Safety footwear (steel cap, ankle support)</li>
+        <li>Hard hat (AS/NZS 1801)</li>
+        <li>Gloves</li>
+        <li>ID lanyard with STC contact details visible</li>
+      </ul>
+
+      <h3>7. Emergency procedures</h3>
+
+      <h4>Child injured at or near worksite</h4>
+      <ol>
+        <li>Stop all traffic immediately</li>
+        <li><strong>First aid by qualified worker — do not move child unless in immediate further danger</strong></li>
+        <li><strong>Call 000 immediately</strong></li>
+        <li>Notify school administration immediately</li>
+        <li>Witness statements taken; preserve scene</li>
+        <li>STC supervisor reports to principal contractor; SafeWork NSW notified if notifiable</li>
+        <li><strong>Do not engage with media</strong> — refer all enquiries to principal contractor or Luke Heiser</li>
+      </ol>
+
+      <h4>Allegation of inappropriate conduct</h4>
+      <ol>
+        <li>Worker subject of allegation removed from site immediately</li>
+        <li>Incident documented; witness statements collected</li>
+        <li>School administration informed</li>
+        <li>Police notification if criminal allegation</li>
+        <li>STC internal investigation per HR procedures</li>
+      </ol>
+
+      <h4>Lost or unaccompanied child entering worksite</h4>
+      <ol>
+        <li>Stop all work in vicinity</li>
+        <li>Guide child to safety (verbally; minimal physical contact, public visibility)</li>
+        <li>Notify school administration immediately</li>
+        <li>Do not leave child unattended; do not transport child</li>
+      </ol>
+
+      <h3>8. Responsibilities</h3>
+      <ul>
+        <li><strong>Luke Heiser</strong> — SWMS currency, WWCC verification for all workers, school liaison confirmed pre-shift.</li>
+        <li><strong>Each worker</strong> — heightened vigilance, WWCC currency, no unnecessary child interaction, professional conduct at all times.</li>
+        <li><strong>Principal contractor</strong> — community notification, scheduling negotiation with school.</li>
+        <li><strong>School administration</strong> — flow of student movement information, supervisor coordination.</li>
+      </ul>
+
+      <h3>9. Sign-on register</h3>
+      <table>
+        <thead><tr><th>Date</th><th>Worker name</th><th>Signature</th><th>TPWD #</th><th>WWCC #</th><th>Acknowledgment</th></tr></thead>
+        <tbody>
+          <tr><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>I have read and understood this SWMS and agree to follow all controls</td></tr>
+        </tbody>
+      </table>
+
+      <h3>10. Review trigger</h3>
+      <p>Reviewed if: any incident involving a child, allegation made, legislation changes, school administration request, 12 months elapsed.</p>
+    `,
+
+    '006': `
+      <div class="doc-meta">
+        <strong>Document number</strong><span>STC-SWMS-006</span>
+        <strong>Version</strong><span>1.0</span>
+        <strong>Date prepared</strong><span>24 May 2026</span>
+        <strong>Prepared by</strong><span>Luke Heiser, Safety Traffic Control</span>
+        <strong>Review date</strong><span>24 May 2027</span>
+      </div>
+
+      <h3>1. Activity description</h3>
+      <p>Traffic control services conducted during wet weather conditions (active rain, post-rain wet surfaces, fog, or storm warnings). Includes risk-based decisions on continued operations, equipment adjustments, and crew welfare.</p>
+
+      <h3>2. Workers covered</h3>
+      <p>All STC personnel and subcontractors engaged during wet weather operations.</p>
+
+      <h3>3. Legislation, codes & standards</h3>
+      <ul>
+        <li>Work Health and Safety Act 2011 (NSW)</li>
+        <li>Work Health and Safety Regulation 2017 (NSW)</li>
+        <li>AS 1742.3 — Manual of Uniform Traffic Control Devices</li>
+        <li>TfNSW Traffic Control at Work Sites Manual — Version 6.0</li>
+        <li>Bureau of Meteorology severe weather warning protocols</li>
+      </ul>
+
+      <h3>4. Competency required</h3>
+      <ul>
+        <li>TPWD (NSW Traffic Controller licence), in date</li>
+        <li>RIICCM201E (White Card)</li>
+        <li>STC wet weather operations induction</li>
+        <li>First aid certified (HLTAID011) — at least one on site</li>
+      </ul>
+
+      <h3>5. Hazards & risk assessment</h3>
+      <table>
+        <thead><tr><th>#</th><th>Hazard</th><th>L</th><th>C</th><th>Initial</th><th>After Controls</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td>Vehicle aquaplaning into worksite</td><td>3</td><td>5</td><td class="risk-high">15 High</td><td class="risk-medium">6 Medium</td></tr>
+          <tr><td>2</td><td>Driver unable to see worker through rain/wipers</td><td>4</td><td>5</td><td class="risk-high">20 Critical</td><td class="risk-medium">8 Medium</td></tr>
+          <tr><td>3</td><td>Worker slipping on wet surface / line marking</td><td>4</td><td>3</td><td class="risk-high">12 High</td><td class="risk-low">4 Low</td></tr>
+          <tr><td>4</td><td>Signage blown / displaced by wind</td><td>4</td><td>3</td><td class="risk-high">12 High</td><td class="risk-low">4 Low</td></tr>
+          <tr><td>5</td><td>Lightning strike</td><td>2</td><td>5</td><td class="risk-high">10 High</td><td class="risk-low">2 Low</td></tr>
+          <tr><td>6</td><td>Hypothermia / cold injury</td><td>3</td><td>3</td><td class="risk-medium">9 Medium</td><td class="risk-low">3 Low</td></tr>
+          <tr><td>7</td><td>Standing water undermining worksite layout</td><td>3</td><td>3</td><td class="risk-medium">9 Medium</td><td class="risk-low">3 Low</td></tr>
+          <tr><td>8</td><td>Electrical hazard near wet ground (where applicable)</td><td>2</td><td>5</td><td class="risk-high">10 High</td><td class="risk-low">3 Low</td></tr>
+        </tbody>
+      </table>
+
+      <h3>6. Control measures</h3>
+
+      <h4>6.1 Elimination</h4>
+      <ul>
+        <li>Suspend or postpone non-essential works during severe weather warnings.</li>
+        <li><strong>Stop-work threshold</strong> — visibility below 50m, sustained wind &gt;70km/h, or active electrical storm.</li>
+      </ul>
+
+      <h4>6.2 Substitution</h4>
+      <ul><li>Static signage with weighted bases used in preference to manual stop/slow operations where conditions permit.</li></ul>
+
+      <h4>6.3 Engineering controls</h4>
+      <ul>
+        <li><strong>Extended taper length</strong> — minimum 1.5x standard length per AS 1742.3 wet weather provisions.</li>
+        <li><strong>All signage weighted</strong> — sandbags or weighted bases, no exceptions.</li>
+        <li><strong>Increased buffer distance</strong> between work zone and live traffic.</li>
+        <li><strong>High-output portable lighting</strong> (where visibility compromised).</li>
+        <li><strong>Battery backup</strong> for radios, headtorches, GPS devices.</li>
+        <li><strong>Slip-resistant matting</strong> at worker positions on painted line markings or polished surfaces.</li>
+      </ul>
+
+      <h4>6.4 Administrative controls</h4>
+      <ul>
+        <li>Pre-shift weather check — BOM forecast and radar reviewed.</li>
+        <li><strong>30-30 lightning rule</strong> — if flash-to-thunder under 30 seconds, suspend work and shelter; resume 30 minutes after last strike.</li>
+        <li>Crew rotated to vehicle / shelter every 30–45 minutes in cold/wet conditions.</li>
+        <li>Hot drinks and dry change of clothing on hand.</li>
+        <li>Two-way radio comms verified working in wet conditions.</li>
+        <li>Toolbox talk (STC-TBT-006) delivered and signed.</li>
+      </ul>
+
+      <h4>6.5 PPE</h4>
+      <ul>
+        <li>High-visibility Class D/N garment, top and pants — fully reflective and intact</li>
+        <li>Wet weather outer (waterproof jacket and pants) sized to fit over hi-vis</li>
+        <li>Hi-vis remains outermost layer at all times</li>
+        <li>Safety footwear (steel cap, ankle support, slip-resistant sole)</li>
+        <li>Hard hat (AS/NZS 1801) with chin strap secured</li>
+        <li>Thermal layer under hi-vis</li>
+        <li>Waterproof gloves</li>
+        <li>Anti-fog eye protection</li>
+      </ul>
+
+      <h3>7. Emergency procedures</h3>
+
+      <h4>Lightning warning</h4>
+      <ol>
+        <li><strong>Suspend work immediately</strong> if 30-30 rule breached</li>
+        <li>Crew shelter in enclosed vehicle (not under trees, not on elevated ground, not in tents or marquees)</li>
+        <li>Resume only 30 minutes after last observed strike</li>
+        <li>Brief crew before resumption</li>
+      </ol>
+
+      <h4>Vehicle loss-of-control event</h4>
+      <ol>
+        <li>Workers move sideways away from traffic flow</li>
+        <li>Stop all traffic immediately; sound air horn if available</li>
+        <li>First aid by qualified worker; call 000 if injury</li>
+        <li>Document via incident report; SafeWork NSW notified if notifiable</li>
+      </ol>
+
+      <h4>Hypothermia symptoms in worker</h4>
+      <ol>
+        <li>Remove worker from cold/wet environment</li>
+        <li>Dry clothing, warm drinks, gradual rewarming</li>
+        <li><strong>Severe symptoms (confusion, slurred speech, shivering stopped) — call 000</strong></li>
+        <li>Do not allow drive home if compromised</li>
+      </ol>
+
+      <h4>Severe weather warning issued</h4>
+      <ol>
+        <li>Supervisor consults with principal contractor</li>
+        <li>Decision to continue, modify, or suspend documented</li>
+        <li>If suspended, scene secured; signage weighted or removed per TMP</li>
+      </ol>
+
+      <h3>8. Responsibilities</h3>
+      <ul>
+        <li><strong>Luke Heiser</strong> — weather check pre-shift, stop-work decision, PPE provision including wet weather gear.</li>
+        <li><strong>Each worker</strong> — wet weather gear worn, immediate report of fatigue/cold symptoms, vigilance for changing conditions.</li>
+        <li><strong>Principal contractor</strong> — TMP modification authority, severe weather response.</li>
+      </ul>
+
+      <h3>9. Sign-on register</h3>
+      <table>
+        <thead><tr><th>Date</th><th>Worker name</th><th>Signature</th><th>TPWD #</th><th>Acknowledgment</th></tr></thead>
+        <tbody>
+          <tr><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>I have read and understood this SWMS and agree to follow all controls</td></tr>
+        </tbody>
+      </table>
+
+      <h3>10. Review trigger</h3>
+      <p>Reviewed if: incident occurs, severe weather event response, legislation changes, 12 months elapsed.</p>
+    `,
+
+    '007': `
+      <div class="doc-meta">
+        <strong>Document number</strong><span>STC-SWMS-007</span>
+        <strong>Version</strong><span>1.0</span>
+        <strong>Date prepared</strong><span>24 May 2026</span>
+        <strong>Prepared by</strong><span>Luke Heiser, Safety Traffic Control</span>
+        <strong>Review date</strong><span>24 May 2027</span>
+      </div>
+
+      <h3>1. Activity description</h3>
+      <p>Traffic control services conducted in hot weather conditions (forecast or actual temperatures above 30°C, or working on dark surfaces that radiate heat). Includes heat exposure management, hydration protocols, crew rotation, and recognition of heat-related illness.</p>
+
+      <h3>2. Workers covered</h3>
+      <p>All STC personnel and subcontractors engaged during hot weather operations.</p>
+
+      <h3>3. Legislation, codes & standards</h3>
+      <ul>
+        <li>Work Health and Safety Act 2011 (NSW)</li>
+        <li>Work Health and Safety Regulation 2017 (NSW)</li>
+        <li><strong>SafeWork NSW <em>Working in Heat</em> Code of Practice</strong></li>
+        <li>AS 1742.3 — Manual of Uniform Traffic Control Devices</li>
+        <li>TfNSW Traffic Control at Work Sites Manual — Version 6.0</li>
+        <li><strong>AS/NZS 1067:2003</strong> — Sunglasses and fashion spectacles (UV protection)</li>
+        <li>BOM heatwave warning protocols</li>
+      </ul>
+
+      <h3>4. Competency required</h3>
+      <ul>
+        <li>TPWD (NSW Traffic Controller licence), in date</li>
+        <li>RIICCM201E (White Card)</li>
+        <li>STC hot weather operations induction (recognition of heat illness signs)</li>
+        <li>First aid certified (HLTAID011) — at least one on site</li>
+      </ul>
+
+      <h3>5. Hazards & risk assessment</h3>
+      <table>
+        <thead><tr><th>#</th><th>Hazard</th><th>L</th><th>C</th><th>Initial</th><th>After Controls</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td>Heat stroke (medical emergency)</td><td>3</td><td>5</td><td class="risk-high">15 High</td><td class="risk-low">4 Low</td></tr>
+          <tr><td>2</td><td>Heat exhaustion</td><td>4</td><td>3</td><td class="risk-high">12 High</td><td class="risk-low">4 Low</td></tr>
+          <tr><td>3</td><td>Dehydration affecting judgment</td><td>4</td><td>4</td><td class="risk-high">16 Critical</td><td class="risk-medium">6 Medium</td></tr>
+          <tr><td>4</td><td>Sunburn (acute and cumulative skin damage)</td><td>5</td><td>3</td><td class="risk-high">15 High</td><td class="risk-low">5 Low</td></tr>
+          <tr><td>5</td><td>UV exposure (long-term skin cancer risk)</td><td>5</td><td>4</td><td class="risk-high">20 Critical</td><td class="risk-medium">8 Medium</td></tr>
+          <tr><td>6</td><td>Heat cognition impairment causing TC error</td><td>4</td><td>5</td><td class="risk-high">20 Critical</td><td class="risk-medium">8 Medium</td></tr>
+          <tr><td>7</td><td>Bitumen surface radiating heat (+5–10°C)</td><td>5</td><td>3</td><td class="risk-high">15 High</td><td class="risk-low">5 Low</td></tr>
+          <tr><td>8</td><td>Reduced concentration leading to vehicle strike</td><td>3</td><td>5</td><td class="risk-high">15 High</td><td class="risk-low">5 Low</td></tr>
+        </tbody>
+      </table>
+
+      <h3>6. Control measures</h3>
+
+      <h4>6.1 Elimination</h4>
+      <ul>
+        <li>Schedule works outside peak heat hours (1100–1500) where principal contractor agrees.</li>
+        <li><strong>Stop-work thresholds:</strong>
+          <ul>
+            <li><strong>35°C</strong> — increased break frequency, all controls active</li>
+            <li><strong>40°C</strong> — supervisor considers suspending; activity-specific risk assessment</li>
+            <li><strong>42°C+</strong> — work suspended unless critical and additional controls implemented</li>
+          </ul>
+        </li>
+      </ul>
+
+      <h4>6.2 Substitution</h4>
+      <ul><li>Static signage in preference to manual stop/slow positions in extreme heat where conditions permit.</li></ul>
+
+      <h4>6.3 Engineering controls</h4>
+      <ul>
+        <li><strong>Shade structures</strong> at every worker position — pop-up gazebo, vehicle awning, or building shadow.</li>
+        <li><strong>Air-conditioned vehicle</strong> on site at all times for crew rotation.</li>
+        <li><strong>Esky stocked with chilled water and electrolyte drinks</strong> — minimum 4L per worker per shift.</li>
+        <li><strong>Cooling vests</strong> (where available) for sustained extreme heat exposure.</li>
+        <li><strong>Wet rags / neck cooling towels</strong> on hand.</li>
+      </ul>
+
+      <h4>6.4 Administrative controls</h4>
+      <ul>
+        <li>Pre-shift forecast check — BOM temperature, humidity, UV index, heatwave warnings.</li>
+        <li><strong>Heat index calculated</strong> (temperature + humidity) — controls scale with index, not raw temperature.</li>
+        <li><strong>15-minute mandatory break every 45 minutes</strong> at temperatures above 35°C; <strong>10 minutes every 30 minutes</strong> above 40°C.</li>
+        <li><strong>Buddy system</strong> — workers check each other for early heat illness signs every 30 minutes.</li>
+        <li>Hydration verified pre-shift — each worker has minimum 4L of fluids.</li>
+        <li>Medication check — workers on antihistamines, blood pressure medication, or diuretics flagged to supervisor (these increase heat risk).</li>
+        <li>Toolbox talk (STC-TBT-007) delivered and signed.</li>
+        <li>Heat illness recognition briefed — signs and symptoms of heat exhaustion vs heat stroke.</li>
+      </ul>
+
+      <h4>6.5 PPE</h4>
+      <ul>
+        <li>High-visibility Class D/N garment — <strong>lightweight, breathable, vented where AS-compliant options exist</strong></li>
+        <li>Light-coloured shirts under hi-vis where colour permitted by AS standards</li>
+        <li>Broad-brim attachment to hard hat (or legionnaire-style flap)</li>
+        <li><strong>Sunscreen SPF 50+ reapplied every 2 hours minimum</strong></li>
+        <li>UV-rated sunglasses (AS/NZS 1067)</li>
+        <li>Safety footwear (steel cap, ankle support, lightweight where compliant)</li>
+        <li>Hard hat (AS/NZS 1801) — light colour to reduce heat absorption</li>
+        <li>Lightweight gloves</li>
+      </ul>
+
+      <h3>7. Emergency procedures</h3>
+
+      <h4>Heat exhaustion (manageable)</h4>
+      <p><strong>Signs:</strong> pale skin, heavy sweating, dizziness, headache, nausea, weakness</p>
+      <ol>
+        <li>Remove worker from heat immediately to shade or air-conditioning</li>
+        <li>Loosen clothing; cool with wet rag on neck and wrists</li>
+        <li>Cool drinks (water + electrolytes); not iced</li>
+        <li>Rest minimum 20 minutes</li>
+        <li>Do not return to active duty until symptoms fully resolved</li>
+        <li>Document via incident report</li>
+      </ol>
+
+      <h4>Heat stroke (medical emergency)</h4>
+      <p><strong>Signs:</strong> red dry skin (sweating may have stopped), confusion, slurred speech, hot to touch, rapid pulse, possible collapse or seizure</p>
+      <ol>
+        <li><strong>Call 000 immediately</strong></li>
+        <li>Aggressive cooling — remove excess clothing, wet entire body, fan vigorously, ice packs to neck/armpits/groin if available</li>
+        <li><strong>Do not give water if confused or vomiting</strong></li>
+        <li>Monitor breathing and pulse; CPR if pulse stops</li>
+        <li>Notify principal contractor; SafeWork NSW notification likely required</li>
+      </ol>
+
+      <h4>Severe heatwave declared</h4>
+      <ol>
+        <li>Supervisor reviews forecast and conditions</li>
+        <li>Stop-work decision documented; principal contractor notified</li>
+        <li>If continuing, additional controls (extra breaks, additional crew rotation) documented</li>
+      </ol>
+
+      <h3>8. Responsibilities</h3>
+      <ul>
+        <li><strong>Luke Heiser</strong> — pre-shift heat assessment, stop-work decision authority, PPE and hydration provision, briefing on heat illness recognition.</li>
+        <li><strong>Each worker</strong> — hydration before and during shift, immediate report of own symptoms or those of buddy, medication disclosure, PPE compliance.</li>
+        <li><strong>Principal contractor</strong> — schedule negotiation, provision of shade structures and air-conditioned shelter, escalation pathway.</li>
+      </ul>
+
+      <h3>9. Sign-on register</h3>
+      <table>
+        <thead><tr><th>Date</th><th>Worker name</th><th>Signature</th><th>TPWD #</th><th>Heat-tolerance meds?</th><th>Acknowledgment</th></tr></thead>
+        <tbody>
+          <tr><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>Y / N</td><td>I have read and understood this SWMS and agree to follow all controls</td></tr>
+        </tbody>
+      </table>
+
+      <h3>10. Review trigger</h3>
+      <p>Reviewed if: any heat-related illness incident, heatwave event response, legislation changes, SafeWork NSW guidance update, 12 months elapsed.</p>
+    `
+  };
+
+  /* ========================================================
+     APP LOGIC — tab switching, rendering, copy
+     ======================================================== */
+
+  const $ = (id) => document.getElementById(id);
+
+  const state = {
+    tab: 'swms',
+    selectedId: null
+  };
+
+  const tabLabels = {
+    swms: 'SWMS',
+    toolbox: 'Toolbox Talks',
+    reference: 'Quick Reference'
+  };
+
+  // Tab switching
+  document.querySelectorAll('.tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      state.tab = btn.dataset.tab;
+      document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t === btn));
+      renderSidebar();
+      // Select first item in the new tab
+      selectItem(library[state.tab][0].id);
+    });
+  });
+
+  function renderSidebar() {
+    const list = $('categoryList');
+    list.innerHTML = '';
+    $('sidebarTitle').textContent = tabLabels[state.tab];
+
+    library[state.tab].forEach(item => {
+      const btn = document.createElement('button');
+      btn.className = 'category-btn';
+      if (item.id === state.selectedId) btn.classList.add('active');
+      btn.innerHTML = `<span class="icon">${item.icon}</span><span class="label">${item.title}</span>`;
+      btn.addEventListener('click', () => selectItem(item.id));
+      list.appendChild(btn);
+    });
+  }
+
+  function selectItem(id) {
+    state.selectedId = id;
+    const item = library[state.tab].find(i => i.id === id);
+    if (!item) return;
+
+    $('contentEyebrow').textContent = item.docNum
+      ? `${tabLabels[state.tab]} · ${item.docNum}`
+      : tabLabels[state.tab];
+    $('contentTitle').textContent = item.title;
+    $('contentBody').innerHTML = item.content;
+
+    // Update sidebar active state
+    document.querySelectorAll('.category-btn').forEach((btn, i) => {
+      btn.classList.toggle('active', library[state.tab][i].id === id);
+    });
+
+    // Scroll content to top on selection
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  /* ========================================================
+     COPY BUTTON — extracts plain text from current content
+     ======================================================== */
+  $('copyBtn').addEventListener('click', async () => {
+    const body = $('contentBody');
+    const title = $('contentTitle').textContent;
+
+    // Strip HTML tags, preserve structure as plain text
+    const text = htmlToPlainText(body.innerHTML);
+    const fullText = `${title}\n${'='.repeat(title.length)}\n\n${text}`;
+
+    try {
+      await navigator.clipboard.writeText(fullText);
+      showToast('Copied to clipboard');
+      const btn = $('copyBtn');
+      btn.classList.add('copied');
+      btn.textContent = '✓ Copied';
+      setTimeout(() => {
+        btn.classList.remove('copied');
+        btn.textContent = '📋 Copy Text';
+      }, 2000);
+    } catch (err) {
+      showToast('Copy failed — try again');
+      console.error(err);
+    }
+  });
+
+  function htmlToPlainText(html) {
+    // Create a temporary element to parse HTML
+    const tmp = document.createElement('div');
+    tmp.innerHTML = html;
+
+    // Walk through and convert to clean text with structure
+    let text = '';
+    function walk(node, depth = 0) {
+      for (const child of node.childNodes) {
+        if (child.nodeType === Node.TEXT_NODE) {
+          text += child.textContent;
+        } else if (child.nodeType === Node.ELEMENT_NODE) {
+          const tag = child.tagName.toLowerCase();
+          if (tag === 'h3') {
+            text += '\n\n' + child.textContent.toUpperCase() + '\n' + '-'.repeat(child.textContent.length) + '\n';
+          } else if (tag === 'h4') {
+            text += '\n\n' + child.textContent + '\n';
+          } else if (tag === 'li') {
+            text += '\n• ' + child.textContent.trim();
+          } else if (tag === 'p') {
+            text += '\n\n' + child.textContent;
+          } else if (tag === 'tr') {
+            const cells = Array.from(child.querySelectorAll('td, th')).map(c => c.textContent.trim());
+            text += '\n' + cells.join(' | ');
+          } else if (tag === 'table') {
+            walk(child, depth + 1);
+            text += '\n';
+          } else {
+            walk(child, depth + 1);
+          }
+        }
+      }
+    }
+    walk(tmp);
+
+    // Clean up excessive whitespace
+    return text.replace(/\n{3,}/g, '\n\n').trim();
+  }
+
+  function showToast(message) {
+    const toast = $('toast');
+    toast.textContent = message;
+    toast.classList.add('shown');
+    setTimeout(() => toast.classList.remove('shown'), 2000);
+  }
+
+  /* ========================================================
+     INITIAL LOAD — show first SWMS by default
+     ======================================================== */
+  state.selectedId = library.swms[0].id;
+  renderSidebar();
+  selectItem(library.swms[0].id);
+
+  </script>
+
+</body>
+</html>

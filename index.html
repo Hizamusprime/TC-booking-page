@@ -361,7 +361,7 @@ footer .abn { color: var(--safety-yellow); }
 
     <span class="hero-line row-3"><span class="highlight">Book the date.</span></span>
 
-    <p class="subtitle">Licensed Traffic Controller — Sydney &amp; surrounds. TPWD licensed, fully insured, fast response. Pick a green day below — booked days are crossed out.</p>
+    <p class="subtitle">Licensed Traffic Controller — Sydney &amp; surrounds. TPWD licensed, fully insured 20M P.L, fast response. Pick a green day below — booked days are crossed out.</p>
     <div class="trust-row">
       <span>TPWD Licensed</span>
       <span>Fully Insured</span>
@@ -448,8 +448,8 @@ footer .abn { color: var(--safety-yellow); }
       <div class="form-row">
         <div class="form-group"><label>Scheduler Phone <span class="req">*</span></label><input type="tel" name="scheduler_phone" placeholder="04XX XXX XXX" required></div>
         <div class="form-group">
-          <label>TCs Required <span class="req">*</span></label>
-          <div class="tc-picker" id="tcPicker">
+          <label>Traffic Controllers Required <span class="req">*</span></label>
+      <div class="tc-picker" id="tcPicker">
             <div class="tc-picker-empty" id="tcPickerEmpty">Pick a date first</div>
           </div>
           <input type="hidden" name="tcs_required" id="tcsRequired" value="1">
@@ -709,7 +709,7 @@ async function updateCostPanel() {
 
   // TCs multiplier
   if (tcsRequired > 1) {
-    html += `<div class="cost-line detail-row"><span>× ${tcsRequired} TCs</span><span>—</span></div>`;
+    html += `<div class="cost-line detail-row"><span>× ${tcsRequired} Traffic Controllers</span><span>—</span></div>`;
   }
 
   html += `<div class="cost-line label-row"><span>Labour total</span><span>$${labour.toFixed(2)}</span></div>`;
@@ -888,7 +888,7 @@ function updateTCsAvailable() {
   const summary = document.createElement('div');
   summary.className = 'tc-picker-summary';
   summary.innerHTML = `
-    <span>Tap to set how many TCs you need</span>
+    <span>Tap to set how many traffic controller you need</span>
     <span><span class="selected-count">${selected}</span> of ${available} available</span>
   `;
   picker.appendChild(summary);

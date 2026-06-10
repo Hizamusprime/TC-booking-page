@@ -20,7 +20,7 @@
     "Public Holiday": { base: 107, label: "Public Holiday" }
   };
   const MIN_HOURS = 4;
-  const TRAVEL_RATE_PER_KM = 0.99;
+  const TRAVEL_RATE_PER_KM = 1.95;
   const TRAVEL_FREE_RADIUS_KM = 30;
   const ROUSE_HILL = { lat: -33.6826, lng: 150.9182 };
   const GST_RATE = 0.10;
@@ -33,6 +33,24 @@
 
 <!-- Supabase JS SDK -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+
+<!-- Google Maps Places Autocomplete -->
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC1uLhYUMwZLcDffvuJKb3ygnK-uGO2A5w&libraries=places&callback=initMapsAutocomplete" async defer></script>
+
+<script>
+  function initMapsAutocomplete() {
+    const input = document.getElementById('siteAddress');
+    if (!input) return;
+    const autocomplete = new google.maps.places.Autocomplete(input, {
+      componentRestrictions: { country: 'au' },
+      types: ['address']
+    });
+    // When a place is selected, fire the existing input listener to recalculate distance
+    autocomplete.addListener('place_changed', () => {
+      input.dispatchEvent(new Event('input'));
+    });
+  }
+</script>
 
 <style>
 :root {
@@ -190,6 +208,31 @@ header .contact a { color: var(--safety-yellow); text-decoration: none; font-wei
 .form-group textarea { resize: vertical; min-height: 80px; }
 .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 @media (max-width: 500px) { .form-row { grid-template-columns: 1fr; } }
+
+/* Google Maps autocomplete dropdown styling */
+.pac-container {
+  background: var(--steel-dark);
+  border: 2px solid var(--safety-yellow);
+  font-family: 'Manrope', sans-serif;
+  font-size: 14px;
+  color: var(--white);
+  border-top: none;
+}
+.pac-item {
+  padding: 8px 12px;
+  color: var(--white);
+  cursor: pointer;
+  border-top: 1px solid var(--steel-light);
+}
+.pac-item:hover, .pac-item-selected {
+  background: var(--steel-light);
+}
+.pac-item-query {
+  color: var(--safety-yellow);
+  font-weight: 700;
+}
+.pac-matched { color: var(--safety-yellow); }
+.pac-icon { display: none; }
 
 /* Input with $ prefix */
 .input-with-prefix {
@@ -430,7 +473,7 @@ footer .abn { color: var(--safety-yellow); }
 
       <div class="form-group">
         <label>Site Address (full address) <span class="req">*</span></label>
-        <input type="text" name="site_address" id="siteAddress" placeholder="e.g. 123 Parramatta Rd, Auburn NSW 2144" required>
+        <input type="text" name="site_address" id="siteAddress" placeholder="Start typing an address…" autocomplete="off" required>
       </div>
 
       <div class="form-row">
@@ -470,7 +513,7 @@ footer .abn { color: var(--safety-yellow); }
       </div>
 
       <div class="fine-print">
-        <strong>FINE PRINT:</strong> Minimum 4-hour engagement. Travel allowance ($0.99/km round-trip) applies past 30km from Rouse Hill. Cancellation under 4hrs notice = 2hr min charge. All quoted rates GST inclusive. Invoice issued same/next business day, payment due within 14 days.
+        <strong>FINE PRINT:</strong> Minimum 4-hour engagement. Travel allowance ($1.95/km round-trip) applies past 30km from Rouse Hill. Cancellation under 4hrs notice = 2hr min charge. All quoted rates GST inclusive. Invoice issued same/next business day, payment due within 14 days.
       </div>
 
       <button type="submit" class="submit-btn" id="submitBtn" disabled>⚠ Pick a date first</button>
@@ -515,7 +558,6 @@ function isNightOnly(dateStr) {
 }
 
 function detectShiftType(dateStr, startTime) {
-  // Used for display label only — the actual billing now uses time bands
   if (!dateStr || !startTime) return null;
   if (NSW_PUBLIC_HOLIDAYS.has(dateStr)) return "Public Holiday";
   const d = new Date(dateStr + 'T00:00:00');
@@ -529,17 +571,12 @@ function detectShiftType(dateStr, startTime) {
   return "Night";
 }
 
-// ============================================================
-// TIME-BAND BILLING — splits a shift across rate bands
-// Returns { bands: [{name, rate, hours, cost}], totalLabour, totalHours, isFlat }
-// ============================================================
 function calculateBillingBands(dateStr, startTime, finishTime) {
   if (!dateStr || !startTime || !finishTime) return null;
 
   const totalHours = calcHours(startTime, finishTime);
   if (totalHours <= 0) return null;
 
-  // Weekend / Public Holiday = single flat rate, no splitting
   const isPH = NSW_PUBLIC_HOLIDAYS.has(dateStr);
   const d = new Date(dateStr + 'T00:00:00');
   const day = d.getDay();
@@ -554,19 +591,17 @@ function calculateBillingBands(dateStr, startTime, finishTime) {
     return { bands: [{ name: "Sunday", rate: RATES.Sunday.base, hours: totalHours, cost: totalHours * RATES.Sunday.base }], totalHours, isFlat: true };
   }
 
-  // Mon–Fri: split into Day / Afternoon / Night bands
-  // Walk minute-by-minute, classify each minute, accumulate
   const [sh, sm] = startTime.split(':').map(Number);
-  const startMin = sh * 60 + sm; // minutes from start of day
-  const endMin = startMin + (totalHours * 60); // can exceed 24*60 if shift crosses midnight
+  const startMin = sh * 60 + sm;
+  const endMin = startMin + (totalHours * 60);
 
   const dayMins = { Day: 0, Afternoon: 0, Night: 0 };
 
   for (let m = startMin; m < endMin; m++) {
-    const minOfDay = m % (24 * 60); // wrap into 0-1440
+    const minOfDay = m % (24 * 60);
     if (minOfDay >= 6*60 && minOfDay < 18*60) dayMins.Day++;
     else if (minOfDay >= 18*60 && minOfDay < 22*60) dayMins.Afternoon++;
-    else dayMins.Night++;  // 10pm-6am
+    else dayMins.Night++;
   }
 
   const bands = [];
@@ -652,10 +687,8 @@ async function updateCostPanel() {
   const actualHours = billing.totalHours;
   const minBumped = actualHours < MIN_HOURS;
 
-  // Calculate labour from the bands
   let labour = billing.bands.reduce((sum, b) => sum + b.cost, 0);
 
-  // 4hr min padding — bill the extra hours at the HIGHEST rate touched
   let padHours = 0;
   let padRate = 0;
   if (minBumped) {
@@ -685,29 +718,23 @@ async function updateCostPanel() {
   const gst = subtotal * GST_RATE;
   const total = subtotal + gst;
 
-  // Build display
   panel.classList.remove('empty');
   let html = '';
 
-  // Shift type label
   const shiftLabel = billing.isFlat ? billing.bands[0].name.toUpperCase() : 'SPLIT (' + billing.bands.map(b => b.name.toUpperCase()).join(' + ') + ')';
   html += `<div class="cost-line label-row"><span>Shift Type</span><span style="color:var(--safety-yellow);font-weight:700;font-size:11px;">${shiftLabel}</span></div>`;
 
-  // Each band on its own line
   billing.bands.forEach(b => {
     html += `<div class="cost-line detail-row"><span>${b.name} — ${b.hours.toFixed(2)}hr × $${b.rate}/hr</span><span>$${b.cost.toFixed(2)}</span></div>`;
   });
 
-  // 4hr min padding
   if (minBumped) {
     html += `<div class="cost-warning">⚠ 4-hour minimum applies (you entered ${actualHours.toFixed(2)} hrs). Padding ${padHours.toFixed(2)}hr at highest rate touched ($${padRate}/hr) = $${(padHours * padRate).toFixed(2)}</div>`;
   }
 
-  // Hours billed total
   const billedHours = Math.max(actualHours, MIN_HOURS);
   html += `<div class="cost-line label-row"><span>Hours billed</span><span>${billedHours.toFixed(2)} hrs</span></div>`;
 
-  // TCs multiplier
   if (tcsRequired > 1) {
     html += `<div class="cost-line detail-row"><span>× ${tcsRequired} Traffic Controllers</span><span>—</span></div>`;
   }
@@ -753,13 +780,7 @@ function updateCostPanelDebounced() {
   lastGeocodeTimer = setTimeout(updateCostPanel, 600);
 }
 
-// Initialize Supabase client
 const supabase = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_KEY);
-
-function getDemoBookedDates() {
-  // Kept for fallback only — no longer used in production
-  return [];
-}
 
 async function loadBookedDates() {
   try {
@@ -856,27 +877,22 @@ function updateTCsAvailable() {
 
   const available = getTCsAvailable(selectedDate);
   let selected = parseInt(hidden.value) || 1;
-  if (selected > available) selected = 1; // reset if previous selection now too high
+  if (selected > available) selected = 1;
   hidden.value = selected;
 
   picker.classList.add('has-data');
   picker.innerHTML = '';
 
-  // Build TC stop signs
   for (let i = 1; i <= available; i++) {
     const fig = document.createElement('div');
     fig.className = 'tc-figure' + (i <= selected ? ' lit' : '');
     fig.dataset.num = i;
     fig.innerHTML = `
       <svg viewBox="0 0 42 52" xmlns="http://www.w3.org/2000/svg">
-        <!-- Sign disc -->
         <circle class="tc-disc" cx="21" cy="17" r="16"/>
-        <!-- Inner white ring (only visible when lit) -->
         <circle class="tc-ring" cx="21" cy="17" r="12.5" fill="none" stroke-width="1"/>
-        <!-- STOP text (only visible when lit) -->
         <text class="tc-stop" x="21" y="20" font-family="Archivo Black, sans-serif"
               font-size="7.5" font-weight="900" text-anchor="middle">STOP</text>
-        <!-- Pole/handle -->
         <rect class="tc-pole" x="20" y="33" width="2" height="19"/>
       </svg>
     `;
@@ -884,7 +900,6 @@ function updateTCsAvailable() {
     picker.appendChild(fig);
   }
 
-  // Summary line
   const summary = document.createElement('div');
   summary.className = 'tc-picker-summary';
   summary.innerHTML = `
@@ -897,8 +912,8 @@ function updateTCsAvailable() {
 function selectTCs(num) {
   const hidden = document.getElementById('tcsRequired');
   hidden.value = num;
-  updateTCsAvailable(); // re-render with new lit state
-  updateCostPanel(); // recalc cost (multiplies by TCs)
+  updateTCsAvailable();
+  updateCostPanel();
 }
 
 function updateSelectedDateDisplay() {
@@ -919,10 +934,8 @@ function updateNightOnlyBanner() {
 
 function updateStartTimeConstraint() {
   if (selectedDate && isNightOnly(selectedDate)) {
-    // If user has picked a start time before 4pm, bump it to 4pm
     const currentStart = document.getElementById('startTime').value;
     if (currentStart && currentStart < "16:00") {
-      // Set picker to 4:00 PM
       document.getElementById('startHour').value = '4';
       document.getElementById('startMin').value = '0';
       document.getElementById('startAmPm').value = 'PM';
@@ -943,9 +956,6 @@ function updateSubmitButton() {
   btn.textContent = '✓ Submit Booking Request';
 }
 
-// ============================================================
-// AM/PM TIME PICKER — populates dropdowns + syncs hidden 24h fields
-// ============================================================
 function populateTimeDropdowns() {
   ['startHour', 'finishHour'].forEach(id => {
     const sel = document.getElementById(id);
@@ -957,7 +967,6 @@ function populateTimeDropdowns() {
       sel.appendChild(opt);
     }
   });
-  // Minute dropdowns: only 00 and 30, default to 00
   ['startMin', 'finishMin'].forEach(id => {
     const sel = document.getElementById(id);
     sel.innerHTML = '';
@@ -967,10 +976,9 @@ function populateTimeDropdowns() {
       opt.textContent = m.toString().padStart(2, '0');
       sel.appendChild(opt);
     });
-    sel.value = '0'; // default to :00
+    sel.value = '0';
   });
 
-// Auto-set minutes to :00 if user picks an hour but hasn't touched minutes
 ['startHour', 'finishHour'].forEach(id => {
   document.getElementById(id).addEventListener('change', () => {
     const minId = id.replace('Hour', 'Min');
@@ -1070,7 +1078,6 @@ document.getElementById('bookingForm').addEventListener('submit', async (e) => {
       .select();
 
     if (error) {
-      // Unique constraint violation = date already booked
       if (error.code === '23505' || (error.message && error.message.toLowerCase().includes('duplicate'))) {
         status.className = 'status-msg error';
         status.textContent = '⚠ Sorry, that date just got booked. Please pick another.';
